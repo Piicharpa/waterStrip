@@ -147,14 +147,20 @@ function Pantee() {
         </div>
         {/* Search Box */}
         <div className="relative">
-          <input
-            type="text"
-            placeholder="ค้นหาสถานที่..."
-            className="w-70 h-10 p-3 pr-12 rounded-full bg-[#f0f0f0] outline-none focus:ring-0"
-          />
+        <input 
+  type="text" 
+  placeholder="ค้นหาสถานที่..." 
+  className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+style={{
+  borderTopLeftRadius: '4000px',
+  borderBottomLeftRadius: '4000px',
+  borderTopRightRadius: '9999px',
+  borderBottomRightRadius: '9999px'
+}}
+/>
           <button
             onClick={handleLocate}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow-md transition-all duration-300 outline-none focus:ring-0"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
           >
             <FaLocationCrosshairs />
           </button>
