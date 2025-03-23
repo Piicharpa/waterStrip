@@ -149,7 +149,7 @@ function Pantee() {
         <div className="relative">
         <input 
   type="text" 
-  placeholder="ค้นหาสถานที่..." 
+  placeholder="Search" 
   className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
 style={{
   borderTopLeftRadius: '4000px',

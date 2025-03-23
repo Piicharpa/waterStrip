@@ -54,6 +54,7 @@ function FirstPage() {
   const loginPopupRef = useRef<HTMLDivElement>(null);
   const signupPopupRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -64,6 +65,7 @@ function FirstPage() {
     });
     return () => unsubscribe();
   }, []);
+  
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (!(e.target instanceof Element)) return;
@@ -111,33 +113,37 @@ function FirstPage() {
     setShowLoginPopup(!showLoginPopup);
     setShowSignupPopup(false);
   };
+  
   const handleSignupClick = () => {
     setActiveButton("signup");
     setShowSignupPopup(!showSignupPopup);
     setShowLoginPopup(false);
   };
-  const handleNavClick = (nav: string) => {
-    setActiveButton(nav);
-    setShowLoginPopup(false);
-    setShowSignupPopup(false);
-  };
+ 
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
+      // หลังจาก sign in สำเร็จ นำทางไปยังหน้า permission
+      navigate("/permission");
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
   };
+  
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     setUserType(type);
     try {
       await signInWithGoogle();
+      // หลังจาก sign up สำเร็จ นำทางไปยังหน้า permission
+      navigate("/permission");
+      
       // หลังจาก sign in สำเร็จ คุณอาจต้องบันทึกประเภทผู้ใช้ไว้ใน database
       // ตัวอย่าง: saveUserTypeToFirebase(auth.currentUser?.uid, type);
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
   };
+  
   const handleLogout = async () => {
     try {
       await logout();
@@ -145,6 +151,7 @@ function FirstPage() {
       console.error("Error logging out:", error);
     }
   };
+  
   return (
     <div
       ref={pageRef}
@@ -164,7 +171,7 @@ function FirstPage() {
               <span className="text-sm">{user.displayName || user.email}</span>
               <button
                 onClick={handleLogout}
-                className="bg-gray-200 hover:bg-gray-300 text-black px-4 py-1 rounded-lg"
+                className="bg-black text-white  px-4 py-1 rounded-lg"
               >
                 Logout
               </button>
@@ -193,7 +200,7 @@ function FirstPage() {
                     </h3>
                     
                     <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2 text-center">ประเภทผู้ใช้งาน:</p>
+                      <p className="text-sm text-gray-500 mb-2 text-center">User type:</p>
                       <div className="flex gap-4 justify-center mb-3">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
@@ -205,7 +212,7 @@ function FirstPage() {
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "researcher" ? "font-medium" : ""}`}>นักวิจัย</span>
+                          <span className={`${userType === "researcher" ? "font-medium" : ""}`}>Researcher</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -226,7 +233,7 @@ function FirstPage() {
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "regular" ? "font-medium" : ""}`}>บุคคลธรรมดา</span>
+                          <span className={`${userType === "regular" ? "font-medium" : ""}`}>General</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -393,3 +400,4 @@ function FirstPage() {
   );
 }
 export default FirstPage;
+
