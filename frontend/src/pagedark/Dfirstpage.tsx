@@ -41,7 +41,7 @@ function MapController({ setShowText }: MapControllerProps) {
   
   return null;
 }
-function FirstPage() {
+function DfirstPage() {
   const [showText, setShowText] = useState(true);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
@@ -124,7 +124,7 @@ function FirstPage() {
     try {
       await signInWithGoogle();
       // หลังจาก sign in สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
+      navigate("/Dpermission");
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
@@ -135,7 +135,7 @@ function FirstPage() {
     try {
       await signInWithGoogle();
       // หลังจาก sign up สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
+      navigate("/Dpermission");
       
       // หลังจาก sign in สำเร็จ คุณอาจต้องบันทึกประเภทผู้ใช้ไว้ใน database
       // ตัวอย่าง: saveUserTypeToFirebase(auth.currentUser?.uid, type);
@@ -155,23 +155,23 @@ function FirstPage() {
   return (
     <div
       ref={pageRef}
-      className="w-full h-screen flex flex-col"
+      className="w-full h-screen flex flex-col bg-black"
       style={{ position: "fixed" }}
     >
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-6 py-3 bg-white">
+      <nav className="flex justify-between items-center px-6 py-3 bg-black">
         <div className="flex items-center gap-2">
-          <img src="/image/logo2.png" alt="Logo" className="h-10" />
-          <span className="text-lg font-bold">AQUAlity</span>
+          <img src="/image/logo3.png" alt="Logo" className="h-10" />
+          <span className="text-lg font-bold text-white">AQUAlity</span>
         </div>
         <div className="flex gap-6 items-center">
           
           {user ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm">{user.displayName || user.email}</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-white">{user.displayName || user.email}</span>
               <button
                 onClick={handleLogout}
-                className="bg-black text-white  px-4 py-1 rounded-lg"
+                className="bg-white text-black px-4 py-1 rounded-lg"
               >
                 Logout
               </button>
@@ -182,8 +182,8 @@ function FirstPage() {
                 <button
                   className={`px-4 py-1 rounded-lg border ${
                     activeButton === "signup" 
-                      ? "bg-black text-white border-black" 
-                      : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
+                      ? "bg-white text-black border-white" 
+                      : "bg-black text-white border-transparent hover:bg-white hover:text-black hover:border-white"
                   }`}
                   onClick={handleSignupClick}
                 >
@@ -193,26 +193,26 @@ function FirstPage() {
                 {showSignupPopup && (
                   <div
                     ref={signupPopupRef}
-                    className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-[400px] p-4 z-[2000] w-64 border border-gray-200"
+                    className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 "
                   >
-                    <h3 className="text-lg font-semibold mb-3 text-center">
+                    <h3 className="text-lg font-semibold mb-3 text-center text-black">
                       SIGN UP FOR A NEW ACCOUNT
                     </h3>
                     
                     <div className="mb-4">
-                      <p className="text-sm text-gray-500 mb-2 text-center">User type:</p>
-                      <div className="flex gap-4 justify-center mb-3">
+                      <p className="text-sm text-gray-400 mb-2 text-center">User type:</p>
+                      <div className="flex gap-10 justify-center mb-3">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                             userType === "researcher" 
                               ? "border-black bg-black" 
-                              : "border-gray-300"
+                              : "border-gray-400"
                           }`}>
                             {userType === "researcher" && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                              <div className="w-2 h-2 bg-black rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "researcher" ? "font-medium" : ""}`}>Researcher</span>
+                          <span className={`${userType === "researcher" ? "font-base text-black" : "text-black"}`}>Researcher</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -227,13 +227,13 @@ function FirstPage() {
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                             userType === "regular" 
                               ? "border-black bg-black" 
-                              : "border-gray-300"
+                              : "border-gray-400"
                           }`}>
                             {userType === "regular" && (
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                              <div className="w-2 h-2 bg-black rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "regular" ? "font-medium" : ""}`}>General</span>
+                          <span className={`${userType === "regular" ? "font-base text-black" : "text-black"}`}>General</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -251,8 +251,8 @@ function FirstPage() {
                         disabled={!userType}
                         className={`py-2 px-4 rounded flex items-center justify-center gap-2 ${
                           !userType 
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
-                            : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-300"
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-200" 
+                            : "bg-white hover:bg-gray-100 text-black border border-gray-300"
                         }`}
                       >
                         <svg
@@ -290,8 +290,8 @@ function FirstPage() {
                 <button
                   className={`px-4 py-1 rounded-lg border ${
                     activeButton === "login" 
-                      ? "bg-black text-white border-black" 
-                      : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
+                      ? "bg-white text-black border-white" 
+                      : "bg-black text-white border-transparent hover:bg-white hover:text-black hover:border-white"
                   }`}
                   onClick={handleLoginClick}
                 >
@@ -300,15 +300,15 @@ function FirstPage() {
                 {showLoginPopup && (
                   <div
                     ref={loginPopupRef}
-                    className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-[400px] p-4 z-[2000] w-64 border border-gray-200"
+                    className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg  p-4 z-[2000] w-100 border border-gray-200"
                   >
-                    <h3 className="text-lg font-semibold mb-3 text-center">
+                    <h3 className="text-lg font-semibold mb-3 text-center text-black">
                       LOG IN TO YOUR USER ACCOUNT
                     </h3>
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={handleGoogleSignIn}
-                        className="bg-white hover:bg-gray-100 text-gray-700 py-2 px-4 rounded border border-gray-300 flex items-center justify-center gap-2"
+                        className="bg-white hover:bg-gray-100 text-black py-2 px-4 rounded border border-gray-300 flex items-center justify-center gap-2"
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -371,10 +371,10 @@ function FirstPage() {
                   <p className="text-3xl font-bold">AQUA,</p>
                   <p className="text-3xl font-bold">Quality</p>
                 </div>
-                {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
+                {/* ปุ่มวงกลมสีขาวเปลี่ยนเป็นดำ */}
                 <button
                   className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/pantee")}
+                  onClick={() => navigate("/Dpantee")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -399,5 +399,4 @@ function FirstPage() {
     </div>
   );
 }
-export default FirstPage;
-
+export default DfirstPage;
