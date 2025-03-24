@@ -99,8 +99,8 @@ function DfirstPage() {
         window.resetMap?.();
       }
       
-      // ถ้าไม่ใช่การคลิกที่ปุ่มล็อกอินหรือลงทะเบียน ให้รีเซ็ต activeButton
-      if (!isLoginButton && !isSignupButton) {
+      // ถ้าไม่ใช่การคลิกที่ปุ่มล็อกอินหรือลงทะเบียน หรือภายในป๊อปอัพ ให้รีเซ็ต activeButton
+      if (!isLoginButton && !isSignupButton && !isLoginPopup && !isSignupPopup) {
         setActiveButton(null);
       }
     };
@@ -118,6 +118,13 @@ function DfirstPage() {
     setActiveButton("signup");
     setShowSignupPopup(!showSignupPopup);
     setShowLoginPopup(false);
+  };
+
+  // เพิ่มฟังก์ชันใหม่สำหรับการเลือกประเภทผู้ใช้
+  const handleUserTypeChange = (type: "researcher" | "regular") => {
+    setUserType(type);
+    // คงสถานะ activeButton เป็น "signup" เมื่อเลือกประเภทผู้ใช้
+    setActiveButton("signup");
   };
  
   const handleGoogleSignIn = async () => {
@@ -209,7 +216,7 @@ function DfirstPage() {
                               : "border-gray-400"
                           }`}>
                             {userType === "researcher" && (
-                              <div className="w-2 h-2 bg-black rounded-full"></div>
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
                           <span className={`${userType === "researcher" ? "font-base text-black" : "text-black"}`}>Researcher</span>
@@ -219,7 +226,7 @@ function DfirstPage() {
                             value="researcher"
                             className="sr-only"
                             checked={userType === "researcher"}
-                            onChange={() => setUserType("researcher")}
+                            onChange={() => handleUserTypeChange("researcher")}
                           />
                         </label>
                         
@@ -230,7 +237,7 @@ function DfirstPage() {
                               : "border-gray-400"
                           }`}>
                             {userType === "regular" && (
-                              <div className="w-2 h-2 bg-black rounded-full"></div>
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
                           <span className={`${userType === "regular" ? "font-base text-black" : "text-black"}`}>General</span>
@@ -240,7 +247,7 @@ function DfirstPage() {
                             value="regular"
                             className="sr-only"
                             checked={userType === "regular"}
-                            onChange={() => setUserType("regular")}
+                            onChange={() => handleUserTypeChange("regular")}
                           />
                         </label>
                       </div>
@@ -251,8 +258,8 @@ function DfirstPage() {
                         disabled={!userType}
                         className={`py-2 px-4 rounded flex items-center justify-center gap-2 ${
                           !userType 
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-200" 
-                            : "bg-white hover:bg-gray-100 text-black border border-gray-300"
+                            ? "bg-[#f1f1f1] text-gray-400  cursor-not-allowed border border-[#f1f1f1]" 
+                            : "bg-white hover:bg-gray-100 text-black border border-[#d6d6d6]"
                         }`}
                       >
                         <svg

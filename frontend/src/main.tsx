@@ -16,12 +16,11 @@ createRoot(document.getElementById('root')!).render(
     <Router>
       <Routes>
         <Route path="/" element={<FirstPage />} />
-        <Route path="/d" element={<DfirstPage />} />
         <Route path="/pantee" element={<Pantee />} />
-        <Route path="/dpantee" element={<Dpantee />} />
         <Route path="/permission" element={<PermissionPage />} />
+        <Route path="/d" element={<DfirstPage />} />
+        <Route path="/dpantee" element={<Dpantee />} />
         <Route path="/dpermission" element={<Dpermission />} />
-        <Route path="/wave" element={<Wave />} />
       </Routes>
     </Router>
   </StrictMode>

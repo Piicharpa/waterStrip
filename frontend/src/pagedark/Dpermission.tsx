@@ -99,7 +99,7 @@ export default function Dpermission() {
             className={`mt-2 px-6 py-2 rounded-lg ${
               checked 
                 ? "bg-white text-black cursor-pointer" 
-                : "bg-gray-300 text-gray-400 cursor-not-allowed"
+                : "bg-[#f1f1f1] text-gray-400  cursor-not-allowed"
             }`}
             onClick={() => checked && handleContinue()}
             disabled={!checked}

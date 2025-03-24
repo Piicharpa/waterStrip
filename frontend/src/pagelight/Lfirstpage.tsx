@@ -99,8 +99,8 @@ function FirstPage() {
         window.resetMap?.();
       }
       
-      // ถ้าไม่ใช่การคลิกที่ปุ่มล็อกอินหรือลงทะเบียน ให้รีเซ็ต activeButton
-      if (!isLoginButton && !isSignupButton) {
+      // แก้ไขตรงนี้: ให้รีเซ็ต activeButton เฉพาะเมื่อคลิกนอกทั้งหมด และไม่ใช่ภายในป๊อปอัพ
+      if (!isLoginButton && !isSignupButton && !isLoginPopup && !isSignupPopup) {
         setActiveButton(null);
       }
     };
@@ -193,7 +193,7 @@ function FirstPage() {
                 {showSignupPopup && (
                   <div
                     ref={signupPopupRef}
-                    className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200"
+                    className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200"
                   >
                     <h3 className="text-lg font-semibold mb-3 text-center">
                       SIGN UP FOR A NEW ACCOUNT
@@ -212,7 +212,7 @@ function FirstPage() {
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "researcher" ? "font-medium" : ""}`}>Researcher</span>
+                          <span className={`${userType === "researcher" ? "font-base" : ""}`}>Researcher</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -233,7 +233,7 @@ function FirstPage() {
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             )}
                           </div>
-                          <span className={`${userType === "regular" ? "font-medium" : ""}`}>General</span>
+                          <span className={`${userType === "regular" ? "font-base" : ""}`}>General</span>
                           <input 
                             type="radio" 
                             name="userType" 
@@ -251,8 +251,8 @@ function FirstPage() {
                         disabled={!userType}
                         className={`py-2 px-4 rounded flex items-center justify-center gap-2 ${
                           !userType 
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
-                            : "bg-white hover:bg-gray-100 text-gray-700 border border-gray-300"
+                            ? "bg-[#f1f1f1] text-gray-400  cursor-not-allowed border border-[#f1f1f1]" 
+                            : "bg-white hover:bg-gray-100 text-gray-700 border border-[#d6d6d6]"
                         }`}
                       >
                         <svg
@@ -300,7 +300,7 @@ function FirstPage() {
                 {showLoginPopup && (
                   <div
                     ref={loginPopupRef}
-                    className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg  p-4 z-[2000] w-100 border border-gray-200"
+                    className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg  p-4 z-[2000] w-100 border border-gray-200"
                   >
                     <h3 className="text-lg font-semibold mb-3 text-center">
                       LOG IN TO YOUR USER ACCOUNT
@@ -400,4 +400,3 @@ function FirstPage() {
   );
 }
 export default FirstPage;
-
