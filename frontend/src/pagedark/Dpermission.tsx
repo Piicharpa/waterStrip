@@ -72,7 +72,7 @@ export default function Dpermission() {
       {/* Success Section */}
       {submitted && (
         <div className="absolute transition-opacity duration-500 opacity-0 animate-slide-up flex flex-col items-center text-center max-w-lg">
-          <p className="text-4xl font-semibold mb-4">Hello, {name}</p>
+          <p className="text-4xl font-semibold mb-6">Hello, {name}</p>
           
           <div className="bg-black border border-white rounded-lg p-6 mb-6 w-full">
             <div className="flex items-start gap-2">
@@ -99,7 +99,7 @@ export default function Dpermission() {
             className={`mt-2 px-6 py-2 rounded-lg ${
               checked 
                 ? "bg-white text-black cursor-pointer" 
-                : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                : "bg-gray-300 text-gray-400 cursor-not-allowed"
             }`}
             onClick={() => checked && handleContinue()}
             disabled={!checked}
