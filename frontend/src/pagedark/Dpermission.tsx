@@ -8,6 +8,7 @@ export default function Dpermission() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [checked, setChecked] = useState(false);
+  
 
   const handleSubmit = () => {
     if (!name.trim()) {

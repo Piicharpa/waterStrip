@@ -11,6 +11,7 @@ import Dpantee from './pagedark/Dpantee';
 import Dpermission from './pagedark/Dpermission';
 import Test from './page/test';
 import Lhome from './pagelight/Lhome';
+import Dhome from './pagedark/Dhome';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/dpermission" element={<Dpermission />} />
         <Route path="/t" element={<Test />} />
         <Route path="/home" element={<Lhome />} />
+        <Route path="/dhome" element={<Dhome />} />
       </Routes>
     </Router>
   </StrictMode>
