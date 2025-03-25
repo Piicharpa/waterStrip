@@ -34,7 +34,7 @@ export default function PermissionPage() {
 
       {/* Form Section */}
       <div className={`transition-opacity duration-500 ${submitted ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-        <h1 className="text-4xl font-semibold mb-6">Hello,</h1>
+        <h1 className="text-4xl font-semibold mb-6">Hello !</h1>
         <div className="relative w-80 flex flex-col items-center">
           <div className="w-full flex items-center">
             <input
@@ -46,7 +46,7 @@ export default function PermissionPage() {
             />
             <button
               onClick={handleSubmit}
-              className="w-12 h-10 bg-black hover:bg-[#f1f1f1] hover:text-gray-400 rounded-full flex items-center justify-center text-white ml-3"
+              className="w-12 h-10 bg-black hover:bg-[#dcdcdc] hover:text-gray-400 rounded-full flex items-center justify-center text-white ml-3"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

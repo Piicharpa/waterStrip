@@ -39,7 +39,7 @@ export default function Dpermission() {
 
       {/* Form Section */}
       <div className={`transition-opacity duration-500 ${submitted ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-        <h1 className="text-4xl font-semibold mb-6">Hello,</h1>
+        <h1 className="text-4xl font-semibold mb-6">Hello !</h1>
         <div className="relative w-80 flex flex-col items-center">
           <div className="w-full flex items-center">
             <input
