@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Dwave from "../component/Dwave";
 import { IoIosWarning } from "react-icons/io";
 import { FaCheck } from "react-icons/fa6";
@@ -8,7 +9,7 @@ export default function Dpermission() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [checked, setChecked] = useState(false);
-  
+  const navigate = useNavigate();
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -19,10 +20,12 @@ export default function Dpermission() {
     setSubmitted(true);
   };
 
+  
+
   const handleContinue = () => {
     // Add navigation or next step logic here
-    console.log("Continuing with consent from:", name);
-    // Navigate to next page or perform next action
+    localStorage.setItem('username', name);
+      navigate('/dhome');
   };
 
   return (
