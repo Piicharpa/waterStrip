@@ -4,6 +4,7 @@ import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 
+
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState(" ");
   const [searchTerm, setSearchTerm] = useState("");
@@ -170,6 +171,7 @@ const Lhome: React.FC = () => {
       setZoomedCardIndex(foundIndex);
     }
   };
+  
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
@@ -200,7 +202,7 @@ const Lhome: React.FC = () => {
             className="scroll-container flex overflow-x-auto w-full scroll-smooth py-4"
             ref={scrollRef}
           >
-            <div className="flex gap-4 px-4 mx-auto">
+            <div onClick={() => navigate("/add")} className="flex gap-4 px-4 mx-auto">
               <button className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl">
                 +
               </button>
