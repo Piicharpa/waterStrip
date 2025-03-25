@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Wave from "../component/wave"; 
 import { IoIosWarning } from "react-icons/io";
 import { FaCheck } from "react-icons/fa6";
@@ -8,6 +9,7 @@ export default function PermissionPage() {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState("");
     const [checked, setChecked] = useState(false);
+    const navigate = useNavigate();
   
     const handleSubmit = () => {
       if (!name.trim()) {
@@ -20,8 +22,8 @@ export default function PermissionPage() {
 
     const handleContinue = () => {
       // Add navigation or next step logic here
-      console.log("Continuing with consent from:", name);
-      // Navigate to next page or perform next action
+      localStorage.setItem('username', name);
+      navigate('/home');
     };
   
     return (
