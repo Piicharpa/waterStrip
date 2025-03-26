@@ -1,0 +1,1 @@
+ALTER TABLE "strip" ADD CONSTRAINT "strip_b_id_user_u_id_fk" FOREIGN KEY ("b_id") REFERENCES "public"."user"("u_id") ON DELETE no action ON UPDATE no action;

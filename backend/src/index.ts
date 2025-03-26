@@ -103,17 +103,17 @@ app.get("/strips", async (req, res, next) => {
 // Insert into Strip
 app.post("/strips", async (req, res, next) => {
   try {
-    const { b_id, s_date, s_latitude, s_longitude } = req.body;
+    const { b_id, s_latitude, s_longitude, u_id , s_url} = req.body;
 
     // Check for missing fields
-    if (!b_id || !s_date || !s_latitude || !s_longitude === undefined) {
+    if (!b_id || !s_latitude || !s_longitude || !u_id || !s_url) {
       throw new Error("Missing required fields: s_url, u_id, s_brand, s_location, s_ph");
     }
 
     // Insert new strip
     const result = await dbClient
       .insert(Strip)
-      .values({ b_id, s_date, s_latitude, s_longitude })
+      .values({ b_id, s_latitude, s_longitude , u_id , s_url})
       .returning(); // Returns inserted values
 
     res.status(201).json({
@@ -258,36 +258,16 @@ app.post("/strips_parameter", async (req, res, next) => {
 });
 
 // Update strip parameter
-app.patch("/strip_parameters/:s_id/:p_id", async (req, res, next) => {
-  try {
-    const { s_id, p_id } = req.params;
-    const { sp_value } = req.body;
+// app.patch("/strips_parameter/:id", async (req, res) => {
+//   const { id } = req.params;
+//   const { sp_value } = req.body;
 
-    // Validate input
-    if (!sp_value) {
-      res.status(400).json({ error: "Missing required field: sp_value" });
-    }
+//   const [updatedBrand] = await dbClient.update(StripParameter).set({ sp_value }).where(eq(StripParameter.sp_id, Number(id))).returning();
 
-    // Update query
-    const result = await dbClient
-      .update(StripParameter)
-      .set({ sp_value })
-      .where(
-        and(eq(StripParameter.s_id, Number(s_id)), eq(StripParameter.p_id, Number(p_id)))
-      )
-      .returning();
+//   if (!updatedBrand) res.status(404).json({ error: "not found" });
 
-    // Check if the update was successful
-    if (result.length === 0) {
-      res.status(404).json({ error: "StripParameter not found" });
-    }
-
-    res.json({ msg: "StripParameter updated successfully", data: result[0] });
-  } catch (err) {
-    next(err);
-  }
-});
-
+//   res.json(updatedBrand);
+// });
 
 
 // =================== Error Handler ===================

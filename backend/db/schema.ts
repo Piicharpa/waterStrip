@@ -24,6 +24,8 @@ export const Strip = pgTable("strip", {
   s_date: timestamp("s_date").notNull().defaultNow(),
   s_latitude: doublePrecision("s_latitude"),
   s_longitude: doublePrecision("s_longitude"),
+  u_id: integer("u_id").references(() => User.u_id).notNull(),
+  s_url: text("s_url"),
 });
 
 // ตาราง PARAMETER
