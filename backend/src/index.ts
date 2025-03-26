@@ -2,8 +2,8 @@ import "dotenv/config";
 import express, { ErrorRequestHandler } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { dbClient } from "@db/client";
-import { Brand, Parameter, Strip, StripParameter, User} from "@db/schema";
+import { dbClient } from "../db/client";
+import { Brand, Parameter, Strip, StripParameter, User} from "../db/schema";
 import { eq, and } from "drizzle-orm";
 
 // Initialize the express app
@@ -258,7 +258,7 @@ app.post("/strips_parameter", async (req, res, next) => {
 });
 
 // Update strip parameter
-app.patch("/strip-parameters/:s_id/:p_id", async (req, res, next) => {
+app.patch("/strip_parameters/:s_id/:p_id", async (req, res, next) => {
   try {
     const { s_id, p_id } = req.params;
     const { sp_value } = req.body;
@@ -342,7 +342,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 // =================== Server ===================
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });

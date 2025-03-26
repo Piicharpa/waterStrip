@@ -1,5 +1,5 @@
 {
-  "id": "5e5f2184-7e70-4e26-82de-73e9403959f8",
+  "id": "bc441ba1-3804-4732-9660-1183a5666fc5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -131,19 +131,25 @@
         "s_id": {
           "name": "s_id",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "p_id": {
           "name": "p_id",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "sp_value": {
           "name": "sp_value",
           "type": "double precision",
           "primaryKey": false,
+          "notNull": true
+        },
+        "sp_id": {
+          "name": "sp_id",
+          "type": "serial",
+          "primaryKey": true,
           "notNull": true
         }
       },

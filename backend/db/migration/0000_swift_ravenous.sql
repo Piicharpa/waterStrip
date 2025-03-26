@@ -19,9 +19,10 @@ CREATE TABLE "strip" (
 );
 --> statement-breakpoint
 CREATE TABLE "strip_parameter" (
-	"s_id" integer PRIMARY KEY NOT NULL,
-	"p_id" integer PRIMARY KEY NOT NULL,
-	"sp_value" double precision NOT NULL
+	"s_id" integer NOT NULL,
+	"p_id" integer NOT NULL,
+	"sp_value" double precision NOT NULL,
+	"sp_id" serial PRIMARY KEY NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user" (

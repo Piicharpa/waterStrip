@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/src/index.js",
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
-  },
+  "db:generate": "drizzle-kit generate",
+  "db:push": "drizzle-kit push",
+  "db:migrate": "ts-node ./db/migrate.ts",
+  "db:prototype": "ts-node ./db/prototype.ts",
+  "dev": "nodemon",
+  "build": "tsc && tsc-alias",
+  "start": "node ./dist/src/index.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,8 +23,7 @@
     "helmet": "^8.0.0",
     "postgres": "^3.4.5",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.2"
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -29,6 +31,7 @@
     "@types/node": "^22.13.10",
     "drizzle-kit": "^0.30.5",
     "nodemon": "^3.1.9",
-    "tsc-alias": "^1.8.11"
+    "tsc-alias": "^1.8.11",
+    "typescript": "^5.8.2"
   }
 }

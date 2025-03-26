@@ -35,8 +35,9 @@ export const Parameter = pgTable("parameter", {
 
 // ตาราง STRIP_PARAMETER (M:N)
 export const StripParameter = pgTable("strip_parameter", {
-  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }) .notNull() .primaryKey(), // Define primary key here
-  p_id: integer("p_id").references(() => Parameter.p_id) .notNull() .primaryKey(), // Define composite primary key inline
+  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }) .notNull(), // Define primary key here
+  p_id: integer("p_id").references(() => Parameter.p_id) .notNull(), // Define composite primary key inline
   sp_value: doublePrecision("sp_value").notNull(),
+  sp_id: serial("sp_id").primaryKey()
 });
 
