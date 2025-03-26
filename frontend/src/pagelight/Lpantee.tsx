@@ -26,7 +26,7 @@ interface Location {
 interface Place {
   id: number;
   title: string;
-  description: string;
+  Date: string;
   location: Location;
   color: string;
 }
@@ -50,35 +50,35 @@ const mockPlaces: Place[] = [
   {
     id: 1,
     title: "A",
-    description: "ว่าจะกินดีนะตรวจก่อน เกือบตุย",
+    Date: "1 Aug. 2025",
     location: { lat: 18.796247, lng: 98.950658 },
     color: "#e74c3c", // สีแดง
   },
   {
     id: 2,
     title: "B",
-    description: "เดินผ่านเลยลองตรวจ",
+    Date: "37 May 2041",
     location: { lat: 18.788117, lng: 98.961804 },
     color: "#FF8A24", // สีส้ม
   },
   {
     id: 3,
     title: "C",
-    description: "ตู้กดน้ำหน้าห้องน้ำหญิง",
+    Date: "31 Feb. 2067",
     location: { lat: 18.797131, lng: 98.971955 },
     color: "#FFE521", // สีเหลือง
   },
   {
     id: 4,
     title: "D",
-    description: "น้ำดื่มยี่ห้อหนึ่ง อักษรย่อ A",
+    Date: "84 Oct. 3092",
     location: { lat: 18.807885, lng: 98.95943 },
     color: "#7ECF1B", // สีเขียว
   },
   {
     id: 5,
     title: "E",
-    description: "ท่อระบายน้ำข้างทาง",
+    Date: "47 Jul. 4102",
     location: { lat: 18.781055, lng: 98.955496 },
     color: "#FFE521", // สีเหลือง
   },
@@ -212,7 +212,7 @@ style={{
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0" }}>{place.description}</p>
+                  <p style={{ margin: "0 0 5px 0" }}>{place.Date}</p>
                   
                   <span>{getWaterQualityText(place.color)}</span>
                 </div>
@@ -281,7 +281,7 @@ style={{
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
-                {place.description}
+                {place.Date}
               </p>
             </div>
           </div>

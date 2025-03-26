@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import PicScale from "../component/picscale";
 import Scale from "../component/subscale";
+import { useNavigate } from "react-router-dom";
 
 const getQualityColor = (quality: number): string => {
   if (quality >= 0 && quality <= 24) return "#e74c3c";
@@ -18,7 +19,8 @@ const Lcardinfo: React.FC = () => {
   const [location, setLocation] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  const navigate = useNavigate();
+  
   const waterQuality = 13;
   useEffect(() => {
     // Retrieve values from localStorage
@@ -346,7 +348,8 @@ const Lcardinfo: React.FC = () => {
               {stripBrand}
             </h2>
             <p className="text-gray-400 ml-35  text-sm">{analyzeDate}</p>
-            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer">
+            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer" 
+            onClick={() => navigate("/pantee")}>
               {location}
             </p>
 
