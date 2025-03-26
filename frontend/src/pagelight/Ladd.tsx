@@ -133,13 +133,17 @@ const Ladd: React.FC = () => {
   };
 
   const handleAnalyze = () => {
-    // Only allow analyze if all conditions are met
     if (isLocationSelected && selectedFile && selectedBrand) {
-      console.log("Analyzing:", {
-        location,
-        brand: selectedBrand,
-        file: selectedFile,
-      });
+      const analyzeDate = new Date().toISOString(); // เก็บวันที่ปัจจุบัน
+      localStorage.setItem("stripBrand", selectedBrand);
+      localStorage.setItem("analyzeDate", analyzeDate);
+      localStorage.setItem("location", location);
+  
+      if (imagePreview) {
+        localStorage.setItem("uploadedImage", imagePreview);
+      }
+  
+      navigate("/cardinfo");
     }
   };
 

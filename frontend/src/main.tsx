@@ -14,6 +14,7 @@ import Lhome from './pagelight/Lhome';
 import Dhome from './pagedark/Dhome';
 import Ladd from './pagelight/Ladd';
 import AddMap from './pagelight/Laddmap';
+import LCardInfo from './pagelight/Lcardinfo';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -25,11 +26,12 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/d" element={<DfirstPage />} />
         <Route path="/dpantee" element={<Dpantee />} />
         <Route path="/dpermission" element={<Dpermission />} />
-        <Route path="/t" element={<Test />} />
+        <Route path="/test" element={<Test />} />
         <Route path="/home" element={<Lhome />} />
         <Route path="/dhome" element={<Dhome />} />
         <Route path="/add" element={<Ladd />} />
         <Route path="/addmap" element={<AddMap />} />
+        <Route path="/cardinfo" element={<LCardInfo />} />
       </Routes>
     </Router>
   </StrictMode>

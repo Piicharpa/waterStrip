@@ -202,8 +202,8 @@ const Lhome: React.FC = () => {
             className="scroll-container flex overflow-x-auto w-full scroll-smooth py-4"
             ref={scrollRef}
           >
-            <div onClick={() => navigate("/add")} className="flex gap-4 px-4 mx-auto">
-              <button className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl">
+            <div  className="flex gap-4 px-4 mx-auto">
+              <button onClick={() => navigate("/add")} className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl">
                 +
               </button>
               {cards.map((card, index) => (
