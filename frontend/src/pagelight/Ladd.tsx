@@ -175,6 +175,7 @@ const Ladd: React.FC = () => {
         </p>
 
         <div
+        onClick={triggerFileInput}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           className={`w-171 h-30 -ml-29 p-6 ${selectedFile ? '' : (isLocationSelected ? 'cursor-pointer hover:bg-gray-100 transition' : 'opacity-50 cursor-not-allowed')} relative`}
@@ -204,16 +205,16 @@ const Ladd: React.FC = () => {
           ) : (
             <>
               <p className={`text-bold text-2xl ${isLocationSelected ? 'text-[#a3a2a2]' : 'text-gray-400'} mt-5 mb-5`}>
-                Drag your photo here
+                Drag the photo or Upload file
               </p>
-              {isLocationSelected && !selectedFile && (
+              {/* {isLocationSelected && !selectedFile && (
                 <button
                   onClick={triggerFileInput}
                   className="absolute top-4 right-4 text-gray-400 hover:text-black"
                 >
                   <FaPaperclip />
                 </button>
-              )}
+              )} */}
             </>
           )}
         </div>
