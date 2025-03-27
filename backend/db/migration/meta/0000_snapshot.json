@@ -1,0 +1,260 @@
+{
+  "id": "bc441ba1-3804-4732-9660-1183a5666fc5",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.brand": {
+      "name": "brand",
+      "schema": "",
+      "columns": {
+        "b_id": {
+          "name": "b_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "b_name": {
+          "name": "b_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "b_chart": {
+          "name": "b_chart",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.parameter": {
+      "name": "parameter",
+      "schema": "",
+      "columns": {
+        "p_id": {
+          "name": "p_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "p_name": {
+          "name": "p_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p_unit": {
+          "name": "p_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.strip": {
+      "name": "strip",
+      "schema": "",
+      "columns": {
+        "s_id": {
+          "name": "s_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "b_id": {
+          "name": "b_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "s_date": {
+          "name": "s_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "s_latitude": {
+          "name": "s_latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "s_longitude": {
+          "name": "s_longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "strip_b_id_brand_b_id_fk": {
+          "name": "strip_b_id_brand_b_id_fk",
+          "tableFrom": "strip",
+          "tableTo": "brand",
+          "columnsFrom": [
+            "b_id"
+          ],
+          "columnsTo": [
+            "b_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.strip_parameter": {
+      "name": "strip_parameter",
+      "schema": "",
+      "columns": {
+        "s_id": {
+          "name": "s_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p_id": {
+          "name": "p_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sp_value": {
+          "name": "sp_value",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sp_id": {
+          "name": "sp_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "strip_parameter_s_id_strip_s_id_fk": {
+          "name": "strip_parameter_s_id_strip_s_id_fk",
+          "tableFrom": "strip_parameter",
+          "tableTo": "strip",
+          "columnsFrom": [
+            "s_id"
+          ],
+          "columnsTo": [
+            "s_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "strip_parameter_p_id_parameter_p_id_fk": {
+          "name": "strip_parameter_p_id_parameter_p_id_fk",
+          "tableFrom": "strip_parameter",
+          "tableTo": "parameter",
+          "columnsFrom": [
+            "p_id"
+          ],
+          "columnsTo": [
+            "p_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "u_id": {
+          "name": "u_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "u_name": {
+          "name": "u_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "u_email": {
+          "name": "u_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "u_password": {
+          "name": "u_password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "u_role": {
+          "name": "u_role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "u_profile_pic": {
+          "name": "u_profile_pic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_u_email_unique": {
+          "name": "user_u_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "u_email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
