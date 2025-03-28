@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 const router = express.Router();
 
 // Get All from Strip
-router.get("/strips", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const results = await dbClient.query.Strip.findMany();
     res.json(results);
@@ -16,7 +16,7 @@ router.get("/strips", async (req, res, next) => {
 });
 
 // Insert into Strip
-router.post("/strips", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const { b_id, s_latitude, s_longitude, u_id , s_url} = req.body;
 
@@ -41,7 +41,7 @@ router.post("/strips", async (req, res, next) => {
 });
 
 // // Update strip in Strip
-// router.patch("/strips/:id", async (req, res, next) => {
+// router.patch("/:id", async (req, res, next) => {
 //   try {
 //     const s_id = parseInt(req.params.id);
 //     const { b_id, s_date, s_latitude, s_longitude } = req.body;
@@ -60,7 +60,7 @@ router.post("/strips", async (req, res, next) => {
 // });
 
 // Delete strip from Strip
-router.delete("/strips/:id", async (req, res, next) => {
+router.delete("/:id", async (req, res, next) => {
   try {
     const s_id = parseInt(req.params.id);
     if (!s_id) throw new Error("Missing strip id");

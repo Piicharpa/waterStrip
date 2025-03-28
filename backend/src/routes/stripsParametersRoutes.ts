@@ -5,7 +5,7 @@ import { StripParameter } from "../../db/schema";
 const router = express.Router();
 
 // Get All from Strip paramenter
-router.get("/strips_parameter", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const results = await dbClient.query.StripParameter.findMany();
     res.json(results);
@@ -15,7 +15,7 @@ router.get("/strips_parameter", async (req, res, next) => {
 });
 
 // Insert into Strip parameter
-router.post("/strips_parameter", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const { s_id, p_id, sp_value } = req.body;
 

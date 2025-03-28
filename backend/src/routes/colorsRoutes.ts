@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 const router = express.Router();
 
 // GET all colors
-router.get("/colors", async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const results = await dbClient.query.Color.findMany();
     res.json(results);
@@ -16,7 +16,7 @@ router.get("/colors", async (req, res, next) => {
 });
 
 // POST new color
-router.post("/colors", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const { b_id, p_id, colors, values } = req.body;
 
@@ -41,7 +41,7 @@ router.post("/colors", async (req, res, next) => {
 });
 
 // PATCH update color
-router.patch("/colors/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;

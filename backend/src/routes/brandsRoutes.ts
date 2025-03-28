@@ -6,22 +6,26 @@ import { eq } from "drizzle-orm";
 const router = express.Router();
 
 // GET all brands
-router.get("/brands", async (req, res) => {
+router.get("/", async (req, res) => {
   const brands = await dbClient.select().from(Brand);
   res.json(brands);
 });
 
 // POST new brand
-router.post("/brands", async (req, res) => {
-  const { b_name, b_chart } = req.body;
-  if (!b_name) res.status(400).json({ error: "b_name is required" });
+router.post("/", async (req, res, next) => {
+  try {
+    const { b_name, b_chart } = req.body;
+    if (!b_name) throw new Error("Brand name is required");
 
-  const [newBrand] = await dbClient.insert(Brand).values({ b_name, b_chart }).returning();
-  res.status(201).json(newBrand);
+    const result = await dbClient.insert(Brand).values({ b_name, b_chart }).returning();
+    res.status(201).json({ msg: "Brand created successfully", data: result[0] });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // PATCH update brand
-router.patch("/brands/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const { b_name, b_chart } = req.body;
 

@@ -6,13 +6,13 @@ import { eq } from "drizzle-orm";
 const router = express.Router();
 
 // GET all parameters
-router.get("/parameters", async (req, res) => {
+router.get("/", async (req, res) => {
   const parameters = await dbClient.select().from(Parameter);
   res.json(parameters);
 });
 
 // POST new parameter
-router.post("/parameters", async (req, res) => {
+router.post("/", async (req, res) => {
   const { p_name, p_unit } = req.body;
   if (!p_name) res.status(400).json({ error: "p_name is required" });
 
@@ -21,7 +21,7 @@ router.post("/parameters", async (req, res) => {
 });
 
 // PATCH update parameter
-router.patch("/parameters/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const { p_name, p_unit } = req.body;
 
