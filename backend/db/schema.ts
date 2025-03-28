@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, doublePrecision, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, doublePrecision, timestamp, primaryKey, json } from "drizzle-orm/pg-core";
 
 // ตาราง USER
 export const User = pgTable("user", {
@@ -43,3 +43,11 @@ export const StripParameter = pgTable("strip_parameter", {
   sp_id: serial("sp_id").primaryKey()
 });
 
+// ตาราง COLOR
+export const Color = pgTable("color", {
+  c_id: serial("c_id").primaryKey(),
+  b_id: integer("b_id").references(() => Brand.b_id).notNull(),
+  p_id: integer("p_id").references(() => Parameter.p_id).notNull(),
+  colors: json("colors").notNull(),
+  values: json("values").notNull(), 
+});
