@@ -30,5 +30,5 @@ Use DBeaver to build the database connection.
 Now you're all set! 🎯 Happy coding! 🚀
 
 
-This will display nicely when viewed in GitHub or any markdown-supported platform.
+
 
