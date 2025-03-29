@@ -3,155 +3,46 @@ import { useNavigate } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
-
+import axios from "axios"; // Import axios for API requests
 
 const Lhome: React.FC = () => {
-  const [username, setUsername] = useState(" ");
+  const [username, setUsername] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [scrollIndex, setScrollIndex] = useState(0);
   const [zoomedCardIndex, setZoomedCardIndex] = useState<number | null>(null);
+  const [cards, setCards] = useState<any[]>([]); // Store API data
   const navigate = useNavigate();
 
-  // Add this useEffect to retrieve username from localStorage
+  // Fetch data from API
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    
-    // If no username is found, redirect back to permission page
+    const fetchData = async () => {
+      try {
+        const response = await axios.get<any[]>("http://localhost:3003/strips");
+        setCards(response.data); // Assuming API returns an array
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
     if (!storedUsername) {
-      navigate('/');
+      navigate("/");
       return;
     }
-    
     setUsername(storedUsername);
   }, [navigate]);
 
-  // จำลองข้อมูลการ์ด
-  const cards = [
-    {
-      imageUrl: "/cardimage/1.jpeg",
-      brand: "A",
-      dateTime: "14:30, 12 Mar. 2025",
-      location: "13°45'22.7\"N 100°30'06.5\"E",
-      waterQuality: 4,
-    },
-    {
-      imageUrl: "/cardimage/2.jpg",
-      brand: "B",
-      dateTime: "08:45, 18 Feb. 2025",
-      location: "35°41'22.2\"N 139°41'30.1\"E",
-      waterQuality: 80,
-    },
-    {
-      imageUrl: "/cardimage/3.jpg",
-      brand: "C",
-      dateTime: "19:10, 25 Jan. 2025",
-      location: "37°33'59.4\"N 126°58'40.8\"E",
-      waterQuality: 45,
-    },
-    {
-      imageUrl: "/cardimage/4.webp",
-      brand: "D",
-      dateTime: "22:50, 30 Dec. 2024",
-      location: "51°30'26.6\"N 0°07'40.1\"W",
-      waterQuality: 31,
-    },
-    {
-      imageUrl: "/cardimage/5.jpg",
-      brand: "E",
-      dateTime: "11:20, 10 Nov. 2024",
-      location: "48°51'23.8\"N 2°21'07.9\"E",
-      waterQuality: 68,
-    },
-    {
-      imageUrl: "/cardimage/6.jpg",
-      brand: "F",
-      dateTime: "06:55, 5 Oct. 2024",
-      location: "52°31'12.0\"N 13°24'18.0\"E",
-      waterQuality: 2,
-    },
-    {
-      imageUrl: "/cardimage/7.jpg",
-      brand: "G",
-      dateTime: "17:40, 21 Sep. 2024",
-      location: "1°21'07.6\"N 103°49'11.3\"E",
-      waterQuality: 99,
-    },
-    {
-      imageUrl: "/cardimage/8.jpeg",
-      brand: "Hello",
-      dateTime: "09:15, 14 Aug. 2024",
-      location: "40°42'46.1\"N 74°00'21.6\"W",
-      waterQuality: 57,
-    },
-    {
-      imageUrl: "/cardimage/9.jpeg",
-      brand: "I",
-      dateTime: "15:05, 7 Jul. 2024",
-      location: "34°03'08.0\"N 118°14'37.3\"W",
-      waterQuality: 34,
-    },
-    {
-      imageUrl: "/cardimage/10.jpg",
-      brand: "Hi",
-      dateTime: "23:14, 1 Jun. 2024",
-      location: "33°52'07.7\"S 151°12'33.5\"E",
-      waterQuality: 81,
-    },
-  ];
-
-  const NUM_DOTS = 4;
-
-  const handleScroll = (direction: "front" | "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = 300;
-      if (direction === "front") {
-        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
-        setZoomedCardIndex(null); // Reset zoomed card when scrolling to front
-      } else {
-        scrollRef.current.scrollBy({
-          left: direction === "left" ? -scrollAmount : scrollAmount,
-          behavior: "smooth",
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollRef.current) {
-        const scrollLeft = scrollRef.current.scrollLeft;
-        const maxScrollLeft =
-          scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.floor((scrollLeft / maxScrollLeft) * (NUM_DOTS - 1));
-        setScrollIndex(index);
-      }
-    };
-
-    const scrollElement = scrollRef.current;
-    scrollElement?.addEventListener("scroll", handleScroll);
-
-    return () => {
-      scrollElement?.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  const handleDotClick = (dotIndex: number) => {
-    if (scrollRef.current) {
-      const maxScrollLeft =
-        scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-      const scrollPosition = (dotIndex / (NUM_DOTS - 1)) * maxScrollLeft;
-      scrollRef.current.scrollTo({ left: scrollPosition, behavior: "smooth" });
-    }
-  };
-
+  // Handle search functionality
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = event.target.value;
     setSearchTerm(newSearchTerm);
 
     if (newSearchTerm === "") {
-      // If search is cleared, scroll to the first card and reset zoom
       scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
       setZoomedCardIndex(null);
       return;
@@ -162,7 +53,6 @@ const Lhome: React.FC = () => {
     );
 
     if (foundIndex !== -1 && cardRefs.current[foundIndex]) {
-      // Scroll to the found card and set it as permanently zoomed
       cardRefs.current[foundIndex]?.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -171,7 +61,60 @@ const Lhome: React.FC = () => {
       setZoomedCardIndex(foundIndex);
     }
   };
-  
+
+  // Handle scroll event
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollRef.current) {
+        const scrollLeft = scrollRef.current.scrollLeft;
+        const maxScrollLeft =
+          scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+        const index = Math.floor((scrollLeft / maxScrollLeft) * (cards.length - 1)); // Use cards.length for number of dots
+        setScrollIndex(index);
+      }
+    };
+
+    const scrollElement = scrollRef.current;
+    scrollElement?.addEventListener("scroll", handleScroll);
+
+    return () => {
+      scrollElement?.removeEventListener("scroll", handleScroll);
+    };
+  }, [cards.length]);
+
+  const handleDotClick = (dotIndex: number) => {
+    if (scrollRef.current) {
+      const scrollWidth = scrollRef.current.scrollWidth;
+      const containerWidth = scrollRef.current.clientWidth;
+      const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
+      scrollRef.current.scrollTo({
+        left: scrollTo,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleScroll = (direction: "left" | "right" | "front") => {
+    if (scrollRef.current) {
+      const scrollWidth = scrollRef.current.scrollWidth;
+      const containerWidth = scrollRef.current.clientWidth;
+      const currentScroll = scrollRef.current.scrollLeft;
+      let newScroll;
+
+      if (direction === "left") {
+        newScroll = Math.max(currentScroll - containerWidth, 0);
+      } else if (direction === "right") {
+        newScroll = Math.min(currentScroll + containerWidth, scrollWidth - containerWidth);
+      } else if (direction === "front") {
+        newScroll = 0;
+      }
+
+      scrollRef.current.scrollTo({
+        left: newScroll,
+        behavior: "smooth",
+      });
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
@@ -202,8 +145,11 @@ const Lhome: React.FC = () => {
             className="scroll-container flex overflow-x-auto w-full scroll-smooth py-4"
             ref={scrollRef}
           >
-            <div  className="flex gap-4 px-4 mx-auto">
-              <button onClick={() => navigate("/add")} className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl">
+            <div className="flex gap-4 px-4 mx-auto">
+              <button
+                onClick={() => navigate("/add")}
+                className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl"
+              >
                 +
               </button>
               {cards.map((card, index) => (
@@ -211,21 +157,27 @@ const Lhome: React.FC = () => {
                   key={index}
                   ref={(el) => (cardRefs.current[index] = el)}
                   className={`transition-transform transform ${
-                    zoomedCardIndex === index || zoomedCardIndex === index
+                    zoomedCardIndex === index
                       ? "scale-110 z-10"
-                      : zoomedCardIndex === null && searchTerm === ""
+                      : zoomedCardIndex === null
                       ? "hover:scale-110 hover:z-10"
                       : "opacity-60"
                   } min-w-[250px]`}
                 >
-                  <Card {...card} />
+                  <Card
+                    imageUrl={card.s_url}
+                    brand={card.b_id}
+                    dateTime={new Date().toLocaleString()} // Adjust based on API response
+                    location={`${card.s_latitude}, ${card.s_longitude}`}
+                    waterQuality={Math.floor(Math.random() * 100)} // Example value
+                  />
                 </div>
               ))}
             </div>
           </div>
 
           <div className="flex justify-center mt-10 space-x-2">
-            {[...Array(NUM_DOTS)].map((_, dotIndex) => (
+            {[...Array(cards.length)].map((_, dotIndex) => (
               <button
                 key={dotIndex}
                 onClick={() => handleDotClick(dotIndex)}
