@@ -4,7 +4,6 @@ import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 
-
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState(" ");
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,14 +15,14 @@ const Lhome: React.FC = () => {
 
   // Add this useEffect to retrieve username from localStorage
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    
+    const storedUsername = localStorage.getItem("username");
+
     // If no username is found, redirect back to permission page
     if (!storedUsername) {
-      navigate('/');
+      navigate("/");
       return;
     }
-    
+
     setUsername(storedUsername);
   }, [navigate]);
 
@@ -171,7 +170,6 @@ const Lhome: React.FC = () => {
       setZoomedCardIndex(foundIndex);
     }
   };
-  
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
@@ -202,10 +200,14 @@ const Lhome: React.FC = () => {
             className="scroll-container flex overflow-x-auto w-full scroll-smooth py-4"
             ref={scrollRef}
           >
-            <div  className="flex gap-4 px-4 mx-auto">
-              <button onClick={() => navigate("/add")} className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl">
+            <div className="flex gap-4 sm:gap-0.5 md:gap-4 lg:gap-6 px-4 mx-auto">
+              <button
+                onClick={() => navigate("/add")}
+                className="w-42 xs:w-46 sm:w-40 md:w-44 h-64 xs:h-68 sm:h-70 md:h-72 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:translate-y-0.5 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl"
+              >
                 +
               </button>
+
               {cards.map((card, index) => (
                 <div
                   key={index}
@@ -214,7 +216,7 @@ const Lhome: React.FC = () => {
                     zoomedCardIndex === index || zoomedCardIndex === index
                       ? "scale-110 z-10"
                       : zoomedCardIndex === null && searchTerm === ""
-                      ? "hover:scale-110 hover:z-10"
+                      ? "hover:scale-105 hover:z-10"
                       : "opacity-60"
                   } min-w-[250px]`}
                 >

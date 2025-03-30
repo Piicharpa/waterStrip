@@ -12,6 +12,8 @@ import { FaLocationCrosshairs } from "react-icons/fa6";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import { useNavigate } from "react-router-dom";
+
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -128,36 +130,37 @@ function Pantee() {
     if (marker) {
       // ทำการเปิด popup ของ marker
       marker.openPopup();
-      
+
       // เลื่อนไปที่ตำแหน่งของสถานที่
-      const place = mockPlaces.find(p => p.id === placeId);
+      const place = mockPlaces.find((p) => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
     }
   };
+  const navigate = useNavigate();
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 py-3 bg-white">
-        <div className="flex items-center gap-2 ">
+        <div className="flex items-center gap-2 " onClick={() => navigate("/")}>
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
           <span className="text-lg font-bold">AQUAlity</span>
         </div>
         {/* Search Box */}
         <div className="relative">
-        <input 
-  type="text" 
-  placeholder="Search" 
-  className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-style={{
-  borderTopLeftRadius: '4000px',
-  borderBottomLeftRadius: '4000px',
-  borderTopRightRadius: '9999px',
-  borderBottomRightRadius: '9999px'
-}}
-/>
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            style={{
+              borderTopLeftRadius: "4000px",
+              borderBottomLeftRadius: "4000px",
+              borderTopRightRadius: "9999px",
+              borderBottomRightRadius: "9999px",
+            }}
+          />
           <button
             onClick={handleLocate}
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
@@ -213,7 +216,7 @@ style={{
                     {place.title}
                   </h3>
                   <p style={{ margin: "0 0 5px 0" }}>{place.Date}</p>
-                  
+
                   <span>{getWaterQualityText(place.color)}</span>
                 </div>
               </Popup>
@@ -257,7 +260,8 @@ style={{
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
+              e.currentTarget.style.boxShadow =
+                "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
             }}
           >
             <div

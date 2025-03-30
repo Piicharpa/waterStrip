@@ -23,8 +23,8 @@ function MapController({ setShowText }: MapControllerProps) {
   
   // ปรับปรุงให้เมื่อเริ่มการเคลื่อนหรือซูม text จะหายไป แต่ไม่กลับมาเมื่อจบการเคลื่อนหรือซูม
   useMapEvents({
-    movestart: () => setShowText(false),
-    zoomstart: () => setShowText(false),
+    movestart: () => setShowText(true),
+    zoomstart: () => setShowText(true),
     // ลบ moveend และ zoomend ออก เพื่อไม่ให้ text กลับมาเมื่อการเคลื่อนหรือซูมสิ้นสุด
   });
   
@@ -160,7 +160,7 @@ function FirstPage() {
     >
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 py-3 bg-white">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" >
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
           <span className="text-lg font-bold">AQUAlity</span>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaLocationCrosshairs } from "react-icons/fa6";
-import { FaPaperclip } from "react-icons/fa";
+
 import { useNavigate } from "react-router-dom";
 
 // Utility function to convert decimal to DMS

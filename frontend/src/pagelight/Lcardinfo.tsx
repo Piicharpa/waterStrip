@@ -20,7 +20,6 @@ const Lcardinfo: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  
   const waterQuality = 13;
   useEffect(() => {
     // Retrieve values from localStorage
@@ -348,8 +347,7 @@ const Lcardinfo: React.FC = () => {
               {stripBrand}
             </h2>
             <p className="text-gray-400 ml-35  text-sm">{analyzeDate}</p>
-            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer" 
-            onClick={() => navigate("/pantee")}>
+            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer">
               {location}
             </p>
 
