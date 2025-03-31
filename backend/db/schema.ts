@@ -2,12 +2,10 @@ import { pgTable, serial, text, integer, doublePrecision, timestamp, primaryKey,
 
 // ตาราง USER
 export const User = pgTable("user", {
-  u_id: serial("u_id").primaryKey(),
+  u_id: text("u_id").primaryKey(),
   u_name: text("u_name").notNull(),
   u_email: text("u_email").unique().notNull(),
-  u_password: text("u_password").notNull(),
   u_role: text("u_role").notNull(),
-  u_profile_pic: text("u_profile_pic"),
 });
 
 // ตาราง BRAND
@@ -24,7 +22,7 @@ export const Strip = pgTable("strip", {
   s_date: timestamp("s_date").notNull().defaultNow(),
   s_latitude: doublePrecision("s_latitude"),
   s_longitude: doublePrecision("s_longitude"),
-  u_id: integer("u_id").references(() => User.u_id).notNull(),
+  u_id: text("u_id").references(() => User.u_id).notNull(),
   s_url: text("s_url"),
 });
 

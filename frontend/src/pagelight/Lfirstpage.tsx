@@ -133,16 +133,27 @@ function FirstPage() {
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     setUserType(type);
     try {
-      await signInWithGoogle();
-      // หลังจาก sign up สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
-      
-      // หลังจาก sign in สำเร็จ คุณอาจต้องบันทึกประเภทผู้ใช้ไว้ใน database
-      // ตัวอย่าง: saveUserTypeToFirebase(auth.currentUser?.uid, type);
+      const user = await signInWithGoogle();
+      if (user) {
+        // เรียก API บันทึก User ลง PostgreSQL
+        await fetch("http://localhost:3003/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            u_email: user.email, 
+            u_role: type,
+            u_id : user.uid,
+            u_name : "name"          
+          }),
+        });
+  
+        navigate("/permission");
+      }
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
   };
+  
   
   const handleLogout = async () => {
     try {
