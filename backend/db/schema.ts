@@ -25,6 +25,7 @@ export const Strip = pgTable("strip", {
   u_id: text("u_id").references(() => User.u_id).notNull(),
   s_url: text("s_url"),
   s_quality: doublePrecision("s_quality").notNull(),
+  s_qualitycolor: text("s_qualitycolor").notNull(),
 });
 
 // ตาราง PARAMETER

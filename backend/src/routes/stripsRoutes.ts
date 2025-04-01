@@ -29,7 +29,7 @@ router.post("/", async (req, res, next) => {
     // Insert new strip
     const result = await dbClient
       .insert(Strip)
-      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: 250}) // Default value for s_quality
+      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: 250, s_qualitycolor: "#ffffff"}) // Default value for s_quality
       .returning(); // Returns inserted values
 
     res.status(201).json({
@@ -47,7 +47,7 @@ router.patch("/:id", async (req, res, next) => {
     console.log("Received Request Body:", req.body); // Debugging log
 
     const s_id = parseInt(req.params.id);
-    const { s_quality } = req.body;
+    const { s_quality,s_qualitycolor } = req.body;
 
     // Check if s_quality is provided
     if (!s_quality) {
@@ -57,7 +57,7 @@ router.patch("/:id", async (req, res, next) => {
     // Perform the update
     const result = await dbClient
       .update(Strip)
-      .set({ s_quality }) // Update only s_quality
+      .set({ s_quality,s_qualitycolor}) // Update only s_quality
       .where(eq(Strip.s_id, s_id))
       .returning();
 

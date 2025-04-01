@@ -19,70 +19,21 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
 interface Location {
   lat: number;
   lng: number;
 }
+
 interface Place {
   id: number;
   title: string;
-  Date: string;
+  date: string;
   location: Location;
   color: string;
+  quality: string;
 }
-// ฟังก์ชันสำหรับกำหนดข้อความคุณภาพน้ำตามสี
-const getWaterQualityText = (color: string) => {
-  switch (color) {
-    case "#e74c3c":
-      return "คุณภาพน้ำ: แย่มาก";
-    case "#FF8A24":
-      return "คุณภาพน้ำ: แย่";
-    case "#FFE521":
-      return "คุณภาพน้ำ: ปานกลาง";
-    case "#7ECF1B":
-      return "คุณภาพน้ำ: ดี";
-    default:
-      return "คุณภาพน้ำ: ไม่ระบุ";
-  }
-};
-// จำลองของสถานที่
-const mockPlaces: Place[] = [
-  {
-    id: 1,
-    title: "A",
-    Date: "1 Aug. 2025",
-    location: { lat: 18.796247, lng: 98.950658 },
-    color: "#e74c3c", // สีแดง
-  },
-  {
-    id: 2,
-    title: "B",
-    Date: "37 May 2041",
-    location: { lat: 18.788117, lng: 98.961804 },
-    color: "#FF8A24", // สีส้ม
-  },
-  {
-    id: 3,
-    title: "C",
-    Date: "31 Feb. 2067",
-    location: { lat: 18.797131, lng: 98.971955 },
-    color: "#FFE521", // สีเหลือง
-  },
-  {
-    id: 4,
-    title: "D",
-    Date: "84 Oct. 3092",
-    location: { lat: 18.807885, lng: 98.95943 },
-    color: "#7ECF1B", // สีเขียว
-  },
-  {
-    id: 5,
-    title: "E",
-    Date: "47 Jul. 4102",
-    location: { lat: 18.781055, lng: 98.955496 },
-    color: "#FFE521", // สีเหลือง
-  },
-];
+
 function ChangeView({ center }: { center: Location }) {
   const map = useMap();
   useEffect(() => {
@@ -90,6 +41,7 @@ function ChangeView({ center }: { center: Location }) {
   }, [center, map]);
   return null;
 }
+
 function Pantee() {
   const [currentLocation, setCurrentLocation] = useState<Location>({
     lat: 18.7883,
@@ -99,8 +51,79 @@ function Pantee() {
     lat: 18.7883,
     lng: 98.9853,
   });
+  const [places, setPlaces] = useState<Place[]>([]);
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
-  // Function to handle location
+  
+
+  // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
+  const dmsToDecimal = (dms: string) => {
+    const regex = /(\d+)[°](\d+)'(\d+\.\d+)"([N|S|E|W])/;
+    const match = dms.match(regex);
+    if (match) {
+      const degrees = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      const seconds = parseFloat(match[3]);
+      const direction = match[4];
+
+      let decimal = degrees + (minutes / 60) + (seconds / 3600);
+
+      // Adjust for N/S/E/W directions
+      if (direction === "S" || direction === "W") {
+        decimal = -decimal;
+      }
+
+      return decimal;
+    } else {
+      throw new Error("Invalid DMS format");
+    }
+  };
+
+  // Utility function to format the date (if needed)
+  const getFormattedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+  };
+
+  useEffect(() => {
+    const fetchPlacesData = async () => {
+      try {
+
+        // Fetch strip data
+        const stripsResponse = await fetch('http://localhost:3003/strips');
+        const stripsData = await stripsResponse.json();
+
+        // Fetch brand data
+        const brandResponse = await fetch('http://localhost:3003/brands');
+        const brandData = await brandResponse.json();
+
+        // Map the strip data and link it with the corresponding brand
+        const mappedPlaces = stripsData.map((strip: any) => {
+          const brand = brandData.find((b: any) => b.b_id === strip.b_id);
+          const lat = dmsToDecimal(strip.s_latitude);
+          const lng = dmsToDecimal(strip.s_longitude);
+
+          return {
+            id: strip.s_id,
+            title: brand ? brand.b_name : "Unknown Brand",
+            date: getFormattedDate(strip.s_date), // Or use your date formatting function
+            location: {
+              lat,
+              lng,
+            },
+            color: strip.s_qualitycolor, // Assuming this is the color for water quality
+            quality: strip.s_quality
+          };
+        });
+
+        setPlaces(mappedPlaces);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchPlacesData();
+  }, []);
+
   const handleLocate = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -130,7 +153,7 @@ function Pantee() {
       marker.openPopup();
       
       // เลื่อนไปที่ตำแหน่งของสถานที่
-      const place = mockPlaces.find(p => p.id === placeId);
+      const place = places.find(p => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
@@ -148,16 +171,16 @@ function Pantee() {
         {/* Search Box */}
         <div className="relative">
         <input 
-  type="text" 
-  placeholder="Search" 
-  className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-style={{
-  borderTopLeftRadius: '4000px',
-  borderBottomLeftRadius: '4000px',
-  borderTopRightRadius: '9999px',
-  borderBottomRightRadius: '9999px'
-}}
-/>
+          type="text" 
+          placeholder="Search" 
+          className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+        style={{
+          borderTopLeftRadius: '4000px',
+          borderBottomLeftRadius: '4000px',
+          borderTopRightRadius: '9999px',
+          borderBottomRightRadius: '9999px'
+        }}
+        />
           <button
             onClick={handleLocate}
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
@@ -195,7 +218,7 @@ style={{
               </div>
             </Popup>
           </Marker>
-          {mockPlaces.map((place) => (
+          {places.map((place) => (
             <CircleMarker
               key={place.id}
               center={[place.location.lat, place.location.lng]}
@@ -212,9 +235,8 @@ style={{
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0" }}>{place.Date}</p>
-                  
-                  <span>{getWaterQualityText(place.color)}</span>
+                  <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
+                  <span>คุณภาพน้ำ: {place.quality}</span>
                 </div>
               </Popup>
             </CircleMarker>
@@ -235,7 +257,7 @@ style={{
           zIndex: 1000,
         }}
       >
-        {mockPlaces.map((place) => (
+        {places.map((place) => (
           <div
             key={place.id}
             style={{
@@ -281,7 +303,7 @@ style={{
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
-                {place.Date}
+                {place.date}
               </p>
             </div>
           </div>
@@ -290,4 +312,5 @@ style={{
     </div>
   );
 }
+
 export default Pantee;
