@@ -20,10 +20,11 @@ export const Strip = pgTable("strip", {
   s_id: serial("s_id").primaryKey(),
   b_id: integer("b_id").references(() => Brand.b_id).notNull(),
   s_date: timestamp("s_date").notNull().defaultNow(),
-  s_latitude: doublePrecision("s_latitude"),
-  s_longitude: doublePrecision("s_longitude"),
+  s_latitude: text("s_latitude"),
+  s_longitude: text("s_longitude"),
   u_id: text("u_id").references(() => User.u_id).notNull(),
   s_url: text("s_url"),
+  s_quality: doublePrecision("s_quality").notNull(),
 });
 
 // ตาราง PARAMETER
@@ -35,10 +36,11 @@ export const Parameter = pgTable("parameter", {
 
 // ตาราง STRIP_PARAMETER (M:N)
 export const StripParameter = pgTable("strip_parameter", {
+  sp_id: serial("sp_id").primaryKey(),
   s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }) .notNull(), // Define primary key here
   p_id: integer("p_id").references(() => Parameter.p_id) .notNull(), // Define composite primary key inline
   sp_value: doublePrecision("sp_value").notNull(),
-  sp_id: serial("sp_id").primaryKey()
+  
 });
 
 // ตาราง COLOR

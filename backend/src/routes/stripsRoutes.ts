@@ -29,7 +29,7 @@ router.post("/", async (req, res, next) => {
     // Insert new strip
     const result = await dbClient
       .insert(Strip)
-      .values({ b_id, s_latitude, s_longitude , u_id , s_url})
+      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: 250}) // Default value for s_quality
       .returning(); // Returns inserted values
 
     res.status(201).json({
@@ -41,24 +41,32 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// // Update strip in Strip
-// router.patch("/:id", async (req, res, next) => {
-//   try {
-//     const s_id = parseInt(req.params.id);
-//     const { b_id, s_date, s_latitude, s_longitude } = req.body;
-//     if (!b_id && !s_date && !s_latitude && !s_longitude === undefined) throw new Error("No data to update");
+// Update strip in Strip
+router.patch("/:id", async (req, res, next) => {
+  try {
+    console.log("Received Request Body:", req.body); // Debugging log
 
-//     const result = await dbClient
-//       .update(Strip)
-//       .set({ b_id, s_date, s_latitude, s_longitude })
-//       .where(eq(Strip.s_id, s_id))
-//       .returning();
-    
-//     res.json({ msg: "Strip updated successfully", data: result });
-//   } catch (err) {
-//     next(err);
-//   }
-// });
+    const s_id = parseInt(req.params.id);
+    const { s_quality } = req.body;
+
+    // Check if s_quality is provided
+    if (!s_quality) {
+       res.status(400).json({ error: "s_quality is required" });
+    }
+
+    // Perform the update
+    const result = await dbClient
+      .update(Strip)
+      .set({ s_quality }) // Update only s_quality
+      .where(eq(Strip.s_id, s_id))
+      .returning();
+
+    res.json({ msg: "Quality updated successfully", data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 // Delete strip from Strip
 router.delete("/:id", async (req, res, next) => {

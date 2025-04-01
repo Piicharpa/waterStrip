@@ -19,23 +19,52 @@ const Lhome: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get<any[]>("http://localhost:3003/strips");
-        setCards(response.data); // Assuming API returns an array
+        const [stripsRes, bandsRes ] = await Promise.all([
+          axios.get<any[]>("http://localhost:3003/strips"),
+          axios.get<any[]>("http://localhost:3003/brands"),
+        ]);
+  
+        const bandsMap = new Map(bandsRes.data.map((band) => [band.b_id, band.b_name]));
+    
+       
+
+  
+        const updatedCards = stripsRes.data.map((strip) => ({
+          ...strip,
+          b_name: bandsMap.get(strip.b_id) || "Unknown",
+        }));
+  
+        setCards(updatedCards);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
+  
     fetchData();
   }, []);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
+    console.log("Stored username:", localStorage);
     if (!storedUsername) {
       navigate("/");
       return;
     }
     setUsername(storedUsername);
   }, [navigate]);
+
+  const formatDate = (isoString: string) => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    }).format(new Date(isoString));
+  };
+  
 
   // Handle search functionality
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +98,7 @@ const Lhome: React.FC = () => {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.floor((scrollLeft / maxScrollLeft) * (cards.length - 1)); // Use cards.length for number of dots
+        const index = Math.floor((scrollLeft / maxScrollLeft) * (cards.length -1)); // Use cards.length for number of dots
         setScrollIndex(index);
       }
     };
@@ -86,7 +115,7 @@ const Lhome: React.FC = () => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
       // const containerWidth = scrollRef.current.clientWidth;
-      const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
+      const scrollTo = (scrollWidth / (cards.length -1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,
         behavior: "smooth",
@@ -166,10 +195,11 @@ const Lhome: React.FC = () => {
                 >
                   <Card
                     imageUrl={card.s_url}
-                    brand={card.b_id}
-                    dateTime={new Date().toLocaleString()} // Adjust based on API response
+                    brand={card.b_name}
+                    dateTime={formatDate(card.s_date)} // Adjust based on API response
                     location={`${card.s_latitude}, ${card.s_longitude}`}
-                    waterQuality={Math.floor(Math.random() * 100)} // Example value
+                    waterQuality={card.s_quality} // Example value
+                    // waterQuality={card.sp_quacolor} // Example value
                   />
                 </div>
               ))}
@@ -197,6 +227,7 @@ const Lhome: React.FC = () => {
             <BiArrowToLeft className="mr-2" size={20} />
             <span className="relative mr-0.5 text-white">Front</span>
           </button>
+
           <div className="flex gap-4">
             <button
               onClick={() => handleScroll("left")}
@@ -205,6 +236,7 @@ const Lhome: React.FC = () => {
               <MdKeyboardArrowLeft className="mr-2" size={20} />
               <span className="relative -top-0.1 mr-2">Prev</span>
             </button>
+
             <button
               onClick={() => handleScroll("right")}
               className="flex items-center text-white px-4 py-2 bg-black rounded-lg"
