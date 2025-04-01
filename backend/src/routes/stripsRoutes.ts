@@ -17,12 +17,13 @@ router.get("/", async (req, res, next) => {
 
 // Insert into Strip
 router.post("/", async (req, res, next) => {
+  console.log("Request Body:", req.body);
   try {
     const { b_id, s_latitude, s_longitude, u_id , s_url} = req.body;
 
-    // Check for missing fields
+    // Corrected check for missing fields
     if (!b_id || !s_latitude || !s_longitude || !u_id || !s_url) {
-      throw new Error("Missing required fields: s_url, u_id, s_brand, s_location, s_ph");
+      throw new Error("Missing required fields: b_id, s_latitude, s_longitude, u_id, s_url");
     }
 
     // Insert new strip

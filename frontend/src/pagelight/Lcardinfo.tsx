@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import PicScale from "../component/picscale";
 import Scale from "../component/subscale";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // Import axios
 
 const getQualityColor = (quality: number): string => {
   if (quality >= 0 && quality <= 24) return "#e74c3c";
@@ -18,6 +19,12 @@ const Lcardinfo: React.FC = () => {
   const [analyzeDate, setAnalyzeDate] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [brands, setBrands] = useState<{ b_id: number; b_name: string }[]>([]);
+  const [scaleColorSets, setScaleColorSets] = useState<{
+    colors: string[];
+    values: number[];
+  }[]>([]); // Initialize as an empty array
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
@@ -29,29 +36,65 @@ const Lcardinfo: React.FC = () => {
     const storedDate = localStorage.getItem("analyzeDate");
     const storedLocation = localStorage.getItem("location");
 
-    if (storedImage) setUploadedImage(storedImage);
-    if (storedBrand) setStripBrand(storedBrand);
-    if (storedLocation) setLocation(storedLocation);
+    console.log("Stored values:", {
+      storedImage,
+      storedBrand,
+      storedDate,
+      storedLocation,});
+     // Fetch brands from API
+     axios
+     .get<{ b_id: number; b_name: string }[]>("http://localhost:3003/brands")
+     .then((response) => {
+       const fetchedBrands = response.data;
+       setBrands(fetchedBrands);
 
-    // Format the date if stored
-    if (storedDate) {
-      const date = new Date(storedDate);
-      const formattedDate = date
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-        .replace(",", ".");
-      setAnalyzeDate(formattedDate);
-    }
+       // Convert b_id to b_name if storedBrandId exists
+       if (storedBrand) {
+         const foundBrand = fetchedBrands.find(
+           (brand) => brand.b_id === parseInt(storedBrand)
+         );
+         if (foundBrand) {
+           setStripBrand(foundBrand.b_name); // Set b_name
+         }
+       }
+     })
+     .catch((error) => {
+       console.error("Error fetching brands:", error);
+     });
 
-    // Optional: Clear localStorage after retrieving
-    localStorage.removeItem("uploadedImage");
-    localStorage.removeItem("stripBrand");
-    localStorage.removeItem("analyzeDate");
-    localStorage.removeItem("location");
+   if (storedImage) setUploadedImage(storedImage);
+   if (storedLocation) setLocation(storedLocation);
+
+   // Format the date if stored
+   if (storedDate) {
+     const date = new Date(storedDate);
+     const formattedDate = date
+       .toLocaleDateString("en-GB", {
+         day: "2-digit",
+         month: "short",
+         year: "numeric",
+       })
+       .replace(",", ".");
+     setAnalyzeDate(formattedDate);
+   }
+
+    //  Optional: Clear localStorage after retrieving
+   localStorage.removeItem("uploadedImage");
+   localStorage.removeItem("stripBrand");
+   localStorage.removeItem("analyzeDate");
+   localStorage.removeItem("location");
   }, []);
+
+      axios
+      .get<{ colors: string[]; values: number[] }[]>(
+        "http://localhost:3003/colors"
+      )
+      .then((response) => {
+        setScaleColorSets(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching colors:", error);
+      });
 
   // Add this function to handle dot and scroll interaction
   const handleDotClick = (index: number) => {
@@ -83,188 +126,188 @@ const Lcardinfo: React.FC = () => {
     };
   }, []);
 
-  const picScaleColors = [
-    "#BE4C19",
-    "#AEA360",
-    "#0CA2C3",
-    "#FAE8F9",
-    "#FBE5EC",
-    "#BF89C0",
-    "#CC95CF",
-    "#ED8D69",
-    "#FFD2B2",
-    "#77B3BC",
-    "#FFBC76",
-    "#0B90C0",
-    "#D16DB1",
-    "#C9A10B",
-    "#FFA9A6",
-    "#FE91C6",
-  ];
+  // const picScaleColors = [
+  //   "#BE4C19",
+  //   "#AEA360",
+  //   "#0CA2C3",
+  //   "#FAE8F9",
+  //   "#FBE5EC",
+  //   "#BF89C0",
+  //   "#CC95CF",
+  //   "#ED8D69",
+  //   "#FFD2B2",
+  //   "#77B3BC",
+  //   "#FFBC76",
+  //   "#0B90C0",
+  //   "#D16DB1",
+  //   "#C9A10B",
+  //   "#FFA9A6",
+  //   "#FE91C6",
+  // ];
 
-  const scaleColorSets = [
-    {
-      colors: [
-        "#F7DC6F",
-        "#F0B827",
-        "#FF9B1E",
-        "#F9530A",
-        "#F8340B",
-        "#E51907",
-      ],
-      values: [6.2, 6.8, 7.2, 7.6, 7.8, 8.4],
-    },
-    {
-      colors: [
-        "#F3D866",
-        "#BFB468",
-        "#959F63",
-        "#759765",
-        "#298584",
-        "#58868D",
-      ],
-      values: [0, 40, 80, 120, 180, 240],
-    },
-    {
-      colors: [
-        "#FFFFFF",
-        "#EFF3F6",
-        "#C9E9EA",
-        "#A3D7DC",
-        "#5BC5DA",
-        "#06ADD2",
-        "#05A9D1",
-      ],
-      values: [0, 0.5, 1, 3, 5, 10, 20],
-    },
-    {
-      colors: [
-        "#FFFFFF",
-        "#E6A0E3",
-        "#E46BB1",
-        "#D53793",
-        "#AB2AA1",
-        "#771F71",
-      ],
-      values: [0, 0.5, 1, 3, 5, 10],
-    },
-    {
-      colors: [
-        "#FFFFFF",
-        "#FEF5F6",
-        "#FEE3EC",
-        "#F7BFD9",
-        "#DD82AC",
-        "#BC4E88",
-        "#BB4079",
-      ],
-      values: [0, 10, 25, 50, 100, 250, 500],
-    },
-    {
-      colors: [
-        "#FDF6F6",
-        "#FFEFF2",
-        "#FBE5EC",
-        "#F8C7DF",
-        "#E79CBA",
-        "#DE739B",
-        "#BE4D7F",
-      ],
-      values: [0, 1, 5, 10, 20, 40, 80],
-    },
-    {
-      colors: [
-        "#FCE5EA",
-        "#DFD0E8",
-        "#C6A4CE",
-        "#BF89C0",
-        "#915FA4",
-        "#674599",
-        "#3D1E88",
-      ],
-      values: [0, 0.002, 0.005, 0.01, 0.02, 0.04, 0.08],
-    },
-    {
-      colors: [
-        "#FBC971",
-        "#FBC26D",
-        "#F5A66A",
-        "#E2805F",
-        "#DE6A78",
-        "#BA3466",
-      ],
-      values: [0, 20, 50, 100, 200, 500],
-    },
-    {
-      colors: [
-        "#FFFFFF",
-        "#FDEBE6",
-        "#FADACA",
-        "#F8C4A6",
-        "#F3A47A",
-        "#F1844C",
-        "#F5683C",
-        "#EC5401",
-      ],
-      values: [0, 5, 10, 25, 50, 100, 250, 500],
-    },
-    {
-      colors: [
-        "#F9EFC7",
-        "#E9E8C2",
-        "#A5D0BF",
-        "#6CA9B0",
-        "#2177BC",
-        "#02489B",
-      ],
-      values: [0, 1, 10, 30, 100, 300],
-    },
-    {
-      colors: ["#F4835E", "#EE856F", "#F49B80", "#F8AF6A", "#F9BF5A"],
-      values: [0, 25, 50, 100, 200],
-    },
-    {
-      colors: ["#FFFFFF", "#BBE1E4", "#8BC8CA", "#0584B2", "#3A829E"],
-      values: [0, 1, 5, 10, 20],
-    },
-    {
-      colors: [
-        "#F3D8E8",
-        "#E6ABD1",
-        "#D88AB9",
-        "#C265A6",
-        "#B74C97",
-        "#BA3466",
-      ],
-      values: [2, 5, 10, 30, 50, 100],
-    },
-    {
-      colors: [
-        "#86A650",
-        "#8B9B38",
-        "#A09532",
-        "#BC9402",
-        "#C38602",
-        "#C3720E",
-      ],
-      values: [2, 25, 50, 125, 250, 425],
-    },
-    {
-      colors: [
-        "#FFD475",
-        "#FBC173",
-        "#F8B882",
-        "#F49B99",
-        "#D66588",
-        "#D66588",
-      ],
-      values: [0, 20, 40, 80, 120, 180],
-    },
-    {
-      colors: ["#FFEAD8", "#FBCFC5", "#F8BDBA", "#EE87B5", "#EE87B5"],
-      values: [0, 30 - 50, 100, 150, 240],
-    },
-  ];
+  // const scaleColorSets = [
+  //   {
+  //     colors: [
+  //       "#F7DC6F",
+  //       "#F0B827",
+  //       "#FF9B1E",
+  //       "#F9530A",
+  //       "#F8340B",
+  //       "#E51907",
+  //     ],
+  //     values: [6.2, 6.8, 7.2, 7.6, 7.8, 8.4],
+  //   },
+  //   {
+  //     colors: [
+  //       "#F3D866",
+  //       "#BFB468",
+  //       "#959F63",
+  //       "#759765",
+  //       "#298584",
+  //       "#58868D",
+  //     ],
+  //     values: [0, 40, 80, 120, 180, 240],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FFFFFF",
+  //       "#EFF3F6",
+  //       "#C9E9EA",
+  //       "#A3D7DC",
+  //       "#5BC5DA",
+  //       "#06ADD2",
+  //       "#05A9D1",
+  //     ],
+  //     values: [0, 0.5, 1, 3, 5, 10, 20],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FFFFFF",
+  //       "#E6A0E3",
+  //       "#E46BB1",
+  //       "#D53793",
+  //       "#AB2AA1",
+  //       "#771F71",
+  //     ],
+  //     values: [0, 0.5, 1, 3, 5, 10],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FFFFFF",
+  //       "#FEF5F6",
+  //       "#FEE3EC",
+  //       "#F7BFD9",
+  //       "#DD82AC",
+  //       "#BC4E88",
+  //       "#BB4079",
+  //     ],
+  //     values: [0, 10, 25, 50, 100, 250, 500],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FDF6F6",
+  //       "#FFEFF2",
+  //       "#FBE5EC",
+  //       "#F8C7DF",
+  //       "#E79CBA",
+  //       "#DE739B",
+  //       "#BE4D7F",
+  //     ],
+  //     values: [0, 1, 5, 10, 20, 40, 80],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FCE5EA",
+  //       "#DFD0E8",
+  //       "#C6A4CE",
+  //       "#BF89C0",
+  //       "#915FA4",
+  //       "#674599",
+  //       "#3D1E88",
+  //     ],
+  //     values: [0, 0.002, 0.005, 0.01, 0.02, 0.04, 0.08],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FBC971",
+  //       "#FBC26D",
+  //       "#F5A66A",
+  //       "#E2805F",
+  //       "#DE6A78",
+  //       "#BA3466",
+  //     ],
+  //     values: [0, 20, 50, 100, 200, 500],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FFFFFF",
+  //       "#FDEBE6",
+  //       "#FADACA",
+  //       "#F8C4A6",
+  //       "#F3A47A",
+  //       "#F1844C",
+  //       "#F5683C",
+  //       "#EC5401",
+  //     ],
+  //     values: [0, 5, 10, 25, 50, 100, 250, 500],
+  //   },
+  //   {
+  //     colors: [
+  //       "#F9EFC7",
+  //       "#E9E8C2",
+  //       "#A5D0BF",
+  //       "#6CA9B0",
+  //       "#2177BC",
+  //       "#02489B",
+  //     ],
+  //     values: [0, 1, 10, 30, 100, 300],
+  //   },
+  //   {
+  //     colors: ["#F4835E", "#EE856F", "#F49B80", "#F8AF6A", "#F9BF5A"],
+  //     values: [0, 25, 50, 100, 200],
+  //   },
+  //   {
+  //     colors: ["#FFFFFF", "#BBE1E4", "#8BC8CA", "#0584B2", "#3A829E"],
+  //     values: [0, 1, 5, 10, 20],
+  //   },
+  //   {
+  //     colors: [
+  //       "#F3D8E8",
+  //       "#E6ABD1",
+  //       "#D88AB9",
+  //       "#C265A6",
+  //       "#B74C97",
+  //       "#BA3466",
+  //     ],
+  //     values: [2, 5, 10, 30, 50, 100],
+  //   },
+  //   {
+  //     colors: [
+  //       "#86A650",
+  //       "#8B9B38",
+  //       "#A09532",
+  //       "#BC9402",
+  //       "#C38602",
+  //       "#C3720E",
+  //     ],
+  //     values: [2, 25, 50, 125, 250, 425],
+  //   },
+  //   {
+  //     colors: [
+  //       "#FFD475",
+  //       "#FBC173",
+  //       "#F8B882",
+  //       "#F49B99",
+  //       "#D66588",
+  //       "#D66588",
+  //     ],
+  //     values: [0, 20, 40, 80, 120, 180],
+  //   },
+  //   {
+  //     colors: ["#FFEAD8", "#FBCFC5", "#F8BDBA", "#EE87B5", "#EE87B5"],
+  //     values: [0, 30 - 50, 100, 150, 240],
+  //   },
+  // ];
 
   const measurements = [
     { name: "pH", concentration: "30S", value: 7.5, colorSetIndex: 0 },
@@ -388,20 +431,22 @@ const Lcardinfo: React.FC = () => {
                   key={index}
                   className="p-5 w-[480px] h-[528px] flex-shrink-0 snap-center mr-2"
                 >
-                  {page.map((measurement, index) => (
+                  {
+                  page.map((measurement, index) => (
                     <Scale
                       key={index}
                       name={measurement.name}
                       concentration={measurement.concentration}
                       value={measurement.value}
                       scaleColors={
-                        scaleColorSets[measurement.colorSetIndex].colors
+                        scaleColorSets[measurement.colorSetIndex]?.colors || []
                       }
                       scaleValues={
-                        scaleColorSets[measurement.colorSetIndex].values
+                        scaleColorSets[measurement.colorSetIndex]?.values || []
                       }
                     />
-                  ))}
+                  ))
+                }
                 </div>
               ))}
             </div>
@@ -434,7 +479,7 @@ const Lcardinfo: React.FC = () => {
             {/* Color bar from picscale.tsx */}
             <div className="flex flex-col items-center -mt-8">
               <h2 className="text-xl font-bold mb-2">Scale</h2>
-              <PicScale scaleColors={picScaleColors} />
+              {/* <PicScale scaleColors={picScaleColors} /> */}
             </div>
           </div>
         </div>

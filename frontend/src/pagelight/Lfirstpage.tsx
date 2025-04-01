@@ -61,6 +61,13 @@ function FirstPage() {
       if (currentUser) {
         setShowLoginPopup(false);
         setShowSignupPopup(false);
+        // Store userId in local storage
+        localStorage.setItem("userId", currentUser.uid);
+        console.log("User ID:", currentUser.uid);
+        // Check if userId is in local storage
+      } else {
+        // Clear userId from local storage if user is logged out
+        localStorage.removeItem("userId");
       }
     });
     return () => unsubscribe();
