@@ -7,7 +7,7 @@
   "db:push": "drizzle-kit push",
   "db:migrate": "ts-node ./db/migrate.ts",
   "db:prototype": "ts-node ./db/prototype.ts",
-  "dev": "nodemon",
+  "dev": "nodemon ./dist/src/index.js",
   "build": "tsc && tsc-alias",
   "start": "node ./dist/src/index.js"
 },

@@ -15,7 +15,9 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" , 
+  // credentials: true,
+}));
 app.use(bodyParser.json());
 
 // Routes
