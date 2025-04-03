@@ -28,6 +28,9 @@ export default function PermissionPage() {
                     if (userData.u_name) {
                         setName(userData.u_name);
                         setSubmitted(true);
+
+                        // ✅ เก็บ username ไว้ใน sessionStorage
+                        sessionStorage.setItem("username", userData.u_name);
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);
@@ -39,7 +42,6 @@ export default function PermissionPage() {
     
         return () => unsubscribe();
     }, [navigate]);
-    
 
     const handleSubmit = async () => {
         if (!name.trim()) {
@@ -58,14 +60,15 @@ export default function PermissionPage() {
             if (!response.ok) throw new Error("Failed to update name");
     
             setSubmitted(true);    
+
+            // ✅ เก็บ username ใน sessionStorage
+            sessionStorage.setItem("username", name);
         } catch (error) {
             console.error("Error updating name:", error);
         }
     };
-    
 
-    const handleContinue = async () => {
-        // console.log(name)
+    const handleContinue = () => {
         navigate("/home");
     };
 

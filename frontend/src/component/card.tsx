@@ -10,7 +10,9 @@ interface CardProps {
   textColor?: string;  // เพิ่มสีข้อความของแบรนด์
   textColorLocation?: string; // สีข้อความสำหรับ location
   textColorDateTime?: string; // สีข้อความสำหรับ dateTime
+  onClick?: () => void; // ฟังก์ชันที่เรียกเมื่อการ์ดถูกคลิก
 }
+
 
 const getWaterQualityColor = (quality: number) => {
   if (quality >= 0 && quality <= 24) return "#e74c3c";
@@ -25,13 +27,20 @@ const Card: React.FC<CardProps> = ({
   dateTime,
   location,
   waterQuality,
+  onClick,
   cardColor = "bg-black",  // ใช้ค่าเริ่มต้น
   textColor = "text-white", // ใช้ค่าเริ่มต้น
   textColorLocation = "text-gray-400", // สีเริ่มต้นของ location
-  textColorDateTime = "text-white" // สีเริ่มต้นของ dateTime
+  textColorDateTime = "text-white", // สีเริ่มต้นของ dateTime
+  
 }) => {
+  // const validBase64 = `data:image/png;base64,${imageUrl}`;
   return (
-    <div className={`w-60 h-70 ${cardColor} text-white p-4 rounded-2xl shadow-lg`}>
+    <div 
+    className={`w-60 h-70 ${cardColor} text-white p-4 rounded-2xl shadow-lg`} 
+    onClick={onClick} // Here, bind the onClick to the card div
+    style={{ cursor: "pointer" }} // Make it look clickable
+  >
       <div className="w-full h-32 bg-blue-400 rounded-xl overflow-hidden">
         <img src={imageUrl} alt="Brand" className="w-full h-full object-cover" />
       </div>

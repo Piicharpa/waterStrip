@@ -113,29 +113,32 @@ const Ladd: React.FC = () => {
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && isLocationSelected) {
+    if (!file) return; // ป้องกัน Error กรณีไม่มีไฟล์
+    
+    if (isLocationSelected) {
       try {
         const compressedFile = await imageCompression(file, {
           maxSizeMB: 0.1,
           maxWidthOrHeight: 800,
           useWebWorker: true,
-          initialQuality: 0.7,
-          fileType: "image/jpeg",
-      });
-
-        // Create image preview
+          initialQuality: 0.7, 
+          alwaysKeepResolution: true, // คงสัดส่วนเดิม
+        });
+  
+        // อ่านไฟล์เป็น Base64 เพื่อใช้แสดงรูป preview
         const reader = new FileReader();
         reader.onloadend = () => {
           setImagePreview(reader.result as string);
+          setSelectedFile(compressedFile); // ย้ายมาที่นี่เพื่อให้แน่ใจว่าถูกตั้งค่าหลังจาก compression
         };
         reader.readAsDataURL(compressedFile);
-        setSelectedFile(compressedFile);
-
+  
       } catch (error) {
-        console.error('Image compression failed:', error);
+        console.error("Image compression failed:", error);
       }
     }
   };
+  
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();

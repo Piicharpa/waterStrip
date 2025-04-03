@@ -5,6 +5,9 @@ import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios"; // Import axios for API requests
 
+
+
+
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,18 +20,18 @@ const Lhome: React.FC = () => {
 
   // Fetch data from API
   useEffect(() => {
+    const storedUserId = sessionStorage.getItem("userId");
+    console.log("localStorage:", sessionStorage);
+    console.log("Stored userId", storedUserId);
     const fetchData = async () => {
       try {
+        const userId = encodeURIComponent(storedUserId || "");
         const [stripsRes, bandsRes ] = await Promise.all([
-          axios.get<any[]>("http://localhost:3003/strips"),
+          axios.get<any[]>(`http://localhost:3003/strips/${userId}`),
           axios.get<any[]>("http://localhost:3003/brands"),
         ]);
   
         const bandsMap = new Map(bandsRes.data.map((band) => [band.b_id, band.b_name]));
-    
-       
-
-  
         const updatedCards = stripsRes.data.map((strip) => ({
           ...strip,
           b_name: bandsMap.get(strip.b_id) || "Unknown",
@@ -44,8 +47,8 @@ const Lhome: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    console.log("Stored username:", localStorage);
+    const storedUsername = sessionStorage.getItem("username");
+    console.log("Stored username:", sessionStorage);
     if (!storedUsername) {
       navigate("/");
       return;
@@ -78,7 +81,7 @@ const Lhome: React.FC = () => {
     }
 
     const foundIndex = cards.findIndex((card) =>
-      card.brand.toLowerCase().includes(newSearchTerm.toLowerCase())
+      card.b_name.toLowerCase().includes(newSearchTerm.toLowerCase())
     );
 
     if (foundIndex !== -1 && cardRefs.current[foundIndex]) {
@@ -114,7 +117,7 @@ const Lhome: React.FC = () => {
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
-      // const containerWidth = scrollRef.current.clientWidth;
+      const containerWidth = scrollRef.current.clientWidth;
       const scrollTo = (scrollWidth / (cards.length -1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,
@@ -182,24 +185,32 @@ const Lhome: React.FC = () => {
                 +
               </button>
               {cards.map((card, index) => (
-                <div
-                  key={index}
-                  ref={(el) => (cardRefs.current[index] = el)}
-                  className={`transition-transform transform ${
-                    zoomedCardIndex === index
-                      ? "scale-110 z-10"
-                      : zoomedCardIndex === null
-                      ? "hover:scale-110 hover:z-10"
-                      : "opacity-60"
-                  } min-w-[250px]`}
-                >
+                  <div
+                    key={index}
+                    ref={(el) => (cardRefs.current[index] = el)}
+                    className={`transition-transform transform ${
+                      zoomedCardIndex === index
+                        ? "scale-110 z-10"
+                        : zoomedCardIndex === null
+                        ? "hover:scale-110 hover:z-10"
+                        : "opacity-60"
+                    } min-w-[250px]`}
+                    
+                  >
                   <Card
                     imageUrl={card.s_url}
                     brand={card.b_name}
                     dateTime={formatDate(card.s_date)} // Adjust based on API response
                     location={`${card.s_latitude}, ${card.s_longitude}`}
                     waterQuality={card.s_quality} // Example value
-                    // waterQuality={card.sp_quacolor} // Example value
+                    onClick={() => {
+                      if (card.s_id) {
+                        console.log(`Navigating to /cardinfo/${card.s_id}`);
+                        navigate(`/cardinfo/${card.s_id}`);
+                      } else {
+                        console.error("Card ID is missing");
+                      }
+                    }}
                   />
                 </div>
               ))}
@@ -248,7 +259,8 @@ const Lhome: React.FC = () => {
         </div>
       </div>
     </div>
+    
   );
 };
 
-export default Lhome;
+export default Lhome;  // ✅ Default Export
