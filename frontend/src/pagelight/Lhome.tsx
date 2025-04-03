@@ -21,8 +21,8 @@ const Lhome: React.FC = () => {
   // Fetch data from API
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
-    console.log("localStorage:", sessionStorage);
-    console.log("Stored userId", storedUserId);
+    // console.log("localStorage:", sessionStorage);
+    // console.log("Stored userId", storedUserId);
     const fetchData = async () => {
       try {
         const userId = encodeURIComponent(storedUserId || "");
@@ -48,7 +48,7 @@ const Lhome: React.FC = () => {
 
   useEffect(() => {
     const storedUsername = sessionStorage.getItem("username");
-    console.log("Stored username:", sessionStorage);
+    // console.log("Stored username:", sessionStorage);
     if (!storedUsername) {
       navigate("/");
       return;
@@ -205,7 +205,7 @@ const Lhome: React.FC = () => {
                     waterQuality={card.s_quality} // Example value
                     onClick={() => {
                       if (card.s_id) {
-                        console.log(`Navigating to /cardinfo/${card.s_id}`);
+                        // console.log(`Navigating to /cardinfo/${card.s_id}`);
                         navigate(`/cardinfo/${card.s_id}`);
                       } else {
                         console.error("Card ID is missing");
