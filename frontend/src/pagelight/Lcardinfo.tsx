@@ -43,8 +43,6 @@ const Lcardinfo: React.FC = () => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
     return format(new Date(isoString), "d MMM. yyyy");
   };
-
-
   
   const waterQuality = 13;
 
