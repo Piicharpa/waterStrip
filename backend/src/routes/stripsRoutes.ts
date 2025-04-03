@@ -1,7 +1,7 @@
 import express from "express";
 import { dbClient } from "../../db/client";
-import { Strip } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { Strip, Brand, Parameter, StripParameter, Color } from "../../db/schema";
+import { eq , and} from "drizzle-orm";
 
 const router = express.Router();
 
@@ -85,5 +85,64 @@ router.delete("/:id", async (req, res, next) => {
     next(err);
   }
 });
+
+router.get("/:id", async (req, res) => {
+  try {
+    const s_id = Number(req.params.id);
+    
+    const result = await dbClient
+      .select({
+        s_id: Strip.s_id,
+        s_url: Strip.s_url,
+        s_date: Strip.s_date,
+        b_id: Strip.b_id,
+        b_name: Brand.b_name,
+        s_latitude: Strip.s_latitude,
+        s_longitude: Strip.s_longitude,
+        p_id: Parameter.p_id,
+        p_name: Parameter.p_name,
+        p_unit: Parameter.p_unit,
+        sp_value: StripParameter.sp_value,
+        colors: Color.colors,
+        values: Color.values
+      })
+      .from(Strip)
+      .innerJoin(Brand, eq(Strip.b_id, Brand.b_id)) 
+      .leftJoin(StripParameter, eq(Strip.s_id, StripParameter.s_id)) // เชื่อม Strip กับค่าพารามิเตอร์
+      .leftJoin(Parameter, eq(StripParameter.p_id, Parameter.p_id)) // ดึงข้อมูล Parameter
+      .leftJoin(Color, and(eq(Color.b_id, Strip.b_id), eq(Color.p_id, Parameter.p_id))) // ดึงข้อมูลสีที่เกี่ยวข้อง
+      .where(eq(Strip.s_id, s_id));
+
+    if (result.length === 0) {
+      res.status(404).json({ message: "Strip not found" });
+    }
+
+    // ✅ จัดกลุ่มข้อมูลให้เป็น JSON ตามโครงสร้างที่ต้องการ
+    const formattedData = {
+      s_id: result[0].s_id,
+      s_url: result[0].s_url,
+      s_date: result[0].s_date,
+      b_id: result[0].b_id,
+      b_name: result[0].b_name,
+      s_latitude: result[0].s_latitude,
+      s_longitude: result[0].s_longitude,
+      parameters: result.map(row => ({
+        p_id: row.p_id,
+        p_name: row.p_name,
+        p_unit: row.p_unit,
+        sp_value: row.sp_value,
+        colors: row.colors || null ,// ถ้าไม่มีสีให้ส่งค่า null
+        values: row.values || null
+      })).filter(param => param.p_id !== null) // ลบค่าที่ไม่มี parameter ออก
+    };
+
+    res.json(formattedData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 
 export default router;

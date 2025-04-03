@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/dhome" element={<Dhome />} />
         <Route path="/add" element={<Ladd />} />
         <Route path="/addmap" element={<AddMap />} />
-        <Route path="/cardinfo" element={<LCardInfo />} />
+        <Route path="/cardinfo/:stripId" element={<LCardInfo />} />
       </Routes>
     </Router>
   </StrictMode>
