@@ -4,7 +4,12 @@ import { FaPaperclip } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import imageCompression from 'browser-image-compression';
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
+interface StripResponse {
+  s_id: number;
+}
 
 // Utility function to convert decimal to DMS
 const toDMS = (decimal: number, isLat: boolean = true) => {
@@ -159,11 +164,27 @@ const Ladd: React.FC = () => {
     }
   };
 
+  const [userId, setUid] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userId = user.uid;
+            setUid(userId);
+
+        } else {
+            navigate("/");
+        }
+    });
+
+    return () => unsubscribe();
+}, [navigate]);
+
   
   const handleAnalyze = async () => {
     if (isLocationSelected && selectedFile && selectedBrandId) {
       // const analyzeDate = new Date().toISOString();
-      const userId = localStorage.getItem("userId");
+      // const userId = localStorage.getItem("userId");
       const locationParts = location.split(", ");
       const latitude = locationParts[0];
       const longitude = locationParts[1];
@@ -177,7 +198,7 @@ const Ladd: React.FC = () => {
     localStorage.setItem("stripBrand", selectedBrandId.toString());
     // localStorage.setItem("analyzeDate", analyzeDate);
     localStorage.setItem("location", location);
-    localStorage.setItem("userId", userId); // Save user ID to localStorage
+    // localStorage.setItem("userId", userId); // Save user ID to localStorage
     if (imagePreview) {
       localStorage.setItem("uploadedImage", imagePreview);
     }
@@ -193,24 +214,21 @@ const Ladd: React.FC = () => {
     };
 
       try {
-        // ส่งข้อมูลไปยัง API
-        const response = await axios.post("http://localhost:3003/strips", data, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-  
-        // ตรวจสอบว่าการส่งข้อมูลสำเร็จ
-        if (response.status === 201) {
-          console.log("Data successfully sent:", response.data);
-          navigate("/cardinfo");
-        } else {
-          console.error("Error in sending data:", response);
+            const response = await axios.post("http://localhost:3003/strips", data, {
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (response.status === 201) {
+              const stripData = response.data as StripResponse; // Type Assertion
+              console.log("Data successfully sent:", stripData);
+              navigate(`/cardinfo/${stripData.s_id}`); // ส่ง s_id ไปที่หน้าถัดไป
+            } else {
+                console.error("Error in sending data:", response);
+            }
+        } catch (error) {
+            console.error("Error in API request:", error);
+            console.log("data : ", data);
         }
-      } catch (error) {
-        console.error("Error in API request:", error);
-        console.log("data : ",data);
-      }
     }
   };
 
