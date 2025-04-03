@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, doublePrecision, timestamp, primaryKey, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, doublePrecision, timestamp, json } from "drizzle-orm/pg-core";
 
 // ตาราง USER
 export const User = pgTable("user", {
@@ -18,11 +18,11 @@ export const Brand = pgTable("brand", {
 // ตาราง STRIP
 export const Strip = pgTable("strip", {
   s_id: serial("s_id").primaryKey(),
-  b_id: integer("b_id").references(() => Brand.b_id).notNull(),
+  b_id: integer("b_id").references(() => Brand.b_id, { onDelete: "cascade" }).notNull(),
   s_date: timestamp("s_date").notNull().defaultNow(),
   s_latitude: text("s_latitude"),
   s_longitude: text("s_longitude"),
-  u_id: text("u_id").references(() => User.u_id).notNull(),
+  u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
   s_url: text("s_url"),
   s_quality: doublePrecision("s_quality").notNull(),
   s_qualitycolor: text("s_qualitycolor").notNull(),
@@ -38,17 +38,16 @@ export const Parameter = pgTable("parameter", {
 // ตาราง STRIP_PARAMETER (M:N)
 export const StripParameter = pgTable("strip_parameter", {
   sp_id: serial("sp_id").primaryKey(),
-  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }) .notNull(), // Define primary key here
-  p_id: integer("p_id").references(() => Parameter.p_id) .notNull(), // Define composite primary key inline
+  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }).notNull(),
+  p_id: integer("p_id").references(() => Parameter.p_id, { onDelete: "cascade" }).notNull(),
   sp_value: doublePrecision("sp_value").notNull(),
-  
 });
 
 // ตาราง COLOR
 export const Color = pgTable("color", {
   c_id: serial("c_id").primaryKey(),
-  b_id: integer("b_id").references(() => Brand.b_id).notNull(),
-  p_id: integer("p_id").references(() => Parameter.p_id).notNull(),
+  b_id: integer("b_id").references(() => Brand.b_id, { onDelete: "cascade" }).notNull(),
+  p_id: integer("p_id").references(() => Parameter.p_id, { onDelete: "cascade" }).notNull(),
   colors: json("colors").notNull(),
-  values: json("values").notNull(), 
+  values: json("values").notNull(),
 });

@@ -181,57 +181,57 @@ const Ladd: React.FC = () => {
 }, [navigate]);
 
   
-  const handleAnalyze = async () => {
-    if (isLocationSelected && selectedFile && selectedBrandId) {
-      // const analyzeDate = new Date().toISOString();
-      // const userId = localStorage.getItem("userId");
+const handleAnalyze = async () => {
+  if (isLocationSelected && selectedFile && selectedBrandId) {
       const locationParts = location.split(", ");
       const latitude = locationParts[0];
       const longitude = locationParts[1];
 
       if (!userId) {
-        console.error("User ID not found. Please log in.");
-        return; // Optionally show an error to the user
+          console.error("User ID not found. Please log in.");
+          return;
       }
-      
+
       // Save data to localStorage
-    localStorage.setItem("stripBrand", selectedBrandId.toString());
-    // localStorage.setItem("analyzeDate", analyzeDate);
-    localStorage.setItem("location", location);
-    // localStorage.setItem("userId", userId); // Save user ID to localStorage
-    if (imagePreview) {
-      localStorage.setItem("uploadedImage", imagePreview);
-    }
-  
-      // ข้อมูลที่ต้องส่งไปยัง API (จัดรูปแบบใหม่)
+      localStorage.setItem("stripBrand", selectedBrandId.toString());
+      localStorage.setItem("location", location);
+      if (imagePreview) {
+          localStorage.setItem("uploadedImage", imagePreview);
+      }
+
+      // ข้อมูลที่ต้องส่งไปยัง API
       const data = {
-        b_id: selectedBrandId,
-        // s_date: analyzeDate,
-        s_latitude: latitude,
-        s_longitude: longitude,
-        u_id: userId,
-        s_url: imagePreview,
-    };
+          b_id: selectedBrandId,
+          s_latitude: latitude,
+          s_longitude: longitude,
+          u_id: userId,
+          s_url: imagePreview,
+      };
 
       try {
-            const response = await axios.post("http://localhost:3003/strips", data, {
-                headers: { "Content-Type": "application/json" },
-            });
+          // ส่งข้อมูลไปยัง API
+          const response = await axios.post("http://localhost:3003/strips", data, {
+              headers: {
+                  "Content-Type": "application/json",
+              },
+          });
 
-            if (response.status === 201) {
-              const stripData = response.data as StripResponse; // Type Assertion
-              console.log("Data successfully sent:", stripData);
-              navigate(`/cardinfo/${stripData.s_id}`); // ส่ง s_id ไปที่หน้าถัดไป
-            } else {
-                console.error("Error in sending data:", response);
-            }
-        } catch (error) {
-            console.error("Error in API request:", error);
-            console.log("data : ", data);
-        }
-    }
-  };
+          // ✅ แก้ไขให้ดึง s_id จาก response.data.data
+          const responseData = response.data as { msg: string; data: { s_id: number } };
 
+          if (response.status === 201 && responseData.data?.s_id) {
+              const stripId = responseData.data.s_id;
+              // console.log("Data successfully sent. Strip ID:", stripId);
+              navigate(`/cardinfo/${stripId}`); // ✅ ไปที่ /cardinfo/s_id
+          } else {
+              console.error("Error: s_id is undefined", responseData);
+          }
+      } catch (error) {
+          console.error("Error in API request:", error);
+          console.log("data : ", data);
+      }
+  }
+};
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md mx-auto space-y-6 text-center">
