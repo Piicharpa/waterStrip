@@ -73,6 +73,7 @@ function FirstPage() {
                 const response = await fetch(`http://localhost:3003/users/${currentUser.uid}`);
                 if (response.ok) {
                     const userData = await response.json();
+                    sessionStorage.setItem("userId", userData.u_id);
                     // console.log("User Data:", userData);
                     setUser(userData);
                 } else {
@@ -84,7 +85,7 @@ function FirstPage() {
                 setUser(null);
             }
         } else {
-            console.log("No user logged in");
+            // console.log("No user logged in");
             setUser(null);
         }
     });

@@ -15,6 +15,25 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/card/:id", async (req, res, next) => {
+  const { id } = req.params; // รับค่า u_id จาก URL
+
+  try {
+    // ดึงข้อมูลจากตาราง Strip โดยกรองด้วย u_id
+    const results = await dbClient.select().from(Strip).where(eq(Strip.u_id, id));
+
+    if (results.length === 0) {
+      res.status(404).json({ message: "No cards found for this user." });
+    }
+
+    // ส่งผลลัพธ์กลับเป็น JSON
+    res.json(results);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 // Insert into Strip
 router.post("/", async (req, res, next) => {
   console.log("Request Body:", req.body);

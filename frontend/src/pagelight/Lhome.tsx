@@ -20,19 +20,29 @@ const Lhome: React.FC = () => {
 
   // Fetch data from API
   useEffect(() => {
+    // ดึงข้อมูล userId จาก sessionStorage ก่อน
     const storedUserId = sessionStorage.getItem("userId");
-    // console.log("localStorage:", sessionStorage);
-    // console.log("Stored userId", storedUserId);
+    console.log("Stored userId:", storedUserId);
+    // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
+    if (!storedUserId) {
+      console.error("User ID not found in sessionStorage");
+      return;
+    }
+  
     const fetchData = async () => {
       try {
         const userId = encodeURIComponent(storedUserId || "");
-        const [stripsRes, bandsRes ] = await Promise.all([
-          axios.get<any[]>(`http://localhost:3003/strips/${userId}`),
+        const [stripsRes, bandsRes] = await Promise.all([
+          axios.get<any[]>(`http://localhost:3003/strips/card/${userId}`),
           axios.get<any[]>("http://localhost:3003/brands"),
         ]);
   
         const bandsMap = new Map(bandsRes.data.map((band) => [band.b_id, band.b_name]));
-        const updatedCards = stripsRes.data.map((strip) => ({
+        
+        // กรอง strips ตาม u_id
+        const filteredStrips = stripsRes.data.filter((strip) => strip.u_id === storedUserId);
+  
+        const updatedCards = filteredStrips.map((strip) => ({
           ...strip,
           b_name: bandsMap.get(strip.b_id) || "Unknown",
         }));
@@ -46,6 +56,7 @@ const Lhome: React.FC = () => {
     fetchData();
   }, []);
 
+  
   useEffect(() => {
     const storedUsername = sessionStorage.getItem("username");
     // console.log("Stored username:", sessionStorage);
@@ -113,6 +124,8 @@ const Lhome: React.FC = () => {
       scrollElement?.removeEventListener("scroll", handleScroll);
     };
   }, [cards.length]);
+
+  
 
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
@@ -205,7 +218,7 @@ const Lhome: React.FC = () => {
                     waterQuality={card.s_quality} // Example value
                     onClick={() => {
                       if (card.s_id) {
-                        // console.log(`Navigating to /cardinfo/${card.s_id}`);
+                        console.log(`Navigating to /cardinfo/${card.s_id}`);
                         navigate(`/cardinfo/${card.s_id}`);
                       } else {
                         console.error("Card ID is missing");
