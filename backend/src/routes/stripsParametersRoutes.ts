@@ -39,16 +39,15 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// Update strip parameter
-// router.patch("/strips_parameter/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { sp_value } = req.body;
-
-//   const [updatedBrand] = await dbClient.update(StripParameter).set({ sp_value }).where(eq(StripParameter.sp_id, Number(id))).returning();
-
-//   if (!updatedBrand) res.status(404).json({ error: "not found" });
-
-//   res.json(updatedBrand);
-// });
+// DELETE All from Strip parameter
+router.delete("/delete-all", async (req, res, next) => {
+  try {
+    // Delete all records from StripParameter table
+    await dbClient.delete(StripParameter);
+    res.status(200).json({ msg: "All records deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

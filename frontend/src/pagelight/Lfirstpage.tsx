@@ -3,8 +3,18 @@ import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect } from "react";
 import { LatLngExpression } from "leaflet";
 import { useNavigate } from "react-router-dom";
-import { signInWithGoogle, logout, auth } from "../firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { logout, auth } from "../firebase";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import axios from "axios"; // ✅ เพิ่มการ import axios
+
+interface AppUser {
+  u_id: string;
+  u_email: string | null;
+  u_name?: string; // จาก Database
+  u_role?: "researcher" | "regular"; // จาก Database
+}
+
+
 // กำหนดค่าตำแหน่งเริ่มต้น
 const INITIAL_CENTER: [number, number] = [18.7883, 98.9853]; // เชียงใหม่
 const INITIAL_ZOOM = 14;
@@ -45,7 +55,7 @@ function FirstPage() {
   const [showText, setShowText] = useState(true);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
   
@@ -56,22 +66,34 @@ function FirstPage() {
   const navigate = useNavigate();
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setShowLoginPopup(false);
-        setShowSignupPopup(false);
-        // Store userId in local storage
-        localStorage.setItem("userId", currentUser.uid);
-        console.log("User ID:", currentUser.uid);
-        // Check if userId is in local storage
-      } else {
-        // Clear userId from local storage if user is logged out
-        localStorage.removeItem("userId");
-      }
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        // console.log("Current User:", currentUser);
+        if (currentUser) {
+            try {
+                const response = await fetch(`http://localhost:3003/users/${currentUser.uid}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    // console.log("User Data:", userData);
+                    setUser(userData);
+                } else {
+                    console.error("User not found in backend");
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                setUser(null);
+            }
+        } else {
+            console.log("No user logged in");
+            setUser(null);
+        }
     });
+
     return () => unsubscribe();
-  }, []);
+}, []);
+
+  
+  
   
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -129,9 +151,23 @@ function FirstPage() {
  
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      // หลังจาก sign in สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const googleId = user.uid;
+  
+      // เช็คว่าผู้ใช้มีบัญชีหรือไม่
+      const response = await axios.post("http://localhost:3003/users/check-user", { u_id: googleId });
+      const data = response.data as { exists: boolean };
+  
+      if (data.exists) {  
+        navigate("/permission");
+      } else {
+        alert("please Sign Up");
+        navigate("/");
+      }
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
@@ -140,27 +176,38 @@ function FirstPage() {
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     setUserType(type);
     try {
-      const user = await signInWithGoogle();
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
       if (user) {
-        // เรียก API บันทึก User ลง PostgreSQL
-        await fetch("http://localhost:3003/users", {
+        const response = await fetch("http://localhost:3003/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            u_email: user.email, 
+          body: JSON.stringify({
+            u_id: user.uid,
+            u_name: "",
+            u_email: user.email,
             u_role: type,
-            u_id : user.uid,
-            u_name : "name"          
           }),
         });
+  
+        if (!response.ok) {
+          throw new Error("Failed to create user");
+        }
+  
+        // ดึงข้อมูล user ที่สมัครสำเร็จจาก API response ทันที
+        const userData = await response.json();
+        setUser(userData);
   
         navigate("/permission");
       }
     } catch (error) {
-      console.error("Error signing in with Google:", error);
+      console.error("Error signing up with Google:", error);
     }
   };
-  
   
   const handleLogout = async () => {
     try {
@@ -186,7 +233,7 @@ function FirstPage() {
           
           {user ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm">{user.displayName || user.email}</span>
+              <span className="text-sm">{user.u_name}</span>
               <button
                 onClick={handleLogout}
                 className="bg-black text-white  px-4 py-1 rounded-lg"

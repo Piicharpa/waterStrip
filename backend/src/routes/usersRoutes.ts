@@ -15,6 +15,27 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// ดึงข้อมูลผู้ใช้จากฐานข้อมูล
+router.get("/:u_id", async (req, res) => {
+  try {
+    const { u_id } = req.params;
+
+    // ดึงข้อมูลจากตาราง users โดยใช้ drizzle หรือ query ปกติ
+    const user = await dbClient.query.User.findFirst({
+      where: (users, { eq }) => eq(users.u_id, u_id),
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user); // ส่งข้อมูลผู้ใช้กลับไปให้ Frontend
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // Create User
 router.post("/", async (req, res, next) => {
   try {
@@ -57,6 +78,23 @@ router.delete("/:id", async (req, res, next) => {
     res.json({ msg: "User deleted successfully", data: { u_id } });
   } catch (err) {
     next(err);
+  }
+});
+
+// API เช็คว่ามี user อยู่หรือยัง
+router.post("/check-user", async (req, res) => {
+  const { u_id } = req.body;
+
+  try {
+    const user = await dbClient.select().from(User).where(eq(User.u_id,u_id)).limit(1);
+
+    if (user.length > 0) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Database error", error });
   }
 });
 
