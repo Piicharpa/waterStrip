@@ -5,9 +5,6 @@ import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios"; // Import axios for API requests
 
-
-
-
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -130,7 +127,7 @@ const Lhome: React.FC = () => {
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
-      const containerWidth = scrollRef.current.clientWidth;
+      // const containerWidth = scrollRef.current.clientWidth;
       const scrollTo = (scrollWidth / (cards.length -1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,

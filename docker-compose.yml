@@ -36,7 +36,7 @@ services:
     container_name: waterStrip-frontend
     build: ./frontend
     ports:
-      - ${NGINX_PORT}:7001
+      - ${NGINX_PORT}:80
     networks:
       - waterStrip-net
     environment:

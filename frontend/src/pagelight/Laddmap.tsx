@@ -105,23 +105,23 @@ const AddMap = () => {
   };
 
   // ฟังก์ชันที่เกิดจากการเลือกตำแหน่งจากแผนที่
-  const handleLocationSelect = (lat: number, lng: number) => {
-    const latDMS = toDMS(lat, true);
-    const lngDMS = toDMS(lng, false);
+  // const handleLocationSelect = (lat: number, lng: number) => {
+  //   const latDMS = toDMS(lat, true);
+  //   const lngDMS = toDMS(lng, false);
 
-    setSelectedLocation({ 
-      lat, 
-      lng, 
-      latDMS, 
-      lngDMS 
-    });
-    setUserMarkerVisible(false);
-    setViewLocation({ lat, lng });
+  //   setSelectedLocation({ 
+  //     lat, 
+  //     lng, 
+  //     latDMS, 
+  //     lngDMS 
+  //   });
+  //   setUserMarkerVisible(false);
+  //   setViewLocation({ lat, lng });
 
-    setTimeout(() => {
-      markersRef.current[1]?.openPopup();
-    }, 100);
-  };
+  //   setTimeout(() => {
+  //     markersRef.current[1]?.openPopup();
+  //   }, 100);
+  // };
 
   // ฟังก์ชันเพื่อให้ Marker สามารถลากได้
   const handleMarkerDragEnd = (e: any) => {
@@ -166,12 +166,12 @@ const AddMap = () => {
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
-          whenReady={(map) => {
-            map.target.on("click", (e: any) => {
-              const latLng = e.latlng;
-              handleLocationSelect(latLng.lat, latLng.lng);
-            });
-          }}
+          // whenReady={(map) => {
+          //   map.target.on("click", (e: any) => {
+          //     const latLng = e.latlng;
+          //     handleLocationSelect(latLng.lat, latLng.lng);
+          //   });
+          // }}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -183,7 +183,7 @@ const AddMap = () => {
             <Marker
               position={[currentLocation.lat, currentLocation.lng]}
               icon={DefaultIcon}
-              ref={(el) => (markersRef.current[0] = el)}
+              // ref={(el) => (markersRef.current[0] = el)}
             >
               <Popup>
                 <div style={{ display: "flex", flexDirection: "column", minWidth: "200px" }}>
@@ -207,7 +207,7 @@ const AddMap = () => {
           {/* Marker for selected location */}
           {selectedLocation && !userMarkerVisible && (
             <Marker
-              ref={(el) => (markersRef.current[1] = el)}
+              // ref={(el) => (markersRef.current[1] = el)}
               position={[selectedLocation.lat, selectedLocation.lng]}
               icon={DefaultIcon}
               draggable={true}

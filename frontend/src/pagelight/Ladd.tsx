@@ -7,10 +7,6 @@ import imageCompression from 'browser-image-compression';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
-interface StripResponse {
-  s_id: number;
-}
-
 // Utility function to convert decimal to DMS
 const toDMS = (decimal: number, isLat: boolean = true) => {
   const degrees = Math.floor(Math.abs(decimal));
