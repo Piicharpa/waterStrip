@@ -355,13 +355,13 @@ const Lcardinfo: React.FC = () => {
             <h2 className="text-3xl font-bold text-black mt-4 ml-45">
               {stripBrand}
             </h2>
-            <p className="text-gray-400 ml-45  text-sm">{analyzeDate}</p>
-            <p className="absolute  top-16.5 right-50  text-black text-base hover:underline cursor-pointer">
+            <p className="text-gray-400 ml-45 mt-2  text-sm">{analyzeDate}</p>
+            <p className="absolute  top-18.5 right-50  text-black text-base hover:underline cursor-pointer">
               {location}
             </p>
 
             {/* Water Quality Indicator - Moved to left side */}
-            <div className="flex items-center space-x-3 mt-4 ml-45">
+            <div className="flex items-center space-x-3 mt-6 ml-45">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: getQualityColor(waterQuality) }}
@@ -379,7 +379,7 @@ const Lcardinfo: React.FC = () => {
         {/* Image, Measurements, and Color Scale Section */}
         <div className="flex flex-grow">
           {/* Container ครอบ Scroll Frame + Pagination */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mt-4">
             {/* Horizontal Scrollable Frame */}
             <div
               ref={scrollContainerRef}
@@ -393,7 +393,7 @@ const Lcardinfo: React.FC = () => {
               {paginatedMeasurements.map((page, index) => (
                 <div
                   key={index}
-                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente "
+                  className="w-120 h-120 bg-transparent  mt-3 flex-shrink-0 snap-cente "
                 >
                   {page.map((measurement, index) => (
                     <Scale
@@ -418,7 +418,7 @@ const Lcardinfo: React.FC = () => {
               {paginatedMeasurements.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-3 h-3 rounded-full cursor-pointer  ${
+                  className={`w-2 h-2 rounded-full cursor-pointer  ${
                     index === currentPage ? "bg-black " : "bg-gray-300"
                   }`}
                   onClick={() => handleDotClick(index)}
@@ -428,7 +428,7 @@ const Lcardinfo: React.FC = () => {
           </div>
 
           {/* Image and Color Scale Section */}
-          <div className="flex space-x-6 ml-auto mr-35 -mt-13 h-126">
+          <div className="flex space-x-6 ml-auto mr-35 -mt-18 h-126">
             {/* Gray box for uploaded image */}
             <div className="h-80 w-80 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
               <img
@@ -446,14 +446,15 @@ const Lcardinfo: React.FC = () => {
           </div>
         </div>
 
-        <div className="absolute -right-15 bg-transparent top-116 transform -translate-x-1/2 w-130   break-words whitespace-pre-wrap">
-          เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง 
-        </div>
+        <div className="scroll-container absolute -right-23 bg-transparent top-116 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
+  เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง 
+</div>
+
 
         {/* Detail Button - Moved to bottom right */}
         <div className="fixed bottom-12 right-50">
         <button
-          className="bg-black text-white px-4 py-2 rounded-lg border-2 border-transparent hover:border-black hover:text-black hover:bg-white"
+          className="bg-black text-white px-4 py-2 rounded-lg border-2 border-transparent hover:bg-gray-700"
           onClick={() => setIsOpen(true)}
         >
           save
@@ -469,26 +470,41 @@ const Lcardinfo: React.FC = () => {
 
             {/* ตัวเลือก Private/Public */}
             <div className="space-y-3">
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 rounded-full border border-black checked:bg-black"
-                  checked={isPrivate}
-                  onChange={() => setIsPrivate(true)}
-                />
-                <span>ส่วนตัว</span>
-              </label>
+  <label className="flex items-center space-x-3 cursor-pointer">
+    <div
+      className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+        isPrivate ? "border-black bg-black" : "border-gray-300 bg-white"
+      }`}
+    >
+      {isPrivate && <div className="w-2 h-2 bg-white rounded-full"></div>}
+    </div>
+    <span>ส่วนตัว</span>
+    <input
+      type="checkbox"
+      className="sr-only"
+      checked={isPrivate}
+      onChange={() => setIsPrivate(true)}
+    />
+  </label>
 
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 rounded-sm border border-gray-400 checked:bg-blue-500"
-                  checked={!isPrivate}
-                  onChange={() => setIsPrivate(false)}
-                />
-                <span>สาธารณะ</span>
-              </label>
-            </div>
+  <label className="flex items-center space-x-3 cursor-pointer">
+    <div
+      className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+        !isPrivate ? "border-black bg-black" : "border-gray-300 bg-white"
+      }`}
+    >
+      {!isPrivate && <div className="w-2 h-2 bg-white rounded-full"></div>}
+    </div>
+    <span>สาธารณะ</span>
+    <input
+      type="checkbox"
+      className="sr-only"
+      checked={!isPrivate}
+      onChange={() => setIsPrivate(false)}
+    />
+  </label>
+</div>
+
 
             {/* ปุ่มยืนยัน */}
             <div className="mt-6 flex justify-end space-x-2">
@@ -499,7 +515,7 @@ const Lcardinfo: React.FC = () => {
                 ยกเลิก
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-black text-white hover:bg-black"
+                className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-700"
                 onClick={handleSave} // กดบันทึกแล้วปิด Popup ทันที
               >
                 บันทึก
