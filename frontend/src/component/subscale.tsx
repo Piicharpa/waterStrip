@@ -21,7 +21,7 @@ const Scale: React.FC<ScaleProps> = ({
   );
 
   return (
-    <div className="flex items-center space-x-4 mb-4">
+    <div className="flex items-center space-x-4 mb-2.5">
       <div className="flex flex-col w-40"> {/* Fixed width to align text */}
         <div className="text-lg font-bold truncate">{name}</div>
         <div className="text-sm text-gray-600 truncate">{concentration}</div>
@@ -29,15 +29,14 @@ const Scale: React.FC<ScaleProps> = ({
       <div className="flex items-center space-x-2 relative">
         {scaleColors.map((color, index) => (
           <div 
-            key={index} 
+            key={index}
             className={`w-6 h-6 relative border-2 border-black flex items-center justify-center ${index === closestIndex ? 'scale-130' : ''}`}
             style={{ backgroundColor: color }}
           >
             {index === closestIndex && (
               <div 
-              className={`absolute top-[-18px] text-black left-1/2 transform -translate-x-1/2 text-sm 
-              ${index === closestIndex ? 'scale-[0.769] origin-top' : ''}`}
-            >
+                className="absolute top-[-18px] text-black left-1/2 transform -translate-x-1/2 text-sm scale-[0.769] origin-top"
+              >
                 {value}
               </div>
             )}

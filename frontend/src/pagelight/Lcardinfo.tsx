@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import PicScale from "../component/picscale";
+// import PicScale from "../component/picscale";
 import Scale from "../component/subscale";
 import { useNavigate } from "react-router-dom";
 
@@ -82,24 +82,24 @@ const Lcardinfo: React.FC = () => {
     };
   }, []);
 
-  const picScaleColors = [
-    "#BE4C19",
-    "#AEA360",
-    "#0CA2C3",
-    "#FAE8F9",
-    "#FBE5EC",
-    "#BF89C0",
-    "#CC95CF",
-    "#ED8D69",
-    "#FFD2B2",
-    "#77B3BC",
-    "#FFBC76",
-    "#0B90C0",
-    "#D16DB1",
-    "#C9A10B",
-    "#FFA9A6",
-    "#FE91C6",
-  ];
+  // const picScaleColors = [
+  //   "#BE4C19",
+  //   "#AEA360",
+  //   "#0CA2C3",
+  //   "#FAE8F9",
+  //   "#FBE5EC",
+  //   "#BF89C0",
+  //   "#CC95CF",
+  //   "#ED8D69",
+  //   "#FFD2B2",
+  //   "#77B3BC",
+  //   "#FFBC76",
+  //   "#0B90C0",
+  //   "#D16DB1",
+  //   "#C9A10B",
+  //   "#FFA9A6",
+  //   "#FE91C6",
+  // ];
 
   const scaleColorSets = [
     {
@@ -337,28 +337,37 @@ const Lcardinfo: React.FC = () => {
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
     measurements.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
   );
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
+  const handleSave = () => {
+    setIsOpen(false); // ปิด Popup ทันที
+
+    // สมมติว่ามีการบันทึกข้อมูล สามารถเพิ่ม API หรือ logic อื่นๆ ตรงนี้ได้
+    console.log(`บันทึกเป็นแบบ ${isPrivate ? "ส่วนตัว" : "สาธารณะ"}`);
+  };
+
   return (
     <div className="fixed flex flex-col h-screen w-screen overflow-hidden">
       <div className="flex flex-col flex-grow overflow-hidden ">
         {/* Top section with Strip Brand and Date */}
         <div className="flex justify-between items-center p-4">
           <div>
-            <h2 className="text-4xl font-bold text-black mt-10 ml-35">
+            <h2 className="text-3xl font-bold text-black mt-4 ml-45">
               {stripBrand}
             </h2>
-            <p className="text-gray-400 ml-35  text-sm">{analyzeDate}</p>
-            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer">
+            <p className="text-gray-400 ml-45  text-sm">{analyzeDate}</p>
+            <p className="absolute  top-16.5 right-50  text-black text-base hover:underline cursor-pointer">
               {location}
             </p>
 
             {/* Water Quality Indicator - Moved to left side */}
-            <div className="flex items-center space-x-3 mt-10 ml-35">
+            <div className="flex items-center space-x-3 mt-4 ml-45">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: getQualityColor(waterQuality) }}
               ></div>
               <div className="flex flex-col">
-                <span className="text-black text-xl font-semibold">
+                <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
                 <span className="text-gray-900 font-bold">{waterQuality}%</span>
@@ -374,7 +383,7 @@ const Lcardinfo: React.FC = () => {
             {/* Horizontal Scrollable Frame */}
             <div
               ref={scrollContainerRef}
-              className="ml-40 w-[480px] flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide mt-3"
+              className="ml-50 w-120  flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide -mt-1"
               style={{
                 scrollbarWidth: "none", // For Firefox
                 msOverflowStyle: "none", // For Internet Explorer and Edge
@@ -384,7 +393,7 @@ const Lcardinfo: React.FC = () => {
               {paginatedMeasurements.map((page, index) => (
                 <div
                   key={index}
-                  className="p-5 w-[480px] h-[528px] flex-shrink-0 snap-center mr-2"
+                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente "
                 >
                   {page.map((measurement, index) => (
                     <Scale
@@ -405,7 +414,7 @@ const Lcardinfo: React.FC = () => {
             </div>
 
             {/* Pagination Dots */}
-            <div className="flex space-x-2 mt-4 ml-30">
+            <div className="flex space-x-2  ml-30">
               {paginatedMeasurements.map((_, index) => (
                 <div
                   key={index}
@@ -419,9 +428,9 @@ const Lcardinfo: React.FC = () => {
           </div>
 
           {/* Image and Color Scale Section */}
-          <div className="flex space-x-6 ml-auto mr-35 mt-4 h-126">
+          <div className="flex space-x-6 ml-auto mr-35 -mt-13 h-126">
             {/* Gray box for uploaded image */}
-            <div className="h-126 w-126 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-6">
+            <div className="h-80 w-80 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
               <img
                 src={uploadedImage}
                 alt="Uploaded water test strip"
@@ -430,19 +439,76 @@ const Lcardinfo: React.FC = () => {
             </div>
 
             {/* Color bar from picscale.tsx */}
-            <div className="flex flex-col items-center -mt-8">
+            {/* <div className="flex flex-col items-center -mt-8">
               <h2 className="text-xl font-bold mb-2">Scale</h2>
               <PicScale scaleColors={picScaleColors} />
-            </div>
+            </div> */}
           </div>
         </div>
 
+        <div className="absolute -right-15 bg-transparent top-116 transform -translate-x-1/2 w-130   break-words whitespace-pre-wrap">
+          เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง 
+        </div>
+
         {/* Detail Button - Moved to bottom right */}
-        {/* <div className="fixed bottom-10 right-35">
-          <button className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition">
-            detail
-          </button>
-        </div> */}
+        <div className="fixed bottom-12 right-50">
+        <button
+          className="bg-black text-white px-4 py-2 rounded-lg border-2 border-transparent hover:border-black hover:text-black hover:bg-white"
+          onClick={() => setIsOpen(true)}
+        >
+          save
+        </button>
+      </div>
+
+      {/* Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
+          <div className="bg-white p-6 rounded-lg  w-96">
+            <h2 className="text-lg font-semibold mb-4">บันทึกเป็นแบบไหน?</h2>
+
+            {/* ตัวเลือก Private/Public */}
+            <div className="space-y-3">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 rounded-full border border-black checked:bg-black"
+                  checked={isPrivate}
+                  onChange={() => setIsPrivate(true)}
+                />
+                <span>ส่วนตัว</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 rounded-sm border border-gray-400 checked:bg-blue-500"
+                  checked={!isPrivate}
+                  onChange={() => setIsPrivate(false)}
+                />
+                <span>สาธารณะ</span>
+              </label>
+            </div>
+
+            {/* ปุ่มยืนยัน */}
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 rounded-lg border border-black hover:bg-gray-200"
+                onClick={() => setIsOpen(false)} // ปิด Popup เมื่อกด "ยกเลิก"
+              >
+                ยกเลิก
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-black text-white hover:bg-black"
+                onClick={handleSave} // กดบันทึกแล้วปิด Popup ทันที
+              >
+                บันทึก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
       </div>
     </div>
   );
