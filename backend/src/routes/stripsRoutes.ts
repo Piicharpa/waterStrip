@@ -1,5 +1,6 @@
 import express from "express";
 import { dbClient } from "../../db/client";
+import { evaluateStripQuality } from "../../src/component/quality"; // Adjusted the path
 import { Strip, Brand, Parameter, StripParameter, Color } from "../../db/schema";
 import { eq , and} from "drizzle-orm";
 
@@ -48,7 +49,7 @@ router.post("/", async (req, res, next) => {
     // Insert new strip
     const result = await dbClient
       .insert(Strip)
-      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: 250, s_qualitycolor: "#ffffff"}) // Default value for s_quality
+      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: " ", s_qualitycolor: "#ffffff"}) // Default value for s_quality
       .returning(); // Returns inserted values
 
     res.status(201).json({
@@ -63,28 +64,17 @@ router.post("/", async (req, res, next) => {
 // Update strip in Strip
 router.patch("/:id", async (req, res, next) => {
   try {
-    console.log("Received Request Body:", req.body); // Debugging log
-
     const s_id = parseInt(req.params.id);
-    const { s_quality,s_qualitycolor } = req.body;
 
-    // Check if s_quality is provided
-    if (!s_quality) {
-       res.status(400).json({ error: "s_quality is required" });
-    }
+    // Ensure evaluateStripQuality is defined or imported
+    await evaluateStripQuality(s_id); // Replace this with the actual implementation or import
 
-    // Perform the update
-    const result = await dbClient
-      .update(Strip)
-      .set({ s_quality,s_qualitycolor}) // Update only s_quality
-      .where(eq(Strip.s_id, s_id))
-      .returning();
-
-    res.json({ msg: "Quality updated successfully", data: result });
+    res.json({ msg: "Quality evaluated and updated successfully" });
   } catch (err) {
     next(err);
   }
 });
+
 
 
 // Delete strip from Strip
@@ -114,6 +104,8 @@ router.get("/:id", async (req, res) => {
         s_id: Strip.s_id,
         s_url: Strip.s_url,
         s_date: Strip.s_date,
+        s_quality: Strip.s_quality,
+        s_qualitycolor: Strip.s_qualitycolor,
         b_id: Strip.b_id,
         b_name: Brand.b_name,
         s_latitude: Strip.s_latitude,
@@ -141,6 +133,8 @@ router.get("/:id", async (req, res) => {
       s_id: result[0].s_id,
       s_url: result[0].s_url,
       s_date: result[0].s_date,
+      s_quality: result[0].s_quality,
+      s_qualitycolor: result[0].s_qualitycolor,
       b_id: result[0].b_id,
       b_name: result[0].b_name,
       s_latitude: result[0].s_latitude,

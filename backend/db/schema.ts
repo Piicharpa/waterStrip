@@ -24,7 +24,7 @@ export const Strip = pgTable("strip", {
   s_longitude: text("s_longitude"),
   u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
   s_url: text("s_url"),
-  s_quality: doublePrecision("s_quality").notNull(),
+  s_quality: text("s_quality").notNull(),
   s_qualitycolor: text("s_qualitycolor").notNull(),
 });
 
@@ -33,6 +33,8 @@ export const Parameter = pgTable("parameter", {
   p_id: serial("p_id").primaryKey(),
   p_name: text("p_name").notNull(),
   p_unit: text("p_unit"),
+  p_min: doublePrecision("p_min").notNull(),
+  p_max: doublePrecision("p_max").notNull(),
 });
 
 // ตาราง STRIP_PARAMETER (M:N)

@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import PicScale from "../component/picscale";
+// import PicScale from "../component/picscale";
 import Scale from "../component/subscale";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
+
+
+
 
 interface ColorScaleSet {
   colors: string[];
@@ -15,19 +18,13 @@ interface Measurement {
   value: number;
 }
 
-const getQualityColor = (quality: number): string => {
-  if (quality >= 0 && quality <= 24) return "#e74c3c";
-  if (quality >= 25 && quality <= 49) return "#FF8A24";
-  if (quality >= 50 && quality <= 74) return "#FFE521";
-  return "#7ECF1B";
-};
-
 const ITEMS_PER_PAGE = 8;
 
 const Lcardinfo: React.FC = () => {
   const { stripId } = useParams<{ stripId: string }>();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
+  const [qualityMessage, setQualityMessage] = useState<string>("");
+  const [qualityColor, setQualityColor] = useState<string>("#000000");
   const [stripBrand, setStripBrand] = useState<string>("");
   const [analyzeDate, setAnalyzeDate] = useState<string>("");
   const [location, setLocation] = useState<string>("");
@@ -44,50 +41,78 @@ const Lcardinfo: React.FC = () => {
     return format(new Date(isoString), "d MMM. yyyy");
   };
 
+  // const getQualityMessage = (quality: string) => {
+  //   switch (quality.trim().toLowerCase()) {
+  //     case "very good":
+  //       return "✨ น้ำดีมากจ้า!";
+  //     case "good":
+  //       return "💧 น้ำคุณภาพดีนะ";
+  //     case "moderate":
+  //       return "😐 พอใช้ได้อยู่นะ";
+  //     case "bad":
+  //       return "⚠️ น้ำไม่ค่อยโอเคเลย";
+  //     case "very bad":
+  //       return "🚨 น้ำแย่มาก ระวัง!";
+  //     default:
+  //       return "ไม่พบข้อมูลคุณภาพน้ำ";
+  //   }
+  // };
+
 
   
-  const waterQuality = 13;
+  // const waterQuality = 13;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1️⃣ PATCH เพื่ออัปเดตค่าคุณภาพก่อน
+        const patchResponse = await fetch(`http://localhost:3003/strips/${stripId}`, {
+          method: "PATCH",
+        });
+        if (!patchResponse.ok) throw new Error("Failed to PATCH data");
+  
+        console.log("PATCH Request Successful");  // Log here to see if PATCH was successful
+  
+        // 2️⃣ จากนั้นค่อย GET ข้อมูลใหม่
         const response = await fetch(`http://localhost:3003/strips/${stripId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
+        if (!response.ok) throw new Error("Failed to fetch data");
+  
         const data = await response.json();
-        
+        console.log("Fetched Data:", data);  // Log the fetched data to see if updated correctly
+  
         setStripBrand(data.b_name);
         setAnalyzeDate(data.s_date);
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
-
-        // ✅ ดึง colors และ values จาก parameters ที่มีข้อมูลครบ
+        setQualityColor(data.s_qualitycolor);
+        setQualityMessage(data.s_quality); 
+  
         const colorScales = data.parameters
-          .filter((param: any) => param.colors && param.values) // เอาเฉพาะที่มีข้อมูล
+          .filter((param: any) => param.colors && param.values)
           .map((param: any) => ({
             colors: param.colors,
-            values: param.values
+            values: param.values,
           }));
-
         setScaleColorSets(colorScales);
-
+  
         const measurements = data.parameters
-          .filter((param: any) => param.p_name && param.p_unit && param.sp_value) // เอาเฉพาะที่มีข้อมูล
+          .filter((param: any) => param.p_name && param.p_unit && param.sp_value)
           .map((param: any) => ({
             name: param.p_name,
             unit: param.p_unit,
-            value: param.sp_value
+            value: param.sp_value,
           }));
-
         setMeasurements(measurements);
+  
       } catch (error) {
         console.error("Error fetching strip data:", error);
       }
     };
-
+  
     fetchData();
   }, [stripId]);
+  
+  
   
 
   // Add this function to handle dot and scroll interaction
@@ -120,25 +145,6 @@ const Lcardinfo: React.FC = () => {
     };
   }, []);
 
-  const picScaleColors = [
-    "#BE4C19",
-    "#AEA360",
-    "#0CA2C3",
-    "#FAE8F9",
-    "#FBE5EC",
-    "#BF89C0",
-    "#CC95CF",
-    "#ED8D69",
-    "#FFD2B2",
-    "#77B3BC",
-    "#FFBC76",
-    "#0B90C0",
-    "#D16DB1",
-    "#C9A10B",
-    "#FFA9A6",
-    "#FE91C6",
-  ];
-
   const totalPages = Math.ceil(measurements.length / ITEMS_PER_PAGE);
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
     measurements.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
@@ -163,13 +169,13 @@ const Lcardinfo: React.FC = () => {
             <div className="flex items-center space-x-3 mt-10 ml-35">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: getQualityColor(waterQuality) }}
+                style={{ backgroundColor: qualityColor }}
               ></div>
               <div className="flex flex-col">
                 <span className="text-black text-xl font-semibold">
                   Water Quality:
                 </span>
-                <span className="text-gray-900 font-bold">{waterQuality}%</span>
+                {/* <span className="text-gray-900 font-bold">{waterQuality}%</span> */}
               </div>
             </div>
           </div>
@@ -228,9 +234,9 @@ const Lcardinfo: React.FC = () => {
           </div>
 
           {/* Image and Color Scale Section */}
-          <div className="flex space-x-6 ml-auto mr-35 mt-4 h-126">
-            {/* Gray box for uploaded image */}
-            <div className="h-126 w-126 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-6">
+          <div className="flex flex-col items-center ml-auto mr-35 mt-4">
+            {/* กล่องรูปภาพ - สูงคงที่ */}
+            <div className="h-126 w-126 bg-gray-200 rounded-lg overflow-hidden">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -242,12 +248,13 @@ const Lcardinfo: React.FC = () => {
               )}
             </div>
 
-            {/* Color bar from picscale.tsx */}
-            <div className="flex flex-col items-center -mt-8">
-              <h2 className="text-xl font-bold mb-2">Scale</h2>
-              <PicScale scaleColors={picScaleColors} />
+            {/* กล่องข้อความแยกต่างหาก */}
+            <div className="mt-6 w-126 text-lg text-blue-800 font-semibold text-center">
+              {qualityMessage}
             </div>
           </div>
+
+
         </div>
       </div>
     </div>

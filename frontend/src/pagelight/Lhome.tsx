@@ -38,7 +38,6 @@ const Lhome: React.FC = () => {
         
         // กรอง strips ตาม u_id
         const filteredStrips = stripsRes.data.filter((strip) => strip.u_id === storedUserId);
-  
         const updatedCards = filteredStrips.map((strip) => ({
           ...strip,
           b_name: bandsMap.get(strip.b_id) || "Unknown",
@@ -212,7 +211,7 @@ const Lhome: React.FC = () => {
                     brand={card.b_name}
                     dateTime={formatDate(card.s_date)} // Adjust based on API response
                     location={`${card.s_latitude}, ${card.s_longitude}`}
-                    waterQuality={card.s_quality} // Example value
+                    waterQualityColor={card.s_qualitycolor}
                     onClick={() => {
                       if (card.s_id) {
                         console.log(`Navigating to /cardinfo/${card.s_id}`);
