@@ -26,6 +26,7 @@ export const Strip = pgTable("strip", {
   s_url: text("s_url"),
   s_quality: text("s_quality").notNull(),
   s_qualitycolor: text("s_qualitycolor").notNull(),
+  s_status: text("s_status").notNull().default("private"), 
 });
 
 // ตาราง PARAMETER
