@@ -39,7 +39,7 @@ router.get("/card/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   console.log("Request Body:", req.body);
   try {
-    const { b_id, s_latitude, s_longitude, u_id , s_url} = req.body;
+    const { b_id, s_latitude, s_longitude, u_id , s_url , s_status} = req.body;
 
     // Corrected check for missing fields
     if (!b_id || !s_latitude || !s_longitude || !u_id || !s_url) {
@@ -49,7 +49,7 @@ router.post("/", async (req, res, next) => {
     // Insert new strip
     const result = await dbClient
       .insert(Strip)
-      .values({ b_id, s_latitude, s_longitude , u_id , s_url ,s_quality: " ", s_qualitycolor: "#ffffff"}) // Default value for s_quality
+      .values({ b_id, s_latitude, s_longitude , u_id , s_url , s_status, s_quality: " ", s_qualitycolor: "#ffffff"}) // Default value for s_quality
       .returning(); // Returns inserted values
 
     res.status(201).json({
@@ -106,6 +106,7 @@ router.get("/:id", async (req, res) => {
         s_date: Strip.s_date,
         s_quality: Strip.s_quality,
         s_qualitycolor: Strip.s_qualitycolor,
+        s_status: Strip.s_status,
         b_id: Strip.b_id,
         b_name: Brand.b_name,
         s_latitude: Strip.s_latitude,
@@ -135,6 +136,7 @@ router.get("/:id", async (req, res) => {
       s_date: result[0].s_date,
       s_quality: result[0].s_quality,
       s_qualitycolor: result[0].s_qualitycolor,
+      s_status: result[0].s_status,
       b_id: result[0].b_id,
       b_name: result[0].b_name,
       s_latitude: result[0].s_latitude,
