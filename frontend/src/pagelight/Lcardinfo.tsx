@@ -66,7 +66,7 @@ const Lcardinfo: React.FC = () => {
     const fetchData = async () => {
       try {
         // 1️⃣ PATCH เพื่ออัปเดตค่าคุณภาพก่อน
-        const patchResponse = await fetch(`http://localhost:3003/strips/${stripId}`, {
+        const patchResponse = await fetch(`http://localhost:3003/strips/quality/${stripId}`, {
           method: "PATCH",
         });
         if (!patchResponse.ok) throw new Error("Failed to PATCH data");

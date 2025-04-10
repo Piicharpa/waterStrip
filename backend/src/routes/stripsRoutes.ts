@@ -62,7 +62,7 @@ router.post("/", async (req, res, next) => {
 });
 
 // Update strip in Strip
-router.patch("/:id", async (req, res, next) => {
+router.patch("/quality/:id", async (req, res, next) => {
   try {
     const s_id = parseInt(req.params.id);
 
@@ -70,6 +70,25 @@ router.patch("/:id", async (req, res, next) => {
     await evaluateStripQuality(s_id); // Replace this with the actual implementation or import
 
     res.json({ msg: "Quality evaluated and updated successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Update strip in Strip
+router.patch("/:id", async (req, res, next) => {
+  try {
+    const s_id = parseInt(req.params.id);
+    const { b_id, s_date, s_latitude, s_longitude,s_status} = req.body;
+    if (!b_id && !s_date && !s_latitude && !s_longitude && !s_status === undefined) throw new Error("No data to update");
+
+    const result = await dbClient
+      .update(Strip)
+      .set({ b_id, s_date, s_latitude, s_longitude, s_status })
+      .where(eq(Strip.s_id, s_id))
+      .returning();
+    
+    res.json({ msg: "Strip updated successfully", data: result });
   } catch (err) {
     next(err);
   }
