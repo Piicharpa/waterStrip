@@ -1,5 +1,7 @@
 import express from "express";
 import { dbClient } from "../../db/client";
+
+import { evaluateStripQuality } from "../../src/component/quality"; // Adjusted the path
 import {
   Strip,
   Brand,
@@ -9,6 +11,7 @@ import {
   StripStatus,
 } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
+
 
 const router = express.Router();
 
@@ -73,10 +76,23 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Update strip in Strip
+router.patch("/quality/:id", async (req, res, next) => {
+  try {
+    const s_id = parseInt(req.params.id);
+
+    // Ensure evaluateStripQuality is defined or imported
+    await evaluateStripQuality(s_id); // Replace this with the actual implementation or import
+
+    res.json({ msg: "Quality evaluated and updated successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch("/:id", async (req, res, next) => {
   try {
     // console.log("Received Request Body:", req.body);
-
     const s_id = parseInt(req.params.id);
     const { s_quality, s_qualitycolor } = req.body;
 
@@ -89,13 +105,14 @@ router.patch("/:id", async (req, res, next) => {
       .set({ s_quality, s_qualitycolor })
       .where(eq(Strip.s_id, s_id))
       .returning();
-
-    res.json({ msg: "Quality updated successfully", data: result });
+    
+    res.json({ msg: "Strip updated successfully", data: result });
   } catch (err) {
     next(err);
   }
 });
 
+// Delete strip from Strip
 router.delete("/:id", async (req, res, next) => {
   try {
     const s_id = parseInt(req.params.id);
@@ -122,6 +139,9 @@ router.get("/:id", async (req, res) => {
         s_id: Strip.s_id,
         s_url: Strip.s_url,
         s_date: Strip.s_date,
+        s_quality: Strip.s_quality,
+        s_qualitycolor: Strip.s_qualitycolor,
+        s_status: Strip.s_status,
         b_id: Strip.b_id,
         b_name: Brand.b_name,
         s_latitude: Strip.s_latitude,
@@ -151,6 +171,9 @@ router.get("/:id", async (req, res) => {
       s_id: result[0].s_id,
       s_url: result[0].s_url,
       s_date: result[0].s_date,
+      s_quality: result[0].s_quality,
+      s_qualitycolor: result[0].s_qualitycolor,
+      s_status: result[0].s_status,
       b_id: result[0].b_id,
       b_name: result[0].b_name,
       s_latitude: result[0].s_latitude,

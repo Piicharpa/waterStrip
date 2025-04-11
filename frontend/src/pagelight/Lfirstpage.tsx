@@ -440,7 +440,7 @@ function FirstPage() {
                 {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
                 <button
                   className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/pantee")}
+                  onClick={() => navigate("/panteefirstpage")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

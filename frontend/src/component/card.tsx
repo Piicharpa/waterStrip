@@ -5,7 +5,7 @@ interface CardProps {
   brand: string;
   dateTime: string;
   location: string;
-  waterQuality: number;
+  waterQualityColor?: string; // สีของคุณภาพน้ำ
   cardColor?: string;  // เพิ่มสีพื้นหลังของการ์ด
   textColor?: string;  // เพิ่มสีข้อความของแบรนด์
   textColorLocation?: string; // สีข้อความสำหรับ location
@@ -14,19 +14,19 @@ interface CardProps {
 }
 
 
-const getWaterQualityColor = (quality: number) => {
-  if (quality >= 0 && quality <= 24) return "#e74c3c";
-  if (quality >= 25 && quality <= 49) return "#FF8A24";
-  if (quality >= 50 && quality <= 74) return "#FFE521";
-  return "#7ECF1B";
-};
+// const getWaterQualityColor = (quality: number) => {
+//   if (quality >= 0 && quality <= 24) return "#e74c3c";
+//   if (quality >= 25 && quality <= 49) return "#FF8A24";
+//   if (quality >= 50 && quality <= 74) return "#FFE521";
+//   return "#7ECF1B";
+// };
 
 const Card: React.FC<CardProps> = ({
   imageUrl,
   brand,
   dateTime,
   location,
-  waterQuality,
+  waterQualityColor, // ใช้สีเริ่มต้น
   onClick,
   cardColor = "bg-black",  // ใช้ค่าเริ่มต้น
   textColor = "text-white", // ใช้ค่าเริ่มต้น
@@ -50,7 +50,7 @@ const Card: React.FC<CardProps> = ({
         <p className={`text-base ${textColorDateTime}`}>{dateTime}</p>
       </div>
       <div className="mt-3 flex justify-end">
-        <div className="w-6 h-6 rounded-full" style={{ backgroundColor: getWaterQualityColor(waterQuality) }}></div>
+        <div className="w-6 h-6 rounded-full" style={{ backgroundColor: waterQualityColor }}></div>
       </div>
     </div>
   );

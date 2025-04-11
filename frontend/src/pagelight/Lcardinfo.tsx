@@ -6,6 +6,9 @@ import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
+
+
+
 interface ColorScaleSet {
   colors: string[];
   values: number[];
@@ -17,19 +20,13 @@ interface Measurement {
   value: number;
 }
 
-const getQualityColor = (quality: number): string => {
-  if (quality >= 0 && quality <= 24) return "#e74c3c";
-  if (quality >= 25 && quality <= 49) return "#FF8A24";
-  if (quality >= 50 && quality <= 74) return "#FFE521";
-  return "#7ECF1B";
-};
-
 const ITEMS_PER_PAGE = 8;
 
 const Lcardinfo: React.FC = () => {
   const { stripId } = useParams<{ stripId: string }>();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
+  const [qualityMessage, setQualityMessage] = useState<string>("");
+  const [qualityColor, setQualityColor] = useState<string>("#000000");
   const [stripBrand, setStripBrand] = useState<string>("");
   const [analyzeDate, setAnalyzeDate] = useState<string>("");
   const [location, setLocation] = useState<string>("");
@@ -47,7 +44,28 @@ const Lcardinfo: React.FC = () => {
     return format(new Date(isoString), "d MMM. yyyy");
   };
 
-  const waterQuality = 13;
+
+  // const getQualityMessage = (quality: string) => {
+  //   switch (quality.trim().toLowerCase()) {
+  //     case "very good":
+  //       return "✨ น้ำดีมากจ้า!";
+  //     case "good":
+  //       return "💧 น้ำคุณภาพดีนะ";
+  //     case "moderate":
+  //       return "😐 พอใช้ได้อยู่นะ";
+  //     case "bad":
+  //       return "⚠️ น้ำไม่ค่อยโอเคเลย";
+  //     case "very bad":
+  //       return "🚨 น้ำแย่มาก ระวัง!";
+  //     default:
+  //       return "ไม่พบข้อมูลคุณภาพน้ำ";
+  //   }
+  // };
+
+
+  
+  // const waterQuality = 13;
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -65,42 +83,51 @@ const Lcardinfo: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 1️⃣ PATCH เพื่ออัปเดตค่าคุณภาพก่อน
+        const patchResponse = await fetch(`http://localhost:3003/strips/quality/${stripId}`, {
+          method: "PATCH",
+        });
+        if (!patchResponse.ok) throw new Error("Failed to PATCH data");
+  
+        console.log("PATCH Request Successful");  // Log here to see if PATCH was successful
+  
+        // 2️⃣ จากนั้นค่อย GET ข้อมูลใหม่
         const response = await fetch(`http://localhost:3003/strips/${stripId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
+        if (!response.ok) throw new Error("Failed to fetch data");
+  
         const data = await response.json();
+
+        console.log("Fetched Data:", data);  // Log the fetched data to see if updated correctly
 
         setStripBrand(data.b_name);
         setAnalyzeDate(data.s_date);
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
+        setQualityColor(data.s_qualitycolor);
+        setQualityMessage(data.s_quality); 
 
         const colorScales = data.parameters
-          .filter((param: any) => param.colors && param.values) // เอาเฉพาะที่มีข้อมูล
+          .filter((param: any) => param.colors && param.values)
           .map((param: any) => ({
             colors: param.colors,
             values: param.values,
           }));
-
         setScaleColorSets(colorScales);
-
+  
         const measurements = data.parameters
-          .filter(
-            (param: any) => param.p_name && param.p_unit && param.sp_value
-          ) // เอาเฉพาะที่มีข้อมูล
+          .filter((param: any) => param.p_name && param.p_unit && param.sp_value)
           .map((param: any) => ({
             name: param.p_name,
             unit: param.p_unit,
             value: param.sp_value,
           }));
-
         setMeasurements(measurements);
+  
       } catch (error) {
         console.error("Error fetching strip data:", error);
       }
     };
-
+  
     fetchData();
   }, [stripId]);
 
@@ -150,6 +177,7 @@ const Lcardinfo: React.FC = () => {
   //   "#FFA9A6",
   //   "#FE91C6",
   // ];
+
 
   const totalPages = Math.ceil(measurements.length / ITEMS_PER_PAGE);
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
@@ -212,13 +240,13 @@ const Lcardinfo: React.FC = () => {
             <div className="flex items-center space-x-3 mt-6 ml-45">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: getQualityColor(waterQuality) }}
+                style={{ backgroundColor: qualityColor }}
               ></div>
               <div className="flex flex-col">
                 <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
-                <span className="text-gray-900 font-bold">{waterQuality}%</span>
+                {/* <span className="text-gray-900 font-bold">{waterQuality}%</span> */}
               </div>
             </div>
           </div>
@@ -300,23 +328,12 @@ const Lcardinfo: React.FC = () => {
               <PicScale scaleColors={picScaleColors} />
             </div> */}
           </div>
+
+
         </div>
 
         <div className="scroll-container absolute -right-23 bg-transparent top-116 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
-          เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่
-          ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
-          เพิ่มข้อความที่นี่ ลองพิมพ์ข้อความยาว ๆ
-          เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง เพิ่มข้อความที่นี่
-          ลองพิมพ์ข้อความยาว ๆ เพื่อดูว่ามันขึ้นบรรทัดใหม่เมื่อเกินขอบกล่อง
+          {qualityMessage}
         </div>
 
         {/* Detail Button - Moved to bottom right */}

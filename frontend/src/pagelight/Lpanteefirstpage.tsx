@@ -42,7 +42,7 @@ function ChangeView({ center }: { center: Location }) {
   return null;
 }
 
-function Pantee() {
+function Panteefirstpage() {
   const [currentLocation, setCurrentLocation] = useState<Location>({
     lat: 18.7883,
     lng: 98.9853,
@@ -97,9 +97,8 @@ function Pantee() {
         const brandData = await brandResponse.json();
 
         // Map the strip data and link it with the corresponding brand
-        const storedUserId = sessionStorage.getItem("userId");
         const mappedPlaces = stripsData
-        .filter((strip: any) => strip.u_id === storedUserId )
+        .filter((strip: any) => strip.s_status === "public")
         .map((strip: any) => {
           const brand = brandData.find((b: any) => b.b_id === strip.b_id);
           const lat = dmsToDecimal(strip.s_latitude);
@@ -107,6 +106,7 @@ function Pantee() {
 
           return {
             id: strip.s_id,
+            status: strip.s_status,
             title: brand ? brand.b_name : "Unknown Brand",
             date: getFormattedDate(strip.s_date), // Or use your date formatting function
             location: {
@@ -114,7 +114,7 @@ function Pantee() {
               lng,
             },
             color: strip.s_qualitycolor, // Assuming this is the color for water quality
-            quality: strip.s_quality
+            // quality: strip.s_quality
           };
         });
 
@@ -316,4 +316,4 @@ function Pantee() {
   );
 }
 
-export default Pantee;
+export default Panteefirstpage;
