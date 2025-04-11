@@ -164,7 +164,7 @@ function FirstPage() {
       const data = response.data as { exists: boolean };
   
       if (data.exists) {  
-        navigate("/permission");
+        navigate("/home");
       } else {
         alert("please Sign Up");
         navigate("/");

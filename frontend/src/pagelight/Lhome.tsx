@@ -19,7 +19,7 @@ const Lhome: React.FC = () => {
   useEffect(() => {
     // ดึงข้อมูล userId จาก sessionStorage ก่อน
     const storedUserId = sessionStorage.getItem("userId");
-    console.log("Stored userId:", storedUserId);
+    // console.log("Stored userId:", storedUserId);
     // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
     if (!storedUserId) {
       console.error("User ID not found in sessionStorage");
@@ -215,7 +215,7 @@ const Lhome: React.FC = () => {
                     waterQuality={card.s_quality} // Example value
                     onClick={() => {
                       if (card.s_id) {
-                        console.log(`Navigating to /cardinfo/${card.s_id}`);
+                        // console.log(`Navigating to /cardinfo/${card.s_id}`);
                         navigate(`/cardinfo/${card.s_id}`);
                       } else {
                         console.error("Card ID is missing");
