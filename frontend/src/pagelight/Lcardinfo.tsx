@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from "react";
 import Scale from "../component/subscale";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 
 
@@ -31,15 +33,17 @@ const Lcardinfo: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [u_id, setUid] = useState("");
 
-  const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]); 
+  const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]);
 
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  
+
   const formatDate = (isoString?: string) => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
     return format(new Date(isoString), "d MMM. yyyy");
   };
+
 
   // const getQualityMessage = (quality: string) => {
   //   switch (quality.trim().toLowerCase()) {
@@ -62,6 +66,20 @@ const Lcardinfo: React.FC = () => {
   
   // const waterQuality = 13;
 
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+        setUid(userId);
+      } else {
+        navigate("/");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -78,15 +96,16 @@ const Lcardinfo: React.FC = () => {
         if (!response.ok) throw new Error("Failed to fetch data");
   
         const data = await response.json();
+
         console.log("Fetched Data:", data);  // Log the fetched data to see if updated correctly
-  
+
         setStripBrand(data.b_name);
         setAnalyzeDate(data.s_date);
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
         setQualityColor(data.s_qualitycolor);
         setQualityMessage(data.s_quality); 
-  
+
         const colorScales = data.parameters
           .filter((param: any) => param.colors && param.values)
           .map((param: any) => ({
@@ -111,22 +130,17 @@ const Lcardinfo: React.FC = () => {
   
     fetchData();
   }, [stripId]);
-  
-  
-  
 
-  // Add this function to handle dot and scroll interaction
   const handleDotClick = (index: number) => {
     setCurrentPage(index);
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
-        left: index * 480, // Width of each page
+        left: index * 480,
         behavior: "smooth",
       });
     }
   };
 
-  // Add this useEffect to sync scroll position with dots
   useEffect(() => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
@@ -145,34 +159,91 @@ const Lcardinfo: React.FC = () => {
     };
   }, []);
 
+  // const picScaleColors = [
+  //   "#BE4C19",
+  //   "#AEA360",
+  //   "#0CA2C3",
+  //   "#FAE8F9",
+  //   "#FBE5EC",
+  //   "#BF89C0",
+  //   "#CC95CF",
+  //   "#ED8D69",
+  //   "#FFD2B2",
+  //   "#77B3BC",
+  //   "#FFBC76",
+  //   "#0B90C0",
+  //   "#D16DB1",
+  //   "#C9A10B",
+  //   "#FFA9A6",
+  //   "#FE91C6",
+  // ];
+
+
   const totalPages = Math.ceil(measurements.length / ITEMS_PER_PAGE);
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
     measurements.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
   );
-  
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
+  const handleSave = async () => {
+    const status = isPrivate ? "private" : "public";
+
+    try {
+      const response = await fetch(
+        `http://localhost:3003/strips/strip-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            u_id,
+            s_id: stripId,
+            status,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Saved successfully:", result);
+        setIsOpen(false); // ปิด popup หลังบันทึกสำเร็จ
+      } else {
+        console.error("Save failed:", result.error);
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+    }
+  };
+
   return (
     <div className="fixed flex flex-col h-screen w-screen overflow-hidden">
       <div className="flex flex-col flex-grow overflow-hidden ">
         {/* Top section with Strip Brand and Date */}
         <div className="flex justify-between items-center p-4">
           <div>
-            <h2 className="text-4xl font-bold text-black mt-10 ml-35">
+            <h2 className="text-3xl font-bold text-black mt-4 ml-45">
               {stripBrand}
             </h2>
-            <p className="text-gray-400 ml-35  text-sm">{formatDate(analyzeDate)}</p>
-            <p className="absolute  top-23 right-35  text-black text-lg hover:underline cursor-pointer" 
-            onClick={() => navigate("/pantee")}>
+            <p className="text-gray-400 ml-45 mt-2 text-sm">
+              {formatDate(analyzeDate)}
+            </p>
+            <p
+              className="absolute  top-18.5 right-50  text-black text-base hover:underline cursor-pointer"
+              onClick={() => navigate("/pantee")}
+            >
               {location}
             </p>
 
             {/* Water Quality Indicator - Moved to left side */}
-            <div className="flex items-center space-x-3 mt-10 ml-35">
+            <div className="flex items-center space-x-3 mt-6 ml-45">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: qualityColor }}
               ></div>
               <div className="flex flex-col">
-                <span className="text-black text-xl font-semibold">
+                <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
                 {/* <span className="text-gray-900 font-bold">{waterQuality}%</span> */}
@@ -184,11 +255,11 @@ const Lcardinfo: React.FC = () => {
         {/* Image, Measurements, and Color Scale Section */}
         <div className="flex flex-grow">
           {/* Container ครอบ Scroll Frame + Pagination */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mt-4">
             {/* Horizontal Scrollable Frame */}
             <div
               ref={scrollContainerRef}
-              className="ml-40 w-[480px] flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide mt-3"
+              className="ml-50 w-120  flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide -mt-1"
               style={{
                 scrollbarWidth: "none", // For Firefox
                 msOverflowStyle: "none", // For Internet Explorer and Edge
@@ -198,11 +269,14 @@ const Lcardinfo: React.FC = () => {
               {paginatedMeasurements.map((page, index) => (
                 <div
                   key={index}
-                  className="p-5 w-[480px] h-[528px] flex-shrink-0 snap-center mr-2"
+                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente "
                 >
                   {page.map((measurement, index) => {
-                    const scaleSetIndex = index % scaleColorSets.length; 
-                    const scaleSet = scaleColorSets[scaleSetIndex] ?? { colors: [], values: [] };
+                    const scaleSetIndex = index % scaleColorSets.length;
+                    const scaleSet = scaleColorSets[scaleSetIndex] ?? {
+                      colors: [],
+                      values: [],
+                    };
 
                     return (
                       <Scale
@@ -224,7 +298,7 @@ const Lcardinfo: React.FC = () => {
               {paginatedMeasurements.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-3 h-3 rounded-full cursor-pointer  ${
+                  className={`w-2 h-2 rounded-full cursor-pointer  ${
                     index === currentPage ? "bg-black " : "bg-gray-300"
                   }`}
                   onClick={() => handleDotClick(index)}
@@ -234,9 +308,9 @@ const Lcardinfo: React.FC = () => {
           </div>
 
           {/* Image and Color Scale Section */}
-          <div className="flex flex-col items-center ml-auto mr-35 mt-4">
-            {/* กล่องรูปภาพ - สูงคงที่ */}
-            <div className="h-126 w-126 bg-gray-200 rounded-lg overflow-hidden">
+          <div className="flex space-x-6 ml-auto mr-35 -mt-18 h-126">
+            {/* Gray box for uploaded image */}
+            <div className="h-80 w-80 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -248,14 +322,102 @@ const Lcardinfo: React.FC = () => {
               )}
             </div>
 
-            {/* กล่องข้อความแยกต่างหาก */}
-            <div className="mt-6 w-126 text-lg text-blue-800 font-semibold text-center">
-              {qualityMessage}
-            </div>
+            {/* Color bar from picscale.tsx */}
+            {/* <div className="flex flex-col items-center -mt-8">
+              <h2 className="text-xl font-bold mb-2">Scale</h2>
+              <PicScale scaleColors={picScaleColors} />
+            </div> */}
           </div>
 
 
         </div>
+
+        <div className="scroll-container absolute -right-23 bg-transparent top-116 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
+          {qualityMessage}
+        </div>
+
+        {/* Detail Button - Moved to bottom right */}
+        <div className="fixed bottom-12 right-50">
+          <button
+            className="bg-black text-white px-4 py-2 rounded-lg border-2 border-transparent hover:bg-gray-700"
+            onClick={() => setIsOpen(true)}
+          >
+            save
+          </button>
+        </div>
+
+        {/* Modal */}
+        {isOpen && (
+          <div
+            className="fixed inset-0 flex items-center justify-center"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+          >
+            <div className="bg-white p-6 rounded-lg  w-96">
+              <h2 className="text-lg font-semibold mb-4">บันทึกเป็นแบบไหน?</h2>
+
+              {/* ตัวเลือก Private/Public */}
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                      isPrivate
+                        ? "border-black bg-black"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isPrivate && (
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    )}
+                  </div>
+                  <span>ส่วนตัว</span>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={isPrivate}
+                    onChange={() => setIsPrivate(true)}
+                  />
+                </label>
+
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <div
+                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                      !isPrivate
+                        ? "border-black bg-black"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {!isPrivate && (
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    )}
+                  </div>
+                  <span>สาธารณะ</span>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={!isPrivate}
+                    onChange={() => setIsPrivate(false)}
+                  />
+                </label>
+              </div>
+
+              {/* ปุ่มยืนยัน */}
+              <div className="mt-6 flex justify-end space-x-2">
+                <button
+                  className="px-4 py-2 rounded-lg border border-black hover:bg-gray-200"
+                  onClick={() => setIsOpen(false)} // ปิด Popup เมื่อกด "ยกเลิก"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-700"
+                  onClick={handleSave} // กดบันทึกแล้วปิด Popup ทันที
+                >
+                  บันทึก
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

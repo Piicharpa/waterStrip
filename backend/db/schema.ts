@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, doublePrecision, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, doublePrecision, timestamp, json, char } from "drizzle-orm/pg-core";
 
 // ตาราง USER
 export const User = pgTable("user", {
@@ -27,6 +27,15 @@ export const Strip = pgTable("strip", {
   s_quality: text("s_quality").notNull(),
   s_qualitycolor: text("s_qualitycolor").notNull(),
   s_status: text("s_status").notNull().default("private"), 
+});
+
+export const StripStatus = pgTable("strip_status", {
+  st_id: serial("st_id").primaryKey(),
+  u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
+  s_id: integer("s_id")
+    .notNull()
+    .references(() => Strip.s_id, { onDelete: "cascade" }),
+  status: char("status", { length: 255 }).notNull() 
 });
 
 // ตาราง PARAMETER
