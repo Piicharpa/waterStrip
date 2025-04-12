@@ -62,7 +62,7 @@ router.post("/", async (req, res, next) => {
         s_longitude,
         u_id,
         s_url,
-        s_quality: 250,
+        s_quality: " ",
         s_qualitycolor: "#ffffff",
       })
       .returning();
