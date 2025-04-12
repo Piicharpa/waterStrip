@@ -46,7 +46,7 @@ router.get("/card/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   console.log("Request Body:", req.body);
   try {
-    const { b_id, s_latitude, s_longitude, u_id, s_url } = req.body;
+    const { b_id, s_latitude, s_longitude, u_id, s_url} = req.body;
 
     if (!b_id || !s_latitude || !s_longitude || !u_id || !s_url) {
       throw new Error(
@@ -62,8 +62,9 @@ router.post("/", async (req, res, next) => {
         s_longitude,
         u_id,
         s_url,
-        s_quality: 250,
+        s_quality: " ",
         s_qualitycolor: "#ffffff",
+        s_status: "private",
       })
       .returning();
 
