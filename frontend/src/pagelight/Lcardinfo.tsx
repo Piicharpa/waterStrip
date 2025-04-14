@@ -178,7 +178,6 @@ const Lcardinfo: React.FC = () => {
   //   "#FE91C6",
   // ];
 
-
   const totalPages = Math.ceil(measurements.length / ITEMS_PER_PAGE);
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
     measurements.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
