@@ -12,7 +12,6 @@ import {
 } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
 
-
 const router = express.Router();
 
 router.get("/", async (req, res, next) => {
@@ -33,9 +32,9 @@ router.get("/card/:id", async (req, res, next) => {
       .from(Strip)
       .where(eq(Strip.u_id, id));
 
-    if (results.length === 0) {
-      res.status(404).json({ message: "No cards found for this user." });
-    }
+    // if (results.length === 0) {
+    //   res.status(404).json({ message: "No cards found for this user." });
+    // }
 
     res.json(results);
   } catch (err) {
@@ -57,12 +56,12 @@ router.post("/", async (req, res, next) => {
     const result = await dbClient
       .insert(Strip)
       .values({
+        u_id,
         b_id,
         s_latitude,
         s_longitude,
-        u_id,
         s_url,
-        s_quality: " ",
+        s_quality: "",
         s_qualitycolor: "#ffffff",
       })
       .returning();
@@ -105,7 +104,7 @@ router.patch("/:id", async (req, res, next) => {
       .set({ s_quality, s_qualitycolor })
       .where(eq(Strip.s_id, s_id))
       .returning();
-    
+
     res.json({ msg: "Strip updated successfully", data: result });
   } catch (err) {
     next(err);
@@ -141,7 +140,7 @@ router.get("/:id", async (req, res) => {
         s_date: Strip.s_date,
         s_quality: Strip.s_quality,
         s_qualitycolor: Strip.s_qualitycolor,
-        s_status: Strip.s_status,
+        s_status: StripStatus.status, // เพิ่ม field status ตรงนี้
         b_id: Strip.b_id,
         b_name: Brand.b_name,
         s_latitude: Strip.s_latitude,
@@ -155,6 +154,7 @@ router.get("/:id", async (req, res) => {
       })
       .from(Strip)
       .innerJoin(Brand, eq(Strip.b_id, Brand.b_id))
+      .leftJoin(StripStatus, eq(Strip.s_id, StripStatus.s_id)) // เพิ่ม join นี้
       .leftJoin(StripParameter, eq(Strip.s_id, StripParameter.s_id))
       .leftJoin(Parameter, eq(StripParameter.p_id, Parameter.p_id))
       .leftJoin(
@@ -197,28 +197,5 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/strip-status", async (req, res) => {
-  try {
-    const { u_id, s_id, status } = req.body;
-
-    if (!s_id || !status || !u_id) {
-      res.status(400).json({ error: "Missing s_id or status" });
-    }
-
-    const inserted = await dbClient
-      .insert(StripStatus)
-      .values({
-        s_id,
-        status,
-        u_id,
-      })
-      .returning();
-
-    res.status(201).json({ message: "Inserted successfully", data: inserted });
-  } catch (error) {
-    console.error("Error inserting strip status:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 export default router;

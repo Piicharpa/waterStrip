@@ -53,7 +53,6 @@ function Panteefirstpage() {
   });
   const [places, setPlaces] = useState<Place[]>([]);
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
-  
 
   // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
   const dmsToDecimal = (dms: string) => {
@@ -65,7 +64,7 @@ function Panteefirstpage() {
       const seconds = parseFloat(match[3]);
       const direction = match[4];
 
-      let decimal = degrees + (minutes / 60) + (seconds / 3600);
+      let decimal = degrees + minutes / 60 + seconds / 3600;
 
       // Adjust for N/S/E/W directions
       if (direction === "S" || direction === "W") {
@@ -81,46 +80,39 @@ function Panteefirstpage() {
   // Utility function to format the date (if needed)
   const getFormattedDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${
+      date.getMonth() + 1
+    }/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   };
 
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
+        // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
+        const response = await fetch("http://localhost:3003/strip-status/public");
+        const data = await response.json();
 
-        // Fetch strip data
-        const stripsResponse = await fetch('http://localhost:3003/strips');
-        const stripsData = await stripsResponse.json();
-
-        // Fetch brand data
-        const brandResponse = await fetch('http://localhost:3003/brands');
-        const brandData = await brandResponse.json();
-
-        // Map the strip data and link it with the corresponding brand
-        const mappedPlaces = stripsData
-        .filter((strip: any) => strip.s_status === "public")
-        .map((strip: any) => {
-          const brand = brandData.find((b: any) => b.b_id === strip.b_id);
+        // Map ข้อมูลให้อยู่ในรูปแบบที่ frontend ใช้
+        const mappedPlaces = data.map((strip: any) => {
           const lat = dmsToDecimal(strip.s_latitude);
           const lng = dmsToDecimal(strip.s_longitude);
 
           return {
             id: strip.s_id,
-            status: strip.s_status,
-            title: brand ? brand.b_name : "Unknown Brand",
-            date: getFormattedDate(strip.s_date), // Or use your date formatting function
+            title: strip.brand_name || "Unknown Brand",
+            date: getFormattedDate(strip.s_date),
             location: {
               lat,
               lng,
             },
-            color: strip.s_qualitycolor, // Assuming this is the color for water quality
-            // quality: strip.s_quality
+            color: strip.s_qualitycolor,
+            quality: strip.s_quality,
           };
         });
 
         setPlaces(mappedPlaces);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching public strip data:", error);
       }
     };
 
@@ -154,9 +146,9 @@ function Panteefirstpage() {
     if (marker) {
       // ทำการเปิด popup ของ marker
       marker.openPopup();
-      
+
       // เลื่อนไปที่ตำแหน่งของสถานที่
-      const place = places.find(p => p.id === placeId);
+      const place = places.find((p) => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
@@ -173,17 +165,17 @@ function Panteefirstpage() {
         </div>
         {/* Search Box */}
         <div className="relative">
-        <input 
-          type="text" 
-          placeholder="Search" 
-          className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-        style={{
-          borderTopLeftRadius: '4000px',
-          borderBottomLeftRadius: '4000px',
-          borderTopRightRadius: '9999px',
-          borderBottomRightRadius: '9999px'
-        }}
-        />
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            style={{
+              borderTopLeftRadius: "4000px",
+              borderBottomLeftRadius: "4000px",
+              borderTopRightRadius: "9999px",
+              borderBottomRightRadius: "9999px",
+            }}
+          />
           <button
             onClick={handleLocate}
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
@@ -238,7 +230,7 @@ function Panteefirstpage() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
+                  <p style={{ margin: "0 0 5px 0" }}>{place.date}</p>
                   {/* <span>คุณภาพน้ำ: {place.quality}</span> */}
                 </div>
               </Popup>
@@ -282,7 +274,8 @@ function Panteefirstpage() {
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
+              e.currentTarget.style.boxShadow =
+                "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
             }}
           >
             <div

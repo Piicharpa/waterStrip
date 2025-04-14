@@ -5,15 +5,14 @@ import { LatLngExpression } from "leaflet";
 import { useNavigate } from "react-router-dom";
 import { logout, auth } from "../firebase";
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import axios from "axios"; // ✅ เพิ่มการ import axios
+import axios from "axios"; 
 
 interface AppUser {
   u_id: string;
   u_email: string | null;
-  u_name?: string; // จาก Database
-  u_role?: "researcher" | "regular"; // จาก Database
+  u_name?: string;
+  u_role?: "researcher" | "regular"; 
 }
-
 
 // กำหนดค่าตำแหน่งเริ่มต้น
 const INITIAL_CENTER: [number, number] = [18.7883, 98.9853]; // เชียงใหม่
@@ -158,12 +157,17 @@ function FirstPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const googleId = user.uid;
+
+      // console.log("Google UID:", googleId);
   
       // เช็คว่าผู้ใช้มีบัญชีหรือไม่
       const response = await axios.post("http://localhost:3003/users/check-user", { u_id: googleId });
+      // console.log("Check-user response:", response.data);
+
       const data = response.data as { exists: boolean };
   
       if (data.exists) {  
+        // console.log("User exists — navigating to /home");
         navigate("/home");
       } else {
         alert("please Sign Up");

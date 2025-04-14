@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "db:generate": "drizzle-kit generate",
-  "db:push": "drizzle-kit push",
-  "db:migrate": "ts-node ./db/migrate.ts",
-  "db:prototype": "ts-node ./db/prototype.ts",
-  "dev": "nodemon ./dist/src/index.js",
-  "build": "tsc && tsc-alias",
-  "start": "node ./dist/src/index.js"
-},
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "ts-node ./db/migrate.ts",
+    "db:prototype": "ts-node ./db/prototype.ts",
+    "dev": "nodemon ./dist/src/index.js",
+    "build": "tsc && tsc-alias",
+    "start": "node ./dist/src/index.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
