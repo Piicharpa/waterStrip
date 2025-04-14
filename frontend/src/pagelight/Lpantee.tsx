@@ -186,7 +186,7 @@ function Pantee() {
         />
           <button
             onClick={handleLocate}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full outline-none focus:ring-0"
           >
             <FaLocationCrosshairs />
           </button>

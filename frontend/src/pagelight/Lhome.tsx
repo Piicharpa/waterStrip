@@ -5,6 +5,10 @@ import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios"; // Import axios for API requests
 
+type User = {
+  u_id: string;
+  u_name: string;
+};
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,15 +58,32 @@ const Lhome: React.FC = () => {
 
   
   useEffect(() => {
-    const storedUsername = sessionStorage.getItem("username");
-    // console.log("Stored username:", sessionStorage);
-    if (!storedUsername) {
+    const storedUserId = sessionStorage.getItem("userId");
+  
+    if (!storedUserId) {
       navigate("/");
       return;
     }
-    setUsername(storedUsername);
+  
+    const fetchUsername = async () => {
+      try {
+        const response = await axios.get<User>(`http://localhost:3003/users/${storedUserId}`);
+        const userData = response.data;
+        if (userData?.u_name) {
+          setUsername(userData.u_name);
+        } else {
+          console.error("No username in response");
+        }
+      } catch (error) {
+        console.error("Error fetching username:", error);
+      }
+    };
+  
+    fetchUsername();
   }, [navigate]);
-
+  
+  
+  
   const formatDate = (isoString: string) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -193,7 +214,7 @@ const Lhome: React.FC = () => {
               >
                 +
               </button>
-              {cards.map((card, index) => (
+              {cards.length === 0 ? null : cards.map((card, index) => (
                   <div
                     key={index}
                     ref={(el) => (cardRefs.current[index] = el)}
@@ -225,7 +246,8 @@ const Lhome: React.FC = () => {
               ))}
             </div>
           </div>
-
+          
+          {cards.length > 0 && (
           <div className="flex justify-center mt-10 space-x-2">
             {[...Array(cards.length)].map((_, dotIndex) => (
               <button
@@ -237,6 +259,7 @@ const Lhome: React.FC = () => {
               />
             ))}
           </div>
+          )}
         </div>
 
         <div className="flex justify-between w-full mt-6 mb-8 px-4 md:px-8">

@@ -190,7 +190,7 @@ const Lcardinfo: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3003/strips/strip-status`,
+        `http://localhost:3003/strip-status`,
         {
           method: "POST",
           headers: {
