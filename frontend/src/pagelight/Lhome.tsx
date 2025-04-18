@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link} from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
@@ -181,10 +181,36 @@ const Lhome: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
-        <div className="fixed top-3 left-6 flex items-center gap-2">
-          <img src="/image/logo2.png" alt="Logo" className="h-10" />
-          <span className="text-lg font-bold">AQUAlity</span>
-        </div>
+        <div className="fixed top-0  bg-white  border-gray-200   px-6 py-3 gap-8 z-50">
+
+        <nav className="flex items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/image/logo2.png" alt="Logo" className="h-10" />
+              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+            </Link>
+
+            {/* Menu Links */}
+            <Link 
+              to="/home"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              Home
+            </Link>
+
+            {/*Map Link */}
+            <Link 
+              to="/pantee"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              Map
+            </Link>
+          </div>
+        </nav>
+
+      </div>
+
 
         <div className="flex-grow flex justify-center mt-3">
           <input

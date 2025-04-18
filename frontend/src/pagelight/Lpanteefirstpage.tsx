@@ -9,6 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { FaLocationCrosshairs } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -158,11 +159,30 @@ function Panteefirstpage() {
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-6 py-3 bg-white">
-        <div className="flex items-center gap-2 ">
-          <img src="/image/logo2.png" alt="Logo" className="h-10" />
-          <span className="text-lg font-bold">AQUAlity</span>
-        </div>
+        <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
+          {/* Logo Section */}
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/image/logo2.png" alt="Logo" className="h-10" />
+              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+            </Link>
+  
+            {/* Menu Links */}
+            <Link 
+              to="/home"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              Home
+            </Link>
+
+            {/*Map Link */}
+            <Link 
+              to="/pantee"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              Map
+            </Link>
+          </div>
         {/* Search Box */}
         <div className="relative">
           <input

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
+import { Link } from "react-router-dom";
 
 
 
@@ -219,6 +220,34 @@ const Lcardinfo: React.FC = () => {
   return (
     <div className="fixed flex flex-col h-screen w-screen overflow-hidden">
       <div className="flex flex-col flex-grow overflow-hidden ">
+
+        <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
+                {/* Logo Section */}
+                <div className="flex items-center gap-6">
+                  <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <img src="/image/logo2.png" alt="Logo" className="h-10" />
+                    <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+                  </Link>
+        
+                  {/* Menu Links */}
+                  <Link 
+                    to="/home"
+                    className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Home
+                  </Link>
+        
+                  {/*Map Link */}
+                  <Link 
+                    to="/pantee"
+                    className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Map
+                  </Link>
+                </div>
+        </nav>
+
+        
         {/* Top section with Strip Brand and Date */}
         <div className="flex justify-between items-center p-4">
           <div>
@@ -331,7 +360,7 @@ const Lcardinfo: React.FC = () => {
 
         </div>
 
-        <div className="scroll-container absolute -right-23 bg-transparent top-116 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
+        <div className="scroll-container absolute -right-23 bg-transparent top-150 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
           {qualityMessage}
         </div>
 

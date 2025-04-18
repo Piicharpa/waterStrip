@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect } from "react";
 import { LatLngExpression } from "leaflet";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { logout, auth } from "../firebase";
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import axios from "axios"; 
@@ -57,7 +57,7 @@ function FirstPage() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
-  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const loginPopupRef = useRef<HTMLDivElement>(null);
@@ -229,12 +229,28 @@ function FirstPage() {
       style={{ position: "fixed" }}
     >
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-6 py-3 bg-white">
-        <div className="flex items-center gap-2">
+      <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9 ">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
-          <span className="text-lg font-bold">AQUAlity</span>
-        </div>
-        <div className="flex gap-6 items-center">
+          <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+        </Link>
+        {/* Nav Links */}
+          <div className={`flex-col md:flex-row md:flex items-center gap-6 w-full ${mobileMenuOpen ? "flex" : "hidden"} md:!flex`}>
+            {user && (
+              <>
+                <Link to="/home" className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                  Home
+                </Link>
+                <Link to="/pantee" className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                  Map
+                </Link>
+              </>
+            )}
+      
+
+
+
+        <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
           
           {user ? (
             <div className="flex items-center gap-2">
@@ -413,6 +429,7 @@ function FirstPage() {
               </div>
             </>
           )}
+        </div>
         </div>
       </nav>
       {/* Map Section */}
