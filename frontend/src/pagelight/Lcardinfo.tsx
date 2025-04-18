@@ -353,12 +353,6 @@ const Lcardinfo: React.FC = () => {
                 <p>กำลังโหลดรูปภาพ..</p>
               )}
             </div>
-
-            {/* Color bar from picscale.tsx */}
-            {/* <div className="flex flex-col items-center -mt-8">
-              <h2 className="text-xl font-bold mb-2">Scale</h2>
-              <PicScale scaleColors={picScaleColors} />
-            </div> */}
           </div>
         </div>
 
@@ -366,15 +360,15 @@ const Lcardinfo: React.FC = () => {
           {qualityMessage}
         </div>
 
-        <div className="fixed bottom-12 right-12 flex items-center space-x-4">
+        <div className="fixed bottom-12 right-45 flex items-center space-x-4">
           <span className="text-gray-700">
             {isPrivate ? "ส่วนตัว" : "สาธารณะ"}
           </span>
 
           <button
             onClick={handleToggle}
-            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-300 ${
-              isPrivate ? "bg-gray-400" : "bg-green-500"
+            className={`relative inline-flex items-center h-7 rounded-full w-11 transition-colors duration-300 ${
+              isPrivate ? "bg-gray-400" : "bg-black"
             }`}
           >
             <span
