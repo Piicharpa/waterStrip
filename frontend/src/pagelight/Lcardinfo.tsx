@@ -6,9 +6,6 @@ import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
-
-
-
 interface ColorScaleSet {
   colors: string[];
   values: number[];
@@ -34,38 +31,13 @@ const Lcardinfo: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [u_id, setUid] = useState("");
-
   const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]);
-
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
     return format(new Date(isoString), "d MMM. yyyy");
   };
-
-
-  // const getQualityMessage = (quality: string) => {
-  //   switch (quality.trim().toLowerCase()) {
-  //     case "very good":
-  //       return "✨ น้ำดีมากจ้า!";
-  //     case "good":
-  //       return "💧 น้ำคุณภาพดีนะ";
-  //     case "moderate":
-  //       return "😐 พอใช้ได้อยู่นะ";
-  //     case "bad":
-  //       return "⚠️ น้ำไม่ค่อยโอเคเลย";
-  //     case "very bad":
-  //       return "🚨 น้ำแย่มาก ระวัง!";
-  //     default:
-  //       return "ไม่พบข้อมูลคุณภาพน้ำ";
-  //   }
-  // };
-
-
-  
-  // const waterQuality = 13;
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -84,27 +56,30 @@ const Lcardinfo: React.FC = () => {
     const fetchData = async () => {
       try {
         // 1️⃣ PATCH เพื่ออัปเดตค่าคุณภาพก่อน
-        const patchResponse = await fetch(`http://localhost:3003/strips/quality/${stripId}`, {
-          method: "PATCH",
-        });
+        const patchResponse = await fetch(
+          `http://localhost:3003/strips/quality/${stripId}`,
+          {
+            method: "PATCH",
+          }
+        );
         if (!patchResponse.ok) throw new Error("Failed to PATCH data");
-  
-        console.log("PATCH Request Successful");  // Log here to see if PATCH was successful
-  
+
+        console.log("PATCH Request Successful"); // Log here to see if PATCH was successful
+
         // 2️⃣ จากนั้นค่อย GET ข้อมูลใหม่
         const response = await fetch(`http://localhost:3003/strips/${stripId}`);
         if (!response.ok) throw new Error("Failed to fetch data");
-  
+
         const data = await response.json();
 
-        console.log("Fetched Data:", data);  // Log the fetched data to see if updated correctly
+        console.log("Fetched Data:", data); // Log the fetched data to see if updated correctly
 
         setStripBrand(data.b_name);
         setAnalyzeDate(data.s_date);
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
         setQualityColor(data.s_qualitycolor);
-        setQualityMessage(data.s_quality); 
+        setQualityMessage(data.s_quality);
 
         const colorScales = data.parameters
           .filter((param: any) => param.colors && param.values)
@@ -113,21 +88,22 @@ const Lcardinfo: React.FC = () => {
             values: param.values,
           }));
         setScaleColorSets(colorScales);
-  
+
         const measurements = data.parameters
-          .filter((param: any) => param.p_name && param.p_unit && param.sp_value)
+          .filter(
+            (param: any) => param.p_name && param.p_unit && param.sp_value
+          )
           .map((param: any) => ({
             name: param.p_name,
             unit: param.p_unit,
             value: param.sp_value,
           }));
         setMeasurements(measurements);
-  
       } catch (error) {
         console.error("Error fetching strip data:", error);
       }
     };
-  
+
     fetchData();
   }, [stripId]);
 
@@ -159,60 +135,88 @@ const Lcardinfo: React.FC = () => {
     };
   }, []);
 
-  // const picScaleColors = [
-  //   "#BE4C19",
-  //   "#AEA360",
-  //   "#0CA2C3",
-  //   "#FAE8F9",
-  //   "#FBE5EC",
-  //   "#BF89C0",
-  //   "#CC95CF",
-  //   "#ED8D69",
-  //   "#FFD2B2",
-  //   "#77B3BC",
-  //   "#FFBC76",
-  //   "#0B90C0",
-  //   "#D16DB1",
-  //   "#C9A10B",
-  //   "#FFA9A6",
-  //   "#FE91C6",
-  // ];
-
   const totalPages = Math.ceil(measurements.length / ITEMS_PER_PAGE);
   const paginatedMeasurements = Array.from({ length: totalPages }, (_, i) =>
     measurements.slice(i * ITEMS_PER_PAGE, (i + 1) * ITEMS_PER_PAGE)
   );
-  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (u_id && stripId) {
+      const checkAndPostInitialStatus = async () => {
+        try {
+          // 1️⃣ ลอง GET status ก่อน
+          const getResponse = await fetch(
+            `http://localhost:3003/strip-status/${u_id}/${stripId}`
+          );
+          const getResult = await getResponse.json();
+
+          if (getResponse.ok && getResult.status) {
+            console.log("Status already exists:", getResult.status);
+            setIsPrivate(getResult.status === "private"); // ตั้งค่าตามสถานะที่ดึงมา
+            return; // ไม่ต้อง post ซ้ำ
+          }
+
+          // 2️⃣ ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
+          const postResponse = await fetch(
+            `http://localhost:3003/strip-status`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                u_id,
+                s_id: stripId,
+                status: "private",
+              }),
+            }
+          );
+
+          const postResult = await postResponse.json();
+
+          if (postResponse.ok) {
+            console.log("Initial private status saved:", postResult);
+            setIsPrivate(true); // ตั้งค่าเริ่มต้นเป็น private
+          } else {
+            console.error("Initial save failed:", postResult.error);
+          }
+        } catch (error) {
+          console.error("Unexpected error checking/setting status:", error);
+        }
+      };
+
+      checkAndPostInitialStatus();
+    }
+  }, [u_id, stripId]);
+
   const [isPrivate, setIsPrivate] = useState(true);
-  const handleSave = async () => {
-    const status = isPrivate ? "private" : "public";
+
+  const handleToggle = async () => {
+    const newStatus = !isPrivate;
+    setIsPrivate(newStatus);
 
     try {
-      const response = await fetch(
-        `http://localhost:3003/strip-status`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            u_id,
-            s_id: stripId,
-            status,
-          }),
-        }
-      );
+      const response = await fetch(`http://localhost:3003/strip-status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          u_id,
+          s_id: stripId,
+          status: newStatus ? "private" : "public",
+        }),
+      });
 
       const result = await response.json();
 
       if (response.ok) {
-        console.log("Saved successfully:", result);
-        setIsOpen(false); // ปิด popup หลังบันทึกสำเร็จ
+        console.log("Status updated successfully:", result);
       } else {
-        console.error("Save failed:", result.error);
+        console.error("Status update failed:", result.error);
       }
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Unexpected error on patch:", error);
     }
   };
 
@@ -327,96 +331,30 @@ const Lcardinfo: React.FC = () => {
               <PicScale scaleColors={picScaleColors} />
             </div> */}
           </div>
-
-
         </div>
 
         <div className="scroll-container absolute -right-23 bg-transparent top-116 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
           {qualityMessage}
         </div>
 
-        {/* Detail Button - Moved to bottom right */}
-        <div className="fixed bottom-12 right-50">
+        <div className="fixed bottom-12 right-12 flex items-center space-x-4">
+          <span className="text-gray-700">
+            {isPrivate ? "ส่วนตัว" : "สาธารณะ"}
+          </span>
+
           <button
-            className="bg-black text-white px-4 py-2 rounded-lg border-2 border-transparent hover:bg-gray-700"
-            onClick={() => setIsOpen(true)}
+            onClick={handleToggle}
+            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-300 ${
+              isPrivate ? "bg-gray-400" : "bg-green-500"
+            }`}
           >
-            save
+            <span
+              className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${
+                isPrivate ? "translate-x-1" : "translate-x-6"
+              }`}
+            />
           </button>
         </div>
-
-        {/* Modal */}
-        {isOpen && (
-          <div
-            className="fixed inset-0 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
-          >
-            <div className="bg-white p-6 rounded-lg  w-96">
-              <h2 className="text-lg font-semibold mb-4">บันทึกเป็นแบบไหน?</h2>
-
-              {/* ตัวเลือก Private/Public */}
-              <div className="space-y-3">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      isPrivate
-                        ? "border-black bg-black"
-                        : "border-gray-300 bg-white"
-                    }`}
-                  >
-                    {isPrivate && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    )}
-                  </div>
-                  <span>ส่วนตัว</span>
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={isPrivate}
-                    onChange={() => setIsPrivate(true)}
-                  />
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      !isPrivate
-                        ? "border-black bg-black"
-                        : "border-gray-300 bg-white"
-                    }`}
-                  >
-                    {!isPrivate && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    )}
-                  </div>
-                  <span>สาธารณะ</span>
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={!isPrivate}
-                    onChange={() => setIsPrivate(false)}
-                  />
-                </label>
-              </div>
-
-              {/* ปุ่มยืนยัน */}
-              <div className="mt-6 flex justify-end space-x-2">
-                <button
-                  className="px-4 py-2 rounded-lg border border-black hover:bg-gray-200"
-                  onClick={() => setIsOpen(false)} // ปิด Popup เมื่อกด "ยกเลิก"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-700"
-                  onClick={handleSave} // กดบันทึกแล้วปิด Popup ทันที
-                >
-                  บันทึก
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
