@@ -34,6 +34,9 @@ const Lcardinfo: React.FC = () => {
   const [u_id, setUid] = useState("");
   const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [prediction, setPrediction] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
@@ -108,6 +111,23 @@ const Lcardinfo: React.FC = () => {
     fetchData();
   }, [stripId]);
 
+  useEffect(() => {
+    const fetchPrediction = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post<{prediction: string}>(
+          "http://localhost:5000/predict",{ image: imageUrl, });
+        setPrediction(response.data.prediction);
+      }catch (error) {
+        console.error("Error fetching prediction:", error);
+        setError("Failed to fetch prediction");
+      }finally {
+        setLoading(false);
+      }
+      if(imageUrl){
+        fetchPrediction();      
+      }
+  }, [imageUrl]);
   const handleDotClick = (index: number) => {
     setCurrentPage(index);
     if (scrollContainerRef.current) {
@@ -274,9 +294,7 @@ const Lcardinfo: React.FC = () => {
                 <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
-                <span className="text-gray-900 font-bold">
-                  //quality here//
-                </span>
+                <span className="text-gray-900 font-bold">{imageUrl}</span>
               </div>
             </div>
           </div>
