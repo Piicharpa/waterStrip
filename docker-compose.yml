@@ -43,6 +43,15 @@ services:
       - NGINX_PROXY=${NGINX_PROXY}
       - NGINX_PORT=${NGINX_PORT}
 
+  ml-service:
+    build: ./ml-service
+    container_name: waterStrip-ml
+    ports:
+      - "5000:5000"
+    networks:
+      - waterStrip-net
+
+
 volumes:
   waterStrip-data:
 

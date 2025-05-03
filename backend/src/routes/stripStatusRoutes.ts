@@ -1,6 +1,15 @@
 import express from "express";
 import { dbClient } from "../../db/client";
-import { Brand, Strip, StripStatus } from "../../db/schema";
+
+import {
+  Strip,
+  Brand,
+  Parameter,
+  StripParameter,
+  Color,
+  StripStatus,
+} from "../../db/schema";
+
 import { eq, and } from "drizzle-orm";
 
 const router = express.Router();

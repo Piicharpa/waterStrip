@@ -197,5 +197,40 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Get Strips Picture by s_id
+router.get("/picture/:id", async (req, res) => {
+  try {
+    const s_id = Number(req.params.id);
+    const result = await dbClient
+      .select({
+        s_url: Strip.s_url,
+      })
+      .from(Strip)
+      .innerJoin(Brand, eq(Strip.b_id, Brand.b_id))
+      .leftJoin(StripStatus, eq(Strip.s_id, StripStatus.s_id)) // เพิ่ม join นี้
+      .leftJoin(StripParameter, eq(Strip.s_id, StripParameter.s_id))
+      .leftJoin(Parameter, eq(StripParameter.p_id, Parameter.p_id))
+      .leftJoin(
+        Color,
+        and(eq(Color.b_id, Strip.b_id), eq(Color.p_id, Parameter.p_id))
+      )
+      .where(eq(Strip.s_id, s_id));
+    if (result.length === 0) {
+      res.status(404).json({ message: "Strip not found" });
+    }
+
+    // Get Image URL from the result
+    const image = result[0].s_url;
+    // res.json(image);
+    const axios = require("axios");
+    const response = await axios.post("http://ml-service:5000/predict", {
+      image: image,
+    });
+    res.json({ prediction: response.data.prediction }); // Send the prediction back to the client
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 export default router;

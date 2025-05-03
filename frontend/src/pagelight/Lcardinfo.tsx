@@ -224,34 +224,32 @@ const Lcardinfo: React.FC = () => {
   return (
     <div className="fixed flex flex-col h-screen w-screen overflow-hidden">
       <div className="flex flex-col flex-grow overflow-hidden ">
-
         <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
-                {/* Logo Section */}
-                <div className="flex items-center gap-6">
-                  <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="/image/logo2.png" alt="Logo" className="h-10" />
-                    <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-                  </Link>
-        
-                  {/* Menu Links */}
-                  <Link 
-                    to="/home"
-                    className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Home
-                  </Link>
-        
-                  {/*Map Link */}
-                  <Link 
-                    to="/pantee"
-                    className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Map
-                  </Link>
-                </div>
+          {/* Logo Section */}
+          <div className="flex items-center gap-6">
+            <Link
+              to="/"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/image/logo2.png" alt="Logo" className="h-10" />
+              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+            </Link>
+
+            {/* Menu Links */}
+            <Link
+              to="/home"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+              Home
+            </Link>
+
+            {/*Map Link */}
+            <Link
+              to="/pantee"
+              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+              Map
+            </Link>
+          </div>
         </nav>
 
-        
         {/* Top section with Strip Brand and Date */}
         <div className="flex justify-between items-center p-4">
           <div>
@@ -263,8 +261,7 @@ const Lcardinfo: React.FC = () => {
             </p>
             <p
               className="absolute  top-18.5 right-50  text-black text-base hover:underline cursor-pointer"
-              onClick={() => navigate("/pantee")}
-            >
+              onClick={() => navigate("/pantee")}>
               {location}
             </p>
 
@@ -272,13 +269,14 @@ const Lcardinfo: React.FC = () => {
             <div className="flex items-center space-x-3 mt-6 ml-45">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: qualityColor }}
-              ></div>
+                style={{ backgroundColor: qualityColor }}></div>
               <div className="flex flex-col">
                 <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
-                {/* <span className="text-gray-900 font-bold">{waterQuality}%</span> */}
+                <span className="text-gray-900 font-bold">
+                  //quality here//
+                </span>
               </div>
             </div>
           </div>
@@ -296,13 +294,11 @@ const Lcardinfo: React.FC = () => {
                 scrollbarWidth: "none", // For Firefox
                 msOverflowStyle: "none", // For Internet Explorer and Edge
                 WebkitOverflowScrolling: "touch", // Smooth scrolling for iOS
-              }}
-            >
+              }}>
               {paginatedMeasurements.map((page, index) => (
                 <div
                   key={index}
-                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente "
-                >
+                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente ">
                   {page.map((measurement, index) => {
                     const scaleSetIndex = index % scaleColorSets.length;
                     const scaleSet = scaleColorSets[scaleSetIndex] ?? {
@@ -369,8 +365,7 @@ const Lcardinfo: React.FC = () => {
             onClick={handleToggle}
             className={`relative inline-flex items-center h-7 rounded-full w-11 transition-colors duration-300 ${
               isPrivate ? "bg-gray-400" : "bg-black"
-            }`}
-          >
+            }`}>
             <span
               className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${
                 isPrivate ? "translate-x-1" : "translate-x-6"
