@@ -221,6 +221,14 @@ router.get("/picture/:id", async (req, res) => {
 
     // Get Image URL from the result
     const image = result[0].s_url;
+
+    // Log to confirm what is sent
+    if (image) {
+      console.log("Sending image to ML service:", image.substring(0, 30));
+    } else {
+      console.error("Image is null or undefined");
+    }
+
     // res.json(image);
     const axios = require("axios");
     const response = await axios.post("http://ml-service:5000/predict", {

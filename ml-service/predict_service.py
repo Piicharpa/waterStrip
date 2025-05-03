@@ -49,32 +49,16 @@ def extract_features_from_image(image_b64):
     
     # Return the extracted features
     return features
-
-
-def preprocess_image(base64_str):
-    image_data = base64.b64decode(base64_str.split(",")[1])
-    image = Image.open(io.BytesIO(image_data)).convert("RGB")
-    image = image.resize((224, 224))  # match your model input
-    image_array = np.array(image) / 255.0
-    image_array = image_array.reshape(1, -1)
-    return image_array
   
 @app.route("/", methods=["GET"])
 def index():
     return "Flask ML service is running!", 200
 
-# @app.route("/predict", methods=["POST"])
-# def predict():
-#     data = request.json
-#     base64_img = data.get("image")
-#     if not base64_img:
-#         return jsonify({"error": "No image provided"}), 400
-
-#     img_array = preprocess_image(base64_img)
-#     scaled = scaler.transform(img_array)
-#     prediction = model.predict(scaled)
-#     return jsonify({"prediction": prediction.tolist()})
-
+'''
+  {
+    "image": "data:image/png;base64,iVBORw0KGgoAAA..."
+  }
+'''
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -83,15 +67,11 @@ def predict():
         if not image_b64:
             return jsonify({"error": "No image provided"}), 400
 
-        # img_array = preprocess_image(image_b64)
         features = extract_features_from_image(image_b64)
-        # scaled = scaler.transform(img_array)
         scaled_features = scaler.transform([features])
         prediction = model.predict(scaled_features)
         return jsonify({"prediction": prediction.tolist()})
-        # decode and predict here...
 
-        # return jsonify({"result": "something"})
     except Exception as e:
         # log to console and return the error
         print("Error in /predict:", e)
