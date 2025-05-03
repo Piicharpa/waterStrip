@@ -1,7 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaLocationCrosshairs } from "react-icons/fa6";
 import { FaPaperclip } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import imageCompression from 'browser-image-compression';
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 // Utility function to convert decimal to DMS
 const toDMS = (decimal: number, isLat: boolean = true) => {
@@ -21,14 +25,26 @@ const toDMS = (decimal: number, isLat: boolean = true) => {
 
 const Ladd: React.FC = () => {
   const [location, setLocation] = useState("Please specify your location");
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [brands, setBrands] = useState<{ b_id: number; b_name: string }[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLocationSelected, setIsLocationSelected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate(); 
 
+  
+
   useEffect(() => {
+    // Fetch brands from API
+    axios.get<{ b_id: number; b_name: string }[]>("http://localhost:3003/brands")
+      .then(response => {
+        setBrands(response.data);
+      })
+      .catch(error => {
+        console.error("Error fetching brands:", error);
+      });
+
     // Clear location when page is refreshed
     window.addEventListener('beforeunload', resetState);
     
@@ -75,14 +91,14 @@ const Ladd: React.FC = () => {
     setIsLocationSelected(false);
     setSelectedFile(null);
     setImagePreview(null);
-    setSelectedBrand("");
+    setSelectedBrandId(null);
   };
 
   const handleLocate = () => {
     // Get the current stored location to pass as previous location
     const currentLocation = localStorage.getItem('selectedLocation');
     const parsedLocation = currentLocation ? JSON.parse(currentLocation) : null;
-
+    
     navigate("/addmap", { 
       state: { 
         previousLocation: parsedLocation,
@@ -91,19 +107,34 @@ const Ladd: React.FC = () => {
     });
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && isLocationSelected) {
-      setSelectedFile(file);
-      
-      // Create image preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return; // ป้องกัน Error กรณีไม่มีไฟล์
+    
+    if (isLocationSelected) {
+      try {
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 0.1,
+          maxWidthOrHeight: 800,
+          useWebWorker: true,
+          initialQuality: 0.7, 
+          alwaysKeepResolution: true, // คงสัดส่วนเดิม
+        });
+  
+        // อ่านไฟล์เป็น Base64 เพื่อใช้แสดงรูป preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string);
+          setSelectedFile(compressedFile); // ย้ายมาที่นี่เพื่อให้แน่ใจว่าถูกตั้งค่าหลังจาก compression
+        };
+        reader.readAsDataURL(compressedFile);
+  
+      } catch (error) {
+        console.error("Image compression failed:", error);
+      }
     }
   };
+  
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -132,21 +163,74 @@ const Ladd: React.FC = () => {
     }
   };
 
-  const handleAnalyze = () => {
-    if (isLocationSelected && selectedFile && selectedBrand) {
-      const analyzeDate = new Date().toISOString(); // เก็บวันที่ปัจจุบัน
-      localStorage.setItem("stripBrand", selectedBrand);
-      localStorage.setItem("analyzeDate", analyzeDate);
-      localStorage.setItem("location", location);
-  
-      if (imagePreview) {
-        localStorage.setItem("uploadedImage", imagePreview);
-      }
-  
-      navigate("/cardinfo");
-    }
-  };
+  const [userId, setUid] = useState("");
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userId = user.uid;
+            setUid(userId);
+
+        } else {
+            navigate("/");
+        }
+    });
+
+    return () => unsubscribe();
+}, [navigate]);
+
+  
+const handleAnalyze = async () => {
+  if (isLocationSelected && selectedFile && selectedBrandId) {
+      const locationParts = location.split(", ");
+      const latitude = locationParts[0];
+      const longitude = locationParts[1];
+
+      if (!userId) {
+          console.error("User ID not found. Please log in.");
+          return;
+      }
+
+      // Save data to localStorage
+      localStorage.setItem("stripBrand", selectedBrandId.toString());
+      localStorage.setItem("location", location);
+      if (imagePreview) {
+          localStorage.setItem("uploadedImage", imagePreview);
+      }
+
+      // ข้อมูลที่ต้องส่งไปยัง API
+      const data = {
+          b_id: selectedBrandId,
+          s_latitude: latitude,
+          s_longitude: longitude,
+          u_id: userId,
+          s_url: imagePreview,
+      };
+
+      try {
+          // ส่งข้อมูลไปยัง API
+          const response = await axios.post("http://localhost:3003/strips", data, {
+              headers: {
+                  "Content-Type": "application/json",
+              },
+          });
+
+          // ✅ แก้ไขให้ดึง s_id จาก response.data.data
+          const responseData = response.data as { msg: string; data: { s_id: number } };
+
+          if (response.status === 201 && responseData.data?.s_id) {
+              const stripId = responseData.data.s_id;
+              // console.log("Data successfully sent. Strip ID:", stripId);
+              navigate(`/cardinfo/${stripId}`); // ✅ ไปที่ /cardinfo/s_id
+          } else {
+              console.error("Error: s_id is undefined", responseData);
+          }
+      } catch (error) {
+          console.error("Error in API request:", error);
+          console.log("data : ", data);
+      }
+  }
+};
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md mx-auto space-y-6 text-center">
@@ -171,7 +255,7 @@ const Ladd: React.FC = () => {
         </div>
 
         <p className="text-sm text-black -mt-6 mb-12">
-        Add location, Upload image, Enter brand
+          Add location, Upload image, Enter brand
         </p>
 
         <div
@@ -219,26 +303,34 @@ const Ladd: React.FC = () => {
         </div>
 
         <div className="flex space-x-2">
-          <input
-            type="text"
-            placeholder="Enter your strip brand"
-            value={selectedBrand}
-            onChange={(e) => setSelectedBrand(e.target.value)}
-            className={`w-full sm:w-100 px-5 py-2 border rounded-l-full outline-none focus:ring-0 ${isLocationSelected && selectedFile ? 'text-black border-black' : ' text-gray-400 border-[#f1f1f1] cursor-not-allowed'}`}
-            disabled={!(isLocationSelected && selectedFile)}
-          />
+          
+
+        <select
+            value={selectedBrandId || ""}
+            onChange={(e) => setSelectedBrandId(Number(e.target.value))}
+            className="w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0"
+            disabled={!isLocationSelected}
+          >
+            <option value="">Select a Brand</option>
+            {brands.map((brand) => (
+              <option key={brand.b_id} value={brand.b_id}>
+                {brand.b_name}
+              </option>
+            ))}
+          </select>
 
           <button
             onClick={handleAnalyze}
-            disabled={!(isLocationSelected && selectedFile && selectedBrand)}
+            disabled={!(isLocationSelected && selectedFile && selectedBrandId)}
             className={`w-full sm:w-32 py-3 rounded-r-full transition ${
-              isLocationSelected && selectedFile && selectedBrand 
+              isLocationSelected && selectedFile && selectedBrandId 
               ? 'bg-black text-white hover:bg-gray-800' 
               : 'bg-[#f1f1f1] text-gray-400 cursor-not-allowed'
             }`}
           >
             Analyze
           </button>
+          
         </div>
       </div>
     </div>

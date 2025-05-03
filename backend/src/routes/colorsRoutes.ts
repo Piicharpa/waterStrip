@@ -59,4 +59,26 @@ router.patch("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update color" });
   }
 });
+
+router.get("/:b_id", async (req, res) => {
+  const { b_id } = req.params;
+
+  try {
+    const result = await dbClient
+      .select({ colors: Color.colors, values: Color.values })
+      .from(Color)
+      .where(eq(Color.b_id,Number(b_id)));
+
+    // แปลงผลลัพธ์ให้อยู่ในรูปแบบ array
+    const formattedResult = result.map(row => ({
+      colors: row.colors,
+      values: row.values
+    }));
+
+    res.json(formattedResult);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
 export default router;

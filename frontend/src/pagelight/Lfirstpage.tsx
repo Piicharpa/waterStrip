@@ -2,9 +2,18 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect } from "react";
 import { LatLngExpression } from "leaflet";
-import { useNavigate } from "react-router-dom";
-import { signInWithGoogle, logout, auth } from "../firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { useNavigate, Link } from "react-router-dom";
+import { logout, auth } from "../firebase";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import axios from "axios"; 
+
+interface AppUser {
+  u_id: string;
+  u_email: string | null;
+  u_name?: string;
+  u_role?: "researcher" | "regular"; 
+}
+
 // กำหนดค่าตำแหน่งเริ่มต้น
 const INITIAL_CENTER: [number, number] = [18.7883, 98.9853]; // เชียงใหม่
 const INITIAL_ZOOM = 14;
@@ -45,10 +54,10 @@ function FirstPage() {
   const [showText, setShowText] = useState(true);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
   const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
-  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const loginPopupRef = useRef<HTMLDivElement>(null);
@@ -56,15 +65,35 @@ function FirstPage() {
   const navigate = useNavigate();
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setShowLoginPopup(false);
-        setShowSignupPopup(false);
-      }
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        // console.log("Current User:", currentUser);
+        if (currentUser) {
+            try {
+                const response = await fetch(`http://localhost:3003/users/${currentUser.uid}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    sessionStorage.setItem("userId", userData.u_id);
+                    // console.log("User Data:", userData);
+                    setUser(userData);
+                } else {
+                    console.error("User not found in backend");
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                setUser(null);
+            }
+        } else {
+            // console.log("No user logged in");
+            setUser(null);
+        }
     });
+
     return () => unsubscribe();
-  }, []);
+}, []);
+
+  
+  
   
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -122,9 +151,28 @@ function FirstPage() {
  
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      // หลังจาก sign in สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const googleId = user.uid;
+
+      // console.log("Google UID:", googleId);
+  
+      // เช็คว่าผู้ใช้มีบัญชีหรือไม่
+      const response = await axios.post("http://localhost:3003/users/check-user", { u_id: googleId });
+      // console.log("Check-user response:", response.data);
+
+      const data = response.data as { exists: boolean };
+  
+      if (data.exists) {  
+        // console.log("User exists — navigating to /home");
+        navigate("/home");
+      } else {
+        alert("please Sign Up");
+        navigate("/");
+      }
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
@@ -133,14 +181,36 @@ function FirstPage() {
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     setUserType(type);
     try {
-      await signInWithGoogle();
-      // หลังจาก sign up สำเร็จ นำทางไปยังหน้า permission
-      navigate("/permission");
-      
-      // หลังจาก sign in สำเร็จ คุณอาจต้องบันทึกประเภทผู้ใช้ไว้ใน database
-      // ตัวอย่าง: saveUserTypeToFirebase(auth.currentUser?.uid, type);
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
+      if (user) {
+        const response = await fetch("http://localhost:3003/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            u_id: user.uid,
+            u_name: "",
+            u_email: user.email,
+            u_role: type,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to create user");
+        }
+  
+        // ดึงข้อมูล user ที่สมัครสำเร็จจาก API response ทันที
+        const userData = await response.json();
+        setUser(userData);
+  
+        navigate("/permission");
+      }
     } catch (error) {
-      console.error("Error signing in with Google:", error);
+      console.error("Error signing up with Google:", error);
     }
   };
   
@@ -159,16 +229,32 @@ function FirstPage() {
       style={{ position: "fixed" }}
     >
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-6 py-3 bg-white">
-        <div className="flex items-center gap-2">
+      <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9 ">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
-          <span className="text-lg font-bold">AQUAlity</span>
-        </div>
-        <div className="flex gap-6 items-center">
+          <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+        </Link>
+        {/* Nav Links */}
+          <div className={`flex-col md:flex-row md:flex items-center gap-6 w-full ${mobileMenuOpen ? "flex" : "hidden"} md:!flex`}>
+            {user && (
+              <>
+                <Link to="/home" className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                  Home
+                </Link>
+                <Link to="/pantee" className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                  Map
+                </Link>
+              </>
+            )}
+      
+
+
+
+        <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
           
           {user ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm">{user.displayName || user.email}</span>
+              <span className="text-sm">{user.u_name}</span>
               <button
                 onClick={handleLogout}
                 className="bg-black text-white  px-4 py-1 rounded-lg"
@@ -344,6 +430,7 @@ function FirstPage() {
             </>
           )}
         </div>
+        </div>
       </nav>
       {/* Map Section */}
       <div className="flex-grow p-4 -mt-4 relative">
@@ -374,7 +461,7 @@ function FirstPage() {
                 {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
                 <button
                   className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/pantee")}
+                  onClick={() => navigate("/panteefirstpage")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -1,13 +1,11 @@
-import { pgTable, serial, text, integer, doublePrecision, timestamp, primaryKey, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, doublePrecision, timestamp, json } from "drizzle-orm/pg-core";
 
 // ตาราง USER
 export const User = pgTable("user", {
-  u_id: serial("u_id").primaryKey(),
+  u_id: text("u_id").primaryKey(),
   u_name: text("u_name").notNull(),
   u_email: text("u_email").unique().notNull(),
-  u_password: text("u_password").notNull(),
   u_role: text("u_role").notNull(),
-  u_profile_pic: text("u_profile_pic"),
 });
 
 // ตาราง BRAND
@@ -20,12 +18,23 @@ export const Brand = pgTable("brand", {
 // ตาราง STRIP
 export const Strip = pgTable("strip", {
   s_id: serial("s_id").primaryKey(),
-  b_id: integer("b_id").references(() => Brand.b_id).notNull(),
+  u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
+  b_id: integer("b_id").references(() => Brand.b_id, { onDelete: "cascade" }).notNull(),
   s_date: timestamp("s_date").notNull().defaultNow(),
-  s_latitude: doublePrecision("s_latitude"),
-  s_longitude: doublePrecision("s_longitude"),
-  u_id: integer("u_id").references(() => User.u_id).notNull(),
+  s_latitude: text("s_latitude"),
+  s_longitude: text("s_longitude"),
   s_url: text("s_url"),
+  s_quality: text("s_quality").notNull(),
+  s_qualitycolor: text("s_qualitycolor").notNull(),
+});
+
+export const StripStatus = pgTable("strip_status", {
+  st_id: serial("st_id").primaryKey(),
+  u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
+  s_id: integer("s_id")
+    .notNull()
+    .references(() => Strip.s_id, { onDelete: "cascade" }),
+  status: text("status").notNull() 
 });
 
 // ตาราง PARAMETER
@@ -33,21 +42,23 @@ export const Parameter = pgTable("parameter", {
   p_id: serial("p_id").primaryKey(),
   p_name: text("p_name").notNull(),
   p_unit: text("p_unit"),
+  p_min: doublePrecision("p_min").notNull(),
+  p_max: doublePrecision("p_max").notNull(),
 });
 
 // ตาราง STRIP_PARAMETER (M:N)
 export const StripParameter = pgTable("strip_parameter", {
-  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }) .notNull(), // Define primary key here
-  p_id: integer("p_id").references(() => Parameter.p_id) .notNull(), // Define composite primary key inline
+  sp_id: serial("sp_id").primaryKey(),
+  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }).notNull(),
+  p_id: integer("p_id").references(() => Parameter.p_id, { onDelete: "cascade" }).notNull(),
   sp_value: doublePrecision("sp_value").notNull(),
-  sp_id: serial("sp_id").primaryKey()
 });
 
 // ตาราง COLOR
 export const Color = pgTable("color", {
   c_id: serial("c_id").primaryKey(),
-  b_id: integer("b_id").references(() => Brand.b_id).notNull(),
-  p_id: integer("p_id").references(() => Parameter.p_id).notNull(),
+  b_id: integer("b_id").references(() => Brand.b_id, { onDelete: "cascade" }).notNull(),
+  p_id: integer("p_id").references(() => Parameter.p_id, { onDelete: "cascade" }).notNull(),
   colors: json("colors").notNull(),
-  values: json("values").notNull(), 
+  values: json("values").notNull(),
 });

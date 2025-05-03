@@ -9,13 +9,15 @@ import brandsRoutes from "./routes/brandsRoutes";
 import parametersRoutes from "./routes/parametersRoutes";
 import stripsParametersRoutes from "./routes/stripsParametersRoutes";
 import colorsRoutes from "./routes/colorsRoutes";
-
+import stripStatusRoutes from "./routes/stripStatusRoutes";
 // Initialize the express app
 const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" , 
+  // credentials: true,
+}));
 app.use(bodyParser.json());
 
 // Routes
@@ -25,6 +27,7 @@ app.use("/brands", brandsRoutes);
 app.use("/parameters", parametersRoutes);
 app.use("/strips_parameter", stripsParametersRoutes);
 app.use("/colors", colorsRoutes);
+app.use("/strip-status", stripStatusRoutes);
 
 // JSON Error Middleware
 const jsonErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
