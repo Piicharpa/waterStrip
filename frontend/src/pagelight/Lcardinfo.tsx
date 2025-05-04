@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 interface ColorScaleSet {
   colors: string[];
@@ -22,7 +23,7 @@ const ITEMS_PER_PAGE = 8;
 
 const Lcardinfo: React.FC = () => {
   const { stripId } = useParams<{ stripId: string }>();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>("");
   const [qualityMessage, setQualityMessage] = useState<string>("");
   const [qualityColor, setQualityColor] = useState<string>("#000000");
   const [stripBrand, setStripBrand] = useState<string>("");
@@ -36,7 +37,7 @@ const Lcardinfo: React.FC = () => {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [prediction, setPrediction] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
@@ -113,21 +114,26 @@ const Lcardinfo: React.FC = () => {
 
   useEffect(() => {
     const fetchPrediction = async () => {
-      setLoading(true);
+      if (!stripId) return; // Check if stripId is available
+
       try {
-        const response = await axios.post<{prediction: string}>(
-          "http://localhost:5000/predict",{ image: imageUrl, });
-        setPrediction(response.data.prediction);
-      }catch (error) {
-        console.error("Error fetching prediction:", error);
-        setError("Failed to fetch prediction");
-      }finally {
-        setLoading(false);
+        const response = await fetch(
+          `http://localhost:3003/strips/predict/${stripId}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch prediction data");
+        const data = await response.json();
+        setPrediction(data.prediction);
+        console.log("Prediction Data:", data); // Log the prediction data
+      } catch (error) {
+        console.error("Error fetching prediction data:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
-      if(imageUrl){
-        fetchPrediction();      
-      }
-  }, [imageUrl]);
+    };
+
+    fetchPrediction();
+  }, [stripId]);
+
   const handleDotClick = (index: number) => {
     setCurrentPage(index);
     if (scrollContainerRef.current) {
@@ -294,7 +300,7 @@ const Lcardinfo: React.FC = () => {
                 <span className="text-black text-lg font-semibold">
                   Water Quality:
                 </span>
-                <span className="text-gray-900 font-bold">{imageUrl}</span>
+                <span className="text-gray-900 font-bold">{prediction}</span>
               </div>
             </div>
           </div>

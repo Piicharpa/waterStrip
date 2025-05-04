@@ -198,7 +198,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Get Strips Picture by s_id
-router.get("/picture/:id", async (req, res) => {
+router.get("/predict/:id", async (req, res) => {
   try {
     const s_id = Number(req.params.id);
     const result = await dbClient
