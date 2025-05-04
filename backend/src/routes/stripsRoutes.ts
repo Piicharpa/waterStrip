@@ -236,19 +236,6 @@ router.get("/predict/:id", async (req, res) => {
       image: image,
     });
 
-    // Post s_id, p_id, and prediction to StripParameter
-    const response2 = await axios.post(
-      "http://localhost:3003/strips_parameter",
-      {
-        s_id: s_id,
-        p_id: 1, // Assuming p_id is 1 for this example
-        sp_value: response.data.prediction, // Assuming the prediction is in the response data
-      }
-    );
-    if (response2.status !== 201) {
-      throw new Error("Error posting prediction to the API");
-    }
-
     res.json({ prediction: response.data.prediction }); // Send the prediction back to the client
   } catch (error) {
     console.error(error);
