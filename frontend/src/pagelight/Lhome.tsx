@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, Link} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
@@ -29,7 +29,7 @@ const Lhome: React.FC = () => {
       console.error("User ID not found in sessionStorage");
       return;
     }
-  
+
     const fetchData = async () => {
       try {
         const userId = encodeURIComponent(storedUserId || "");
@@ -37,37 +37,42 @@ const Lhome: React.FC = () => {
           axios.get<any[]>(`http://localhost:3003/strips/card/${userId}`),
           axios.get<any[]>("http://localhost:3003/brands"),
         ]);
-  
-        const bandsMap = new Map(bandsRes.data.map((band) => [band.b_id, band.b_name]));
-        
+
+        const bandsMap = new Map(
+          bandsRes.data.map((band) => [band.b_id, band.b_name])
+        );
+
         // กรอง strips ตาม u_id
-        const filteredStrips = stripsRes.data.filter((strip) => strip.u_id === storedUserId);
+        const filteredStrips = stripsRes.data.filter(
+          (strip) => strip.u_id === storedUserId
+        );
         const updatedCards = filteredStrips.map((strip) => ({
           ...strip,
           b_name: bandsMap.get(strip.b_id) || "Unknown",
         }));
-  
+
         setCards(updatedCards);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-  
+
     fetchData();
   }, []);
 
-  
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
-  
+
     if (!storedUserId) {
       navigate("/");
       return;
     }
-  
+
     const fetchUsername = async () => {
       try {
-        const response = await axios.get<User>(`http://localhost:3003/users/${storedUserId}`);
+        const response = await axios.get<User>(
+          `http://localhost:3003/users/${storedUserId}`
+        );
         const userData = response.data;
         if (userData?.u_name) {
           setUsername(userData.u_name);
@@ -78,12 +83,10 @@ const Lhome: React.FC = () => {
         console.error("Error fetching username:", error);
       }
     };
-  
+
     fetchUsername();
   }, [navigate]);
-  
-  
-  
+
   const formatDate = (isoString: string) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -95,7 +98,6 @@ const Lhome: React.FC = () => {
       hour12: true,
     }).format(new Date(isoString));
   };
-  
 
   // Handle search functionality
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +131,9 @@ const Lhome: React.FC = () => {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.floor((scrollLeft / maxScrollLeft) * (cards.length -1)); // Use cards.length for number of dots
+        const index = Math.floor(
+          (scrollLeft / maxScrollLeft) * (cards.length - 1)
+        ); // Use cards.length for number of dots
         setScrollIndex(index);
       }
     };
@@ -142,13 +146,11 @@ const Lhome: React.FC = () => {
     };
   }, [cards.length]);
 
-  
-
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
       // const containerWidth = scrollRef.current.clientWidth;
-      const scrollTo = (scrollWidth / (cards.length -1)) * dotIndex; // Scroll to specific dot
+      const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,
         behavior: "smooth",
@@ -166,7 +168,10 @@ const Lhome: React.FC = () => {
       if (direction === "left") {
         newScroll = Math.max(currentScroll - containerWidth, 0);
       } else if (direction === "right") {
-        newScroll = Math.min(currentScroll + containerWidth, scrollWidth - containerWidth);
+        newScroll = Math.min(
+          currentScroll + containerWidth,
+          scrollWidth - containerWidth
+        );
       } else if (direction === "front") {
         newScroll = 0;
       }
@@ -182,35 +187,37 @@ const Lhome: React.FC = () => {
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
         <div className="fixed top-0  bg-white  border-gray-200   px-6 py-3 gap-8 z-50">
+          <nav className="flex items-center justify-between">
+            {/* Logo Section */}
+            <div className="flex items-center gap-6">
+              <Link
+                to="/"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
+                <img src="/image/logo2.png" alt="Logo" className="h-10" />
+                <span className="text-xl font-bold text-gray-800">
+                  AQUAlity
+                </span>
+              </Link>
 
-        <nav className="flex items-center justify-between">
-          {/* Logo Section */}
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src="/image/logo2.png" alt="Logo" className="h-10" />
-              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-            </Link>
+              {/* Menu Links */}
+              <Link
+                to="/home"
+                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
+                Home
+              </Link>
 
-            {/* Menu Links */}
-            <Link 
-              to="/home"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-            >
-              Home
-            </Link>
-
-            {/*Map Link */}
-            <Link 
-              to="/pantee"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-            >
-              Map
-            </Link>
-          </div>
-        </nav>
-
-      </div>
-
+              {/*Map Link */}
+              <Link
+                to="/pantee"
+                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
+                Map
+              </Link>
+            </div>
+          </nav>
+        </div>
 
         <div className="flex-grow flex justify-center mt-3">
           <input
@@ -240,51 +247,52 @@ const Lhome: React.FC = () => {
               >
                 +
               </button>
-              {cards.length === 0 ? null : cards.map((card, index) => (
-                  <div
-                    key={index}
-                    ref={(el) => (cardRefs.current[index] = el)}
-                    className={`transition-transform transform ${
-                      zoomedCardIndex === index
-                        ? "scale-110 z-10"
-                        : zoomedCardIndex === null
-                        ? "hover:scale-110 hover:z-10"
-                        : "opacity-60"
-                    } min-w-[250px]`}
-                    
-                  >
-                  <Card
-                    imageUrl={card.s_url}
-                    brand={card.b_name}
-                    dateTime={formatDate(card.s_date)} // Adjust based on API response
-                    location={`${card.s_latitude}, ${card.s_longitude}`}
-                    waterQualityColor={card.s_qualitycolor}
-                    onClick={() => {
-                      if (card.s_id) {
-                        // console.log(`Navigating to /cardinfo/${card.s_id}`);
-                        navigate(`/cardinfo/${card.s_id}`);
-                      } else {
-                        console.error("Card ID is missing");
-                      }
-                    }}
-                  />
-                </div>
-              ))}
+              {cards.length === 0
+                ? null
+                : cards.map((card, index) => (
+                    <div
+                      key={index}
+                      ref={(el) => (cardRefs.current[index] = el)}
+                      className={`transition-transform transform ${
+                        zoomedCardIndex === index
+                          ? "scale-110 z-10"
+                          : zoomedCardIndex === null
+                          ? "hover:scale-110 hover:z-10"
+                          : "opacity-60"
+                      } min-w-[250px]`}
+                    >
+                      <Card
+                        imageUrl={card.s_url}
+                        brand={card.b_name}
+                        dateTime={formatDate(card.s_date)} // Adjust based on API response
+                        location={`${card.s_latitude}, ${card.s_longitude}`}
+                        waterQualityColor={card.s_qualitycolor}
+                        onClick={() => {
+                          if (card.s_id) {
+                            // console.log(`Navigating to /cardinfo/${card.s_id}`);
+                            navigate(`/cardinfo/${card.s_id}`);
+                          } else {
+                            console.error("Card ID is missing");
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
             </div>
           </div>
-          
+
           {cards.length > 0 && (
-          <div className="flex justify-center mt-10 space-x-2">
-            {[...Array(cards.length)].map((_, dotIndex) => (
-              <button
-                key={dotIndex}
-                onClick={() => handleDotClick(dotIndex)}
-                className={`w-3 h-3 rounded-full ${
-                  scrollIndex === dotIndex ? "bg-black" : "bg-gray-300"
-                }`}
-              />
-            ))}
-          </div>
+            <div className="flex justify-center mt-10 space-x-2">
+              {[...Array(cards.length)].map((_, dotIndex) => (
+                <button
+                  key={dotIndex}
+                  onClick={() => handleDotClick(dotIndex)}
+                  className={`w-3 h-3 rounded-full ${
+                    scrollIndex === dotIndex ? "bg-black" : "bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
           )}
         </div>
 
@@ -317,8 +325,7 @@ const Lhome: React.FC = () => {
         </div>
       </div>
     </div>
-    
   );
 };
 
-export default Lhome;  // ✅ Default Export
+export default Lhome;

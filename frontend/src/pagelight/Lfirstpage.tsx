@@ -249,12 +249,14 @@ function FirstPage() {
     <div
       ref={pageRef}
       className="w-full h-screen flex flex-col"
-      style={{ position: "fixed" }}>
+      style={{ position: "fixed" }}
+    >
       {/* Navbar */}
       <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9 ">
         <Link
           to="/"
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
           <span className="text-xl font-bold text-gray-800">AQUAlity</span>
         </Link>
@@ -262,17 +264,20 @@ function FirstPage() {
         <div
           className={`flex-col md:flex-row md:flex items-center gap-6 w-full ${
             mobileMenuOpen ? "flex" : "hidden"
-          } md:!flex`}>
+          } md:!flex`}
+        >
           {user && (
             <>
               <Link
                 to="/home"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
                 Home
               </Link>
               <Link
                 to="/pantee"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
                 Map
               </Link>
             </>
@@ -284,7 +289,8 @@ function FirstPage() {
                 <span className="text-sm">{user.u_name}</span>
                 <button
                   onClick={handleLogout}
-                  className="bg-black text-white  px-4 py-1 rounded-lg">
+                  className="bg-black text-white  px-4 py-1 rounded-lg"
+                >
                   Logout
                 </button>
               </div>
@@ -297,14 +303,16 @@ function FirstPage() {
                         ? "bg-black text-white border-black"
                         : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
                     }`}
-                    onClick={handleSignupClick}>
+                    onClick={handleSignupClick}
+                  >
                     Sign up
                   </button>
 
                   {showSignupPopup && (
                     <div
                       ref={signupPopupRef}
-                      className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200">
+                      className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200"
+                    >
                       <h3 className="text-lg font-semibold mb-3 text-center">
                         SIGN UP FOR A NEW ACCOUNT
                       </h3>
@@ -320,7 +328,8 @@ function FirstPage() {
                                 userType === "researcher"
                                   ? "border-black bg-black"
                                   : "border-gray-300"
-                              }`}>
+                              }`}
+                            >
                               {userType === "researcher" && (
                                 <div className="w-2 h-2 bg-white rounded-full"></div>
                               )}
@@ -328,7 +337,8 @@ function FirstPage() {
                             <span
                               className={`${
                                 userType === "researcher" ? "font-base" : ""
-                              }`}>
+                              }`}
+                            >
                               Researcher
                             </span>
                             <input
@@ -347,7 +357,8 @@ function FirstPage() {
                                 userType === "regular"
                                   ? "border-black bg-black"
                                   : "border-gray-300"
-                              }`}>
+                              }`}
+                            >
                               {userType === "regular" && (
                                 <div className="w-2 h-2 bg-white rounded-full"></div>
                               )}
@@ -355,7 +366,8 @@ function FirstPage() {
                             <span
                               className={`${
                                 userType === "regular" ? "font-base" : ""
-                              }`}>
+                              }`}
+                            >
                               General
                             </span>
                             <input
@@ -379,12 +391,14 @@ function FirstPage() {
                             !userType
                               ? "bg-[#f1f1f1] text-gray-400  cursor-not-allowed border border-[#f1f1f1]"
                               : "bg-white hover:bg-gray-100 text-gray-700 border border-[#d6d6d6]"
-                          }`}>
+                          }`}
+                        >
                           <svg
                             viewBox="0 0 24 24"
                             width="16"
                             height="16"
-                            xmlns="http://www.w3.org/2000/svg">
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
                             <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
                               <path
                                 fill="#4285F4"
@@ -417,25 +431,29 @@ function FirstPage() {
                         ? "bg-black text-white border-black"
                         : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
                     }`}
-                    onClick={handleLoginClick}>
+                    onClick={handleLoginClick}
+                  >
                     Login
                   </button>
                   {showLoginPopup && (
                     <div
                       ref={loginPopupRef}
-                      className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg  p-4 z-[2000] w-100 border border-gray-200">
+                      className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg  p-4 z-[2000] w-100 border border-gray-200"
+                    >
                       <h3 className="text-lg font-semibold mb-3 text-center">
                         LOG IN TO YOUR USER ACCOUNT
                       </h3>
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={handleGoogleSignIn}
-                          className="bg-white hover:bg-gray-100 text-gray-700 py-2 px-4 rounded border border-gray-300 flex items-center justify-center gap-2">
+                          className="bg-white hover:bg-gray-100 text-gray-700 py-2 px-4 rounded border border-gray-300 flex items-center justify-center gap-2"
+                        >
                           <svg
                             viewBox="0 0 24 24"
                             width="16"
                             height="16"
-                            xmlns="http://www.w3.org/2000/svg">
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
                             <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
                               <path
                                 fill="#4285F4"
@@ -472,7 +490,8 @@ function FirstPage() {
           <MapContainer
             center={INITIAL_CENTER as LatLngExpression}
             zoom={INITIAL_ZOOM}
-            className="w-full h-full">
+            className="w-full h-full"
+          >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -494,13 +513,15 @@ function FirstPage() {
                 {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
                 <button
                   className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/panteefirstpage")}>
+                  onClick={() => navigate("/panteefirstpage")}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
-                    stroke="currentColor">
+                    stroke="currentColor"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
