@@ -244,7 +244,16 @@ router.get("/predict/:id", async (req, res) => {
       image: image,
     });
 
-    res.json({ prediction: response.data.prediction }); // Send the prediction back to the client
+    const prediction = response.data.prediction;
+
+    // Insert prediction result into database
+    await dbClient.insert(StripParameter).values({
+      s_id: s_id,
+      p_id: 1, 
+      sp_value: prediction,
+    });
+
+    res.json({ prediction });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });

@@ -3,7 +3,7 @@ import { FaLocationCrosshairs } from "react-icons/fa6";
 import { FaPaperclip } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import imageCompression from 'browser-image-compression';
+import imageCompression from "browser-image-compression";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -11,7 +11,9 @@ import { auth } from "../firebase";
 const toDMS = (decimal: number, isLat: boolean = true) => {
   const degrees = Math.floor(Math.abs(decimal));
   const minutes = Math.floor((Math.abs(decimal) - degrees) * 60);
-  const seconds = ((Math.abs(decimal) - degrees - minutes / 60) * 3600).toFixed(1);
+  const seconds = ((Math.abs(decimal) - degrees - minutes / 60) * 3600).toFixed(
+    1
+  );
 
   let direction;
   if (isLat) {
@@ -31,36 +33,40 @@ const Ladd: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLocationSelected, setIsLocationSelected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate(); 
-
-  
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch brands from API
-    axios.get<{ b_id: number; b_name: string }[]>("http://localhost:3003/brands")
-      .then(response => {
+    axios
+      .get<{ b_id: number; b_name: string }[]>("http://localhost:3003/brands")
+      .then((response) => {
         setBrands(response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching brands:", error);
       });
 
     // Clear location when page is refreshed
-    window.addEventListener('beforeunload', resetState);
-    
+    window.addEventListener("beforeunload", resetState);
+
     // Check for location in localStorage and sessionStorage
-    const storedLocation = localStorage.getItem('selectedLocation') || 
-                           sessionStorage.getItem('selectedLocation');
-    
+    const storedLocation =
+      localStorage.getItem("selectedLocation") ||
+      sessionStorage.getItem("selectedLocation");
+
     if (storedLocation) {
       try {
         const parsedLocation = JSON.parse(storedLocation);
-        
+
         // Ensure the location object has lat and lng
-        if (parsedLocation && parsedLocation.lat !== undefined && parsedLocation.lng !== undefined) {
+        if (
+          parsedLocation &&
+          parsedLocation.lat !== undefined &&
+          parsedLocation.lng !== undefined
+        ) {
           const latDMS = toDMS(parsedLocation.lat, true);
           const lngDMS = toDMS(parsedLocation.lng, false);
-          
+
           // Update state with stored location
           setLocation(`${latDMS}, ${lngDMS}`);
           setIsLocationSelected(true);
@@ -79,14 +85,14 @@ const Ladd: React.FC = () => {
 
     // Cleanup event listener
     return () => {
-      window.removeEventListener('beforeunload', resetState);
+      window.removeEventListener("beforeunload", resetState);
     };
   }, []);
 
   // Reset state to initial values
   const resetState = () => {
-    localStorage.removeItem('selectedLocation');
-    sessionStorage.removeItem('selectedLocation');
+    localStorage.removeItem("selectedLocation");
+    sessionStorage.removeItem("selectedLocation");
     setLocation("Please specify your location");
     setIsLocationSelected(false);
     setSelectedFile(null);
@@ -96,31 +102,33 @@ const Ladd: React.FC = () => {
 
   const handleLocate = () => {
     // Get the current stored location to pass as previous location
-    const currentLocation = localStorage.getItem('selectedLocation');
+    const currentLocation = localStorage.getItem("selectedLocation");
     const parsedLocation = currentLocation ? JSON.parse(currentLocation) : null;
-    
-    navigate("/addmap", { 
-      state: { 
+
+    navigate("/addmap", {
+      state: {
         previousLocation: parsedLocation,
-        selectedLocation: parsedLocation
-      } 
+        selectedLocation: parsedLocation,
+      },
     });
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return; // ป้องกัน Error กรณีไม่มีไฟล์
-    
+
     if (isLocationSelected) {
       try {
         const compressedFile = await imageCompression(file, {
           maxSizeMB: 0.1,
           maxWidthOrHeight: 800,
           useWebWorker: true,
-          initialQuality: 0.7, 
+          initialQuality: 0.7,
           alwaysKeepResolution: true, // คงสัดส่วนเดิม
         });
-  
+
         // อ่านไฟล์เป็น Base64 เพื่อใช้แสดงรูป preview
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -128,13 +136,11 @@ const Ladd: React.FC = () => {
           setSelectedFile(compressedFile); // ย้ายมาที่นี่เพื่อให้แน่ใจว่าถูกตั้งค่าหลังจาก compression
         };
         reader.readAsDataURL(compressedFile);
-  
       } catch (error) {
         console.error("Image compression failed:", error);
       }
     }
   };
-  
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -147,7 +153,7 @@ const Ladd: React.FC = () => {
     const file = event.dataTransfer.files[0];
     if (file && isLocationSelected) {
       setSelectedFile(file);
-      
+
       // Create image preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -167,76 +173,92 @@ const Ladd: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const userId = user.uid;
-            setUid(userId);
-
-        } else {
-            navigate("/");
-        }
+      if (user) {
+        const userId = user.uid;
+        setUid(userId);
+      } else {
+        navigate("/");
+      }
     });
 
     return () => unsubscribe();
-}, [navigate]);
+  }, [navigate]);
 
-  
-const handleAnalyze = async () => {
-  if (isLocationSelected && selectedFile && selectedBrandId) {
+  const handleAnalyze = async () => {
+    if (isLocationSelected && selectedFile && selectedBrandId) {
       const locationParts = location.split(", ");
       const latitude = locationParts[0];
       const longitude = locationParts[1];
 
       if (!userId) {
-          console.error("User ID not found. Please log in.");
-          return;
+        console.error("User ID not found. Please log in.");
+        return;
       }
 
       // Save data to localStorage
       localStorage.setItem("stripBrand", selectedBrandId.toString());
       localStorage.setItem("location", location);
       if (imagePreview) {
-          localStorage.setItem("uploadedImage", imagePreview);
+        localStorage.setItem("uploadedImage", imagePreview);
       }
 
       // ข้อมูลที่ต้องส่งไปยัง API
       const data = {
-          b_id: selectedBrandId,
-          s_latitude: latitude,
-          s_longitude: longitude,
-          u_id: userId,
-          s_url: imagePreview,
+        b_id: selectedBrandId,
+        s_latitude: latitude,
+        s_longitude: longitude,
+        u_id: userId,
+        s_url: imagePreview,
       };
 
       try {
-          // ส่งข้อมูลไปยัง API
-          const response = await axios.post("http://localhost:3003/strips", data, {
-              headers: {
-                  "Content-Type": "application/json",
-              },
-          });
-
-          // ✅ แก้ไขให้ดึง s_id จาก response.data.data
-          const responseData = response.data as { msg: string; data: { s_id: number } };
-
-          if (response.status === 201 && responseData.data?.s_id) {
-              const stripId = responseData.data.s_id;
-              // console.log("Data successfully sent. Strip ID:", stripId);
-              navigate(`/cardinfo/${stripId}`); // ✅ ไปที่ /cardinfo/s_id
-          } else {
-              console.error("Error: s_id is undefined", responseData);
+        // ส่งข้อมูลไปยัง API
+        const response = await axios.post(
+          "http://localhost:3003/strips",
+          data,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
+        );
+
+        const responseData = response.data as {
+          msg: string;
+          data: { s_id: number };
+        };
+
+        if (response.status === 201 && responseData.data?.s_id) {
+          const stripId = responseData.data.s_id;
+
+          try {
+            await axios.get(`http://localhost:3003/strips/predict/${stripId}`);
+          } catch (predictError) {
+            console.error("Prediction failed:", predictError);
+            // คุณอาจใส่ alert หรือแสดงข้อความเตือนผู้ใช้ได้ตรงนี้
+          }
+        
+          navigate(`/cardinfo/${stripId}`);
+        }
+         else {
+          console.error("Error: s_id is undefined", responseData);
+        }
       } catch (error) {
-          console.error("Error in API request:", error);
-          console.log("data : ", data);
+        console.error("Error in API request:", error);
+        console.log("data : ", data);
       }
-  }
-};
+    }
+  };
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md mx-auto space-y-6 text-center">
         <div className="flex w-full justify-center">
           <div className="border h-11 w-70 rounded-full p-2 flex items-center justify-between">
-            <span className={`text-black pl-3 ${isLocationSelected ? '' : 'text-black'}`}>
+            <span
+              className={`text-black pl-3 ${
+                isLocationSelected ? "" : "text-black"
+              }`}
+            >
               {location}
             </span>
             <button
@@ -261,14 +283,21 @@ const handleAnalyze = async () => {
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className={`w-171 h-30 -ml-29 p-6 ${selectedFile ? '' : (isLocationSelected ? 'cursor-pointer hover:bg-gray-100 transition' : 'opacity-50 cursor-not-allowed')} relative`}
+          className={`w-171 h-30 -ml-29 p-6 ${
+            selectedFile
+              ? ""
+              : isLocationSelected
+              ? "cursor-pointer hover:bg-gray-100 transition"
+              : "opacity-50 cursor-not-allowed"
+          } relative`}
           style={{
-            backgroundImage: imagePreview ? 'none' : 
-              "url('data:image/svg+xml,%3csvg width=%22100%25%22 height=%22100%25%22 xmlns=%22http://www.w3.org/2000/svg%22%3e%3crect width=%22100%25%22 height=%22100%25%22 fill=%22none%22 rx=%2211%22 ry=%2211%22 stroke=%22black%22 stroke-width=%224%22 stroke-dasharray=%228%2c12%22 stroke-dashoffset=%2221%22 stroke-linecap=%22square%22/%3e%3c/svg%3e')",
+            backgroundImage: imagePreview
+              ? "none"
+              : "url('data:image/svg+xml,%3csvg width=%22100%25%22 height=%22100%25%22 xmlns=%22http://www.w3.org/2000/svg%22%3e%3crect width=%22100%25%22 height=%22100%25%22 fill=%22none%22 rx=%2211%22 ry=%2211%22 stroke=%22black%22 stroke-width=%224%22 stroke-dasharray=%228%2c12%22 stroke-dashoffset=%2221%22 stroke-linecap=%22square%22/%3e%3c/svg%3e')",
             borderRadius: "11px",
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
           <input
@@ -280,14 +309,18 @@ const handleAnalyze = async () => {
             disabled={!isLocationSelected}
           />
           {imagePreview ? (
-            <img 
-              src={imagePreview} 
-              alt="Preview" 
+            <img
+              src={imagePreview}
+              alt="Preview"
               className="w-30 h-30 object-cover rounded-lg"
             />
           ) : (
             <>
-              <p className={`text-bold text-2xl ${isLocationSelected ? 'text-[#a3a2a2]' : 'text-gray-400'} mt-5 mb-5`}>
+              <p
+                className={`text-bold text-2xl ${
+                  isLocationSelected ? "text-[#a3a2a2]" : "text-gray-400"
+                } mt-5 mb-5`}
+              >
                 Drag your photo here
               </p>
               {isLocationSelected && !selectedFile && (
@@ -303,9 +336,7 @@ const handleAnalyze = async () => {
         </div>
 
         <div className="flex space-x-2">
-          
-
-        <select
+          <select
             value={selectedBrandId || ""}
             onChange={(e) => setSelectedBrandId(Number(e.target.value))}
             className="w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0"
@@ -323,14 +354,13 @@ const handleAnalyze = async () => {
             onClick={handleAnalyze}
             disabled={!(isLocationSelected && selectedFile && selectedBrandId)}
             className={`w-full sm:w-32 py-3 rounded-r-full transition ${
-              isLocationSelected && selectedFile && selectedBrandId 
-              ? 'bg-black text-white hover:bg-gray-800' 
-              : 'bg-[#f1f1f1] text-gray-400 cursor-not-allowed'
+              isLocationSelected && selectedFile && selectedBrandId
+                ? "bg-black text-white hover:bg-gray-800"
+                : "bg-[#f1f1f1] text-gray-400 cursor-not-allowed"
             }`}
           >
             Analyze
           </button>
-          
         </div>
       </div>
     </div>
