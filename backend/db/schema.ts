@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, doublePrecision, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable,serial, text, uuid, integer, doublePrecision, timestamp, json } from "drizzle-orm/pg-core";
 
 // ตาราง USER
 export const User = pgTable("user", {
@@ -17,7 +17,7 @@ export const Brand = pgTable("brand", {
 
 // ตาราง STRIP
 export const Strip = pgTable("strip", {
-  s_id: serial("s_id").primaryKey(),
+  s_id: uuid("s_id").primaryKey().defaultRandom(),
   u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
   b_id: integer("b_id").references(() => Brand.b_id, { onDelete: "cascade" }).notNull(),
   s_date: timestamp("s_date").notNull().defaultNow(),
@@ -28,13 +28,12 @@ export const Strip = pgTable("strip", {
   s_qualitycolor: text("s_qualitycolor").notNull(),
 });
 
+// ตาราง STRIP_STATUS
 export const StripStatus = pgTable("strip_status", {
   st_id: serial("st_id").primaryKey(),
   u_id: text("u_id").references(() => User.u_id, { onDelete: "cascade" }).notNull(),
-  s_id: integer("s_id")
-    .notNull()
-    .references(() => Strip.s_id, { onDelete: "cascade" }),
-  status: text("status").notNull() 
+  s_id: uuid("s_id").references(() => Strip.s_id, { onDelete: "cascade" }).notNull(),
+  status: text("status").notNull()
 });
 
 // ตาราง PARAMETER
@@ -46,10 +45,10 @@ export const Parameter = pgTable("parameter", {
   p_max: doublePrecision("p_max").notNull(),
 });
 
-// ตาราง STRIP_PARAMETER (M:N)
+// ตาราง STRIP_PARAMETER
 export const StripParameter = pgTable("strip_parameter", {
   sp_id: serial("sp_id").primaryKey(),
-  s_id: integer("s_id").references(() => Strip.s_id, { onDelete: "cascade" }).notNull(),
+  s_id: uuid("s_id").references(() => Strip.s_id, { onDelete: "cascade" }).notNull(),
   p_id: integer("p_id").references(() => Parameter.p_id, { onDelete: "cascade" }).notNull(),
   sp_value: doublePrecision("sp_value").notNull(),
 });

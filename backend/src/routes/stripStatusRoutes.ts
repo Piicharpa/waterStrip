@@ -1,6 +1,15 @@
 import express from "express";
 import { dbClient } from "../../db/client";
-import { Brand, Strip, StripStatus } from "../../db/schema";
+
+import {
+  Strip,
+  Brand,
+  Parameter,
+  StripParameter,
+  Color,
+  StripStatus,
+} from "../../db/schema";
+
 import { eq, and } from "drizzle-orm";
 
 const router = express.Router();
@@ -113,7 +122,7 @@ router.get("/:u_id/:s_id", async (req, res) => {
       .select()
       .from(StripStatus)
       .where(
-        and(eq(StripStatus.u_id, u_id), eq(StripStatus.s_id, Number(s_id)))
+        and(eq(StripStatus.u_id, u_id), eq(StripStatus.s_id, s_id))
       );
 
     // ถ้ามีสถานะอยู่แล้ว

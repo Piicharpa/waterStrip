@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvent,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FaLocationCrosshairs } from "react-icons/fa6";
@@ -12,7 +19,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 const toDMS = (decimal: number, isLat: boolean = true) => {
   const degrees = Math.floor(Math.abs(decimal));
   const minutes = Math.floor((Math.abs(decimal) - degrees) * 60);
-  const seconds = ((Math.abs(decimal) - degrees - minutes / 60) * 3600).toFixed(1);
+  const seconds = ((Math.abs(decimal) - degrees - minutes / 60) * 3600).toFixed(
+    1
+  );
 
   let direction;
   if (isLat) {
@@ -46,7 +55,7 @@ function ChangeView({ center }: { center: { lat: number; lng: number } }) {
 const AddMap = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Get previous location from route state or use default
   const previousLocation = location.state?.previousLocation || {
     lat: 18.7883,
@@ -66,7 +75,7 @@ const AddMap = () => {
   } | null>(location.state?.selectedLocation || null);
   const [userMarkerVisible, setUserMarkerVisible] = useState(!selectedLocation);
 
-  const markersRef = useRef<{ [key: number]: L.Marker }>({});
+  const markersRef = useRef<{ [key: number]: L.Marker | null }>({});
 
   // ฟังก์ชันตรวจสอบตำแหน่งของผู้ใช้
   const handleLocate = () => {
@@ -109,11 +118,11 @@ const AddMap = () => {
     const latDMS = toDMS(lat, true);
     const lngDMS = toDMS(lng, false);
 
-    setSelectedLocation({ 
-      lat, 
-      lng, 
-      latDMS, 
-      lngDMS 
+    setSelectedLocation({
+      lat,
+      lng,
+      latDMS,
+      lngDMS,
     });
     setUserMarkerVisible(false);
     setViewLocation({ lat, lng });
@@ -129,11 +138,11 @@ const AddMap = () => {
     const latDMS = toDMS(lat, true);
     const lngDMS = toDMS(lng, false);
 
-    setSelectedLocation({ 
-      lat, 
-      lng, 
-      latDMS, 
-      lngDMS 
+    setSelectedLocation({
+      lat,
+      lng,
+      latDMS,
+      lngDMS,
     });
   };
 
@@ -141,10 +150,25 @@ const AddMap = () => {
   const handleConfirmLocation = () => {
     if (selectedLocation) {
       // เก็บค่าตำแหน่งใน localStorage เพื่อส่งไปยังหน้า Ladd
-      localStorage.setItem('selectedLocation', JSON.stringify(selectedLocation));
-      navigate('/add'); // นำทางไปยังหน้า Ladd
+      localStorage.setItem(
+        "selectedLocation",
+        JSON.stringify(selectedLocation)
+      );
+      navigate("/add"); // นำทางไปยังหน้า Ladd
     }
   };
+
+  // Handling the click event on the map to select a location
+  function MapClickHandler({
+    onSelect,
+  }: {
+    onSelect: (lat: number, lng: number) => void;
+  }) {
+    useMapEvent("click", (e) => {
+      onSelect(e.latlng.lat, e.latlng.lng);
+    });
+    return null;
+  }
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
@@ -155,24 +179,20 @@ const AddMap = () => {
           handleLocate();
         }}
         className="absolute right-2 top-2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full outline-none focus:ring-0"
-        style={{ zIndex: 1000 }}
-      >
+        style={{ zIndex: 1000 }}>
         <FaLocationCrosshairs />
       </button>
 
       {/* Map Section */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+      <div
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
         <MapContainer
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
-          style={{ height: "100%", width: "100%" }}
-          whenReady={(map) => {
-            map.target.on("click", (e: any) => {
-              const latLng = e.latlng;
-              handleLocationSelect(latLng.lat, latLng.lng);
-            });
-          }}
-        >
+          style={{ height: "100%", width: "100%" }}>
+          <MapClickHandler onSelect={handleLocationSelect} />
+
+          {/* Tile Layer for the map */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -183,19 +203,24 @@ const AddMap = () => {
             <Marker
               position={[currentLocation.lat, currentLocation.lng]}
               icon={DefaultIcon}
-              ref={(el) => (markersRef.current[0] = el)}
-            >
+              ref={(el) => (markersRef.current[0] = el)}>
               <Popup>
-                <div style={{ display: "flex", flexDirection: "column", minWidth: "200px" }}>
-                  <h3 style={{ fontWeight: "bold", marginBottom: "5px" }}>ตำแหน่งของคุณ</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: "200px",
+                  }}>
+                  <h3 style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                    ตำแหน่งของคุณ
+                  </h3>
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <p style={{ whiteSpace: "nowrap" }}>
                       {selectedLocation?.latDMS}, {selectedLocation?.lngDMS}
                     </p>
-                    <button 
+                    <button
                       onClick={handleConfirmLocation}
-                      className="bg-black ml-4.5 h-6 w-6 rounded-full text-white flex justify-center items-center"
-                    >
+                      className="bg-black ml-4.5 h-6 w-6 rounded-full text-white flex justify-center items-center">
                       <FaCheck />
                     </button>
                   </div>
@@ -213,19 +238,24 @@ const AddMap = () => {
               draggable={true}
               eventHandlers={{
                 dragend: handleMarkerDragEnd,
-              }}
-            >
+              }}>
               <Popup>
-                <div style={{ display: "flex", flexDirection: "column", minWidth: "200px" }}>
-                  <h3 style={{ fontWeight: "bold", marginBottom: "5px" }}>ตำแหน่งที่เลือก</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: "200px",
+                  }}>
+                  <h3 style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                    ตำแหน่งที่เลือก
+                  </h3>
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <p>
                       {selectedLocation.latDMS}, {selectedLocation.lngDMS}
                     </p>
-                    <button 
+                    <button
                       onClick={handleConfirmLocation}
-                      className="bg-black ml-4 h-6 w-6 rounded-full text-white flex justify-center items-center"
-                    >
+                      className="bg-black ml-4 h-6 w-6 rounded-full text-white flex justify-center items-center">
                       <FaCheck />
                     </button>
                   </div>
