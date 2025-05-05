@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { Link } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 
 interface ColorScaleSet {
   colors: string[];
@@ -35,9 +35,9 @@ const Lcardinfo: React.FC = () => {
   const [u_id, setUid] = useState("");
   const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [prediction, setPrediction] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  // const [prediction, setPrediction] = useState<string>("");
+  // const [loading, setLoading] = useState<boolean>(false);
+  // const [error, setError] = useState<string>("");
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return "N/A"; // ถ้าไม่มีค่าวันที่ ให้แสดง "N/A"
@@ -60,7 +60,7 @@ const Lcardinfo: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1️⃣ PATCH เพื่ออัปเดตค่าคุณภาพก่อน
+        // PATCH เพื่ออัปเดตค่าคุณภาพก่อน
         const patchResponse = await fetch(
           `http://localhost:3003/strips/quality/${stripId}`,
           {
@@ -71,7 +71,7 @@ const Lcardinfo: React.FC = () => {
 
         console.log("PATCH Request Successful"); // Log here to see if PATCH was successful
 
-        // 2️⃣ จากนั้นค่อย GET ข้อมูลใหม่
+        // จากนั้นค่อย GET ข้อมูลใหม่
         const response = await fetch(`http://localhost:3003/strips/${stripId}`);
         if (!response.ok) throw new Error("Failed to fetch data");
 
@@ -190,7 +190,7 @@ const Lcardinfo: React.FC = () => {
     if (u_id && stripId) {
       const checkAndPostInitialStatus = async () => {
         try {
-          // 1️⃣ ลอง GET status ก่อน
+          // ลอง GET status ก่อน
           const getResponse = await fetch(
             `http://localhost:3003/strip-status/${u_id}/${stripId}`
           );
@@ -202,7 +202,7 @@ const Lcardinfo: React.FC = () => {
             return; // ไม่ต้อง post ซ้ำ
           }
 
-          // 2️⃣ ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
+          // ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
           const postResponse = await fetch(
             `http://localhost:3003/strip-status`,
             {
@@ -395,7 +395,7 @@ const Lcardinfo: React.FC = () => {
           </div>
         </div>
 
-        <div className="scroll-container absolute -right-23 bg-transparent top-150 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
+        <div className="scroll-container absolute -right-100 bg-transparent top-130 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
           {qualityMessage}
         </div>
 

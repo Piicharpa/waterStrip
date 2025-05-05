@@ -79,7 +79,7 @@ router.post("/", async (req, res, next) => {
 // Update strip in Strip
 router.patch("/quality/:id", async (req, res, next) => {
   try {
-    const s_id = parseInt(req.params.id);
+    const s_id = req.params.id;
 
     // Ensure evaluateStripQuality is defined or imported
     await evaluateStripQuality(s_id); // Replace this with the actual implementation or import
@@ -93,7 +93,7 @@ router.patch("/quality/:id", async (req, res, next) => {
 router.patch("/:id", async (req, res, next) => {
   try {
     // console.log("Received Request Body:", req.body);
-    const s_id = parseInt(req.params.id);
+    const s_id = req.params.id;
     const { s_quality, s_qualitycolor } = req.body;
 
     if (!s_quality) {
@@ -115,7 +115,7 @@ router.patch("/:id", async (req, res, next) => {
 // Delete strip from Strip
 router.delete("/:id", async (req, res, next) => {
   try {
-    const s_id = parseInt(req.params.id);
+    const s_id = req.params.id;
     if (!s_id) throw new Error("Missing strip id");
 
     const results = await dbClient.query.Strip.findMany({
@@ -132,7 +132,7 @@ router.delete("/:id", async (req, res, next) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const s_id = Number(req.params.id);
+    const s_id = req.params.id;
 
     const result = await dbClient
       .select({
@@ -141,7 +141,7 @@ router.get("/:id", async (req, res) => {
         s_date: Strip.s_date,
         s_quality: Strip.s_quality,
         s_qualitycolor: Strip.s_qualitycolor,
-        s_status: StripStatus.status, // เพิ่ม field status ตรงนี้
+        s_status: StripStatus.status,
         b_id: Strip.b_id,
         b_name: Brand.b_name,
         s_latitude: Strip.s_latitude,
@@ -155,7 +155,7 @@ router.get("/:id", async (req, res) => {
       })
       .from(Strip)
       .innerJoin(Brand, eq(Strip.b_id, Brand.b_id))
-      .leftJoin(StripStatus, eq(Strip.s_id, StripStatus.s_id)) // เพิ่ม join นี้
+      .leftJoin(StripStatus, eq(Strip.s_id, StripStatus.s_id))
       .leftJoin(StripParameter, eq(Strip.s_id, StripParameter.s_id))
       .leftJoin(Parameter, eq(StripParameter.p_id, Parameter.p_id))
       .leftJoin(
@@ -166,6 +166,22 @@ router.get("/:id", async (req, res) => {
 
     if (result.length === 0) {
       res.status(404).json({ message: "Strip not found" });
+    }
+
+    // ใช้ Map เพื่อ deduplicate p_id
+    const paramMap = new Map();
+    for (const row of result) {
+      if (!row.p_id) continue;
+      if (!paramMap.has(row.p_id)) {
+        paramMap.set(row.p_id, {
+          p_id: row.p_id,
+          p_name: row.p_name,
+          p_unit: row.p_unit,
+          sp_value: row.sp_value,
+          colors: row.colors || null,
+          values: row.values || null,
+        });
+      }
     }
 
     const formattedData = {
@@ -179,16 +195,7 @@ router.get("/:id", async (req, res) => {
       b_name: result[0].b_name,
       s_latitude: result[0].s_latitude,
       s_longitude: result[0].s_longitude,
-      parameters: result
-        .map((row) => ({
-          p_id: row.p_id,
-          p_name: row.p_name,
-          p_unit: row.p_unit,
-          sp_value: row.sp_value,
-          colors: row.colors || null,
-          values: row.values || null,
-        }))
-        .filter((param) => param.p_id !== null),
+      parameters: Array.from(paramMap.values()),
     };
 
     res.json(formattedData);
@@ -198,10 +205,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+
 // Get Strips Picture by s_id
 router.get("/predict/:id", async (req, res) => {
   try {
-    const s_id = Number(req.params.id);
+    const s_id = req.params.id;
     const result = await dbClient
       .select({
         s_url: Strip.s_url,

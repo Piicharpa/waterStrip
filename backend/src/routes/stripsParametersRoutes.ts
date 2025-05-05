@@ -90,7 +90,7 @@ router.patch("/:s_id/:p_id", async (req, res, next) => {
       .set({ sp_value })
       .where(
         and(
-          eq(StripParameter.s_id, Number(s_id)),
+          eq(StripParameter.s_id, s_id),
           eq(StripParameter.p_id, Number(p_id))
         )
       )
