@@ -65,6 +65,7 @@ export default function PermissionPage() {
 
             // ✅ เก็บ username ใน sessionStorage
             sessionStorage.setItem("username", name);
+            sessionStorage.setItem("userId", uid);
         } catch (error) {
             console.error("Error updating name:", error);
         }
