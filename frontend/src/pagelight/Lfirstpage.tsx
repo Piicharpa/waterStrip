@@ -34,12 +34,6 @@ declare global {
 function MapController({ setShowText }: MapControllerProps) {
   const map = useMap();
 
-  // ปรับปรุงให้เมื่อเริ่มการเคลื่อนหรือซูม text จะหายไป แต่ไม่กลับมาเมื่อจบการเคลื่อนหรือซูม
-  useMapEvents({
-    movestart: () => setShowText(false),
-    zoomstart: () => setShowText(false),
-    // ลบ moveend และ zoomend ออก เพื่อไม่ให้ text กลับมาเมื่อการเคลื่อนหรือซูมสิ้นสุด
-  });
 
   // ปรับปรุง window.resetMap เพื่อให้แสดง showText ด้วย
   useEffect(() => {
@@ -51,6 +45,7 @@ function MapController({ setShowText }: MapControllerProps) {
       window.resetMap = undefined;
     };
   }, [map, setShowText]);
+
 
   return null;
 }
