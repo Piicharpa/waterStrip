@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect } from "react";
 import { LatLngExpression } from "leaflet";
@@ -262,26 +262,26 @@ function FirstPage() {
           } md:!flex`}
         >
           {user && (
-            <>
+            <div className="ml-0.5">
               <Link
                 to="/home"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-black text-base hover:underline px-4 py-2 rounded-lg transition-colors"
               >
                 Home
               </Link>
               <Link
                 to="/pantee"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-black text-base hover:underline px-8 py-2 rounded-lg transition-colors"
               >
                 Map
               </Link>
-            </>
+            </div>
           )}
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm">{user.u_name}</span>
+                <span className="text-base">{user.u_name}</span>
                 <button
                   onClick={handleLogout}
                   className="bg-black text-white  px-4 py-1 rounded-lg"

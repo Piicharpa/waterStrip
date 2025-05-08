@@ -170,7 +170,7 @@ function Pantee() {
             <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
               {/* Logo Section */}
               <div className="flex items-center gap-6">
-                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <Link to="/" className=" items-center -mt-20 gap-3 hover:opacity-80 transition-opacity">
                   <img src="/image/logo2.png" alt="Logo" className="h-10" />
                   <span className="text-xl font-bold text-gray-800">AQUAlity</span>
                 </Link>

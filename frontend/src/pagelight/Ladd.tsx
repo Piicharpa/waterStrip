@@ -299,6 +299,7 @@ const Ladd: React.FC = () => {
             justifyContent: "center",
             alignItems: "center",
           }}
+          onClick={triggerFileInput}
         >
           <input
             type="file"
@@ -321,7 +322,7 @@ const Ladd: React.FC = () => {
                   isLocationSelected ? "text-[#a3a2a2]" : "text-gray-400"
                 } mt-5 mb-5`}
               >
-                Drag your photo here
+                Drag the photo or Upload file
               </p>
               {isLocationSelected && !selectedFile && (
                 <button
@@ -339,8 +340,12 @@ const Ladd: React.FC = () => {
           <select
             value={selectedBrandId || ""}
             onChange={(e) => setSelectedBrandId(Number(e.target.value))}
-            className="w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0"
-            disabled={!isLocationSelected}
+            className={`w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0 ${
+              isLocationSelected && selectedFile
+                ? "text-black border-black"
+                : "text-gray-400 border-[#f1f1f1] cursor-not-allowed"
+            }`}
+            disabled={!(isLocationSelected && selectedFile)}
           >
             <option value="">Select a Brand</option>
             {brands.map((brand) => (

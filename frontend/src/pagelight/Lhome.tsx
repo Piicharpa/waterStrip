@@ -203,7 +203,7 @@ const Lhome: React.FC = () => {
               {/* Menu Links */}
               <Link
                 to="/home"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
               >
                 Home
               </Link>
@@ -211,7 +211,7 @@ const Lhome: React.FC = () => {
               {/*Map Link */}
               <Link
                 to="/pantee"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
               >
                 Map
               </Link>
@@ -225,7 +225,7 @@ const Lhome: React.FC = () => {
             placeholder="Search"
             value={searchTerm}
             onChange={handleSearch}
-            className="border outline-none rounded-full px-6 py-3 w-120 h-10"
+            className="border outline-none rounded-full ml-10 px-6 py-3 w-100 h-10"
           />
         </div>
 

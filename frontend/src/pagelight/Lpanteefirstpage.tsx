@@ -162,7 +162,7 @@ function Panteefirstpage() {
         <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
           {/* Logo Section */}
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center  gap-3 hover:opacity-80 transition-opacity">
               <img src="/image/logo2.png" alt="Logo" className="h-10" />
               <span className="text-xl font-bold text-gray-800">AQUAlity</span>
             </Link>
@@ -170,18 +170,18 @@ function Panteefirstpage() {
             {/* Menu Links */}
             <Link 
               to="/home"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
             >
               Home
             </Link>
 
-            {/*Map Link */}
+            {/* Map Link
             <Link 
               to="/pantee"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              className="text-gray-800 text-base  hover:underline px-4 py-2 rounded-lg transition-colors"
             >
               Map
-            </Link>
+            </Link> */}
           </div>
         {/* Search Box */}
         <div className="relative">
