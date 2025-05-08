@@ -169,7 +169,7 @@ function Panteefirstpage() {
   
             {/* Menu Links */}
             <Link 
-              to="/home"
+              to="/"
               className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
             >
               Home

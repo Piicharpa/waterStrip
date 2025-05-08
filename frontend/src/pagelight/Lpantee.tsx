@@ -167,46 +167,46 @@ function Pantee() {
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
       {/* Navbar */}
-            <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
-              {/* Logo Section */}
-              <div className="flex items-center gap-6">
-                <Link to="/" className=" items-center -mt-20 gap-3 hover:opacity-80 transition-opacity">
-                  <img src="/image/logo2.png" alt="Logo" className="h-10" />
-                  <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-                </Link>
-      
-                {/* Menu Links */}
-                <Link 
-                  to="/home"
-                  className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Home
-                </Link>
-
-                {/*Map Link */}
-                <Link 
-                  to="/pantee"
-                  className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Map
-                </Link>
-              </div>
+      <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
+          {/* Logo Section */}
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center  gap-3 hover:opacity-80 transition-opacity">
+              <img src="/image/logo2.png" alt="Logo" className="h-10" />
+              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+            </Link>
+  
+           {/* Menu Links */}
+                         <Link
+                           to="/home"
+                           className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
+                         >
+                           Home
+                         </Link>
+           
+                         {/*Map Link */}
+                         <Link
+                           to="/pantee"
+                           className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
+                         >
+                           Map
+                         </Link>
+          </div>
         {/* Search Box */}
         <div className="relative">
-        <input 
-          type="text" 
-          placeholder="Search" 
-          className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-        style={{
-          borderTopLeftRadius: '4000px',
-          borderBottomLeftRadius: '4000px',
-          borderTopRightRadius: '9999px',
-          borderBottomRightRadius: '9999px'
-        }}
-        />
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            style={{
+              borderTopLeftRadius: "4000px",
+              borderBottomLeftRadius: "4000px",
+              borderTopRightRadius: "9999px",
+              borderBottomRightRadius: "9999px",
+            }}
+          />
           <button
             onClick={handleLocate}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full outline-none focus:ring-0"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
           >
             <FaLocationCrosshairs />
           </button>
