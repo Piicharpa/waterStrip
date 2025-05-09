@@ -76,7 +76,7 @@ function FirstPage() {
       if (currentUser) {
         try {
           const response = await fetch(
-            `http://localhost:3003/users/${currentUser.uid}`
+            `/api/users/${currentUser.uid}`
           );
           if (response.ok) {
             const userData = await response.json();
@@ -182,7 +182,7 @@ function FirstPage() {
 
       // เช็คว่าผู้ใช้มีบัญชีหรือไม่
       const response = await axios.post(
-        "http://localhost:3003/users/check-user",
+        "/api/users/check-user",
         { u_id: googleId }
       );
       // console.log("Check-user response:", response.data);
@@ -211,7 +211,7 @@ function FirstPage() {
       const user = result.user;
 
       if (user) {
-        const response = await fetch("http://localhost:3003/users", {
+        const response = await fetch("/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

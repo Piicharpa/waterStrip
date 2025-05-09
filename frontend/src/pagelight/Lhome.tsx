@@ -34,8 +34,8 @@ const Lhome: React.FC = () => {
       try {
         const userId = encodeURIComponent(storedUserId || "");
         const [stripsRes, bandsRes] = await Promise.all([
-          axios.get<any[]>(`http://localhost:3003/strips/card/${userId}`),
-          axios.get<any[]>("http://localhost:3003/brands"),
+          axios.get<any[]>(`/api/strips/card/${userId}`),
+          axios.get<any[]>("/api/brands"),
         ]);
 
         const bandsMap = new Map(
@@ -71,7 +71,7 @@ const Lhome: React.FC = () => {
     const fetchUsername = async () => {
       try {
         const response = await axios.get<User>(
-          `http://localhost:3003/users/${storedUserId}`
+          `/api/users/${storedUserId}`
         );
         const userData = response.data;
         if (userData?.u_name) {

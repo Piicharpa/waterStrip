@@ -90,7 +90,7 @@ function Panteefirstpage() {
     const fetchPlacesData = async () => {
       try {
         // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
-        const response = await fetch("http://localhost:3003/strip-status/public");
+        const response = await fetch("/api/strip-status/public");
         const data = await response.json();
 
         // Map ข้อมูลให้อยู่ในรูปแบบที่ frontend ใช้
