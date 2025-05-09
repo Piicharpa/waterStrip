@@ -75,9 +75,7 @@ function FirstPage() {
       // console.log("Current User:", currentUser);
       if (currentUser) {
         try {
-          const response = await fetch(
-            `/api/users/${currentUser.uid}`
-          );
+          const response = await fetch(`/api/users/${currentUser.uid}`);
           if (response.ok) {
             const userData = await response.json();
             sessionStorage.setItem("userId", userData.u_id);
@@ -181,16 +179,17 @@ function FirstPage() {
       // console.log("Google UID:", googleId);
 
       // เช็คว่าผู้ใช้มีบัญชีหรือไม่
-      const response = await axios.post(
-        "/api/users/check-user",
-        { u_id: googleId }
-      );
+      const response = await axios.post("/api/users/check-user", {
+        u_id: googleId,
+      });
       // console.log("Check-user response:", response.data);
 
       const data = response.data as { exists: boolean };
 
       if (data.exists) {
-        // console.log("User exists — navigating to /home");
+        const userInfo = await axios.get(`/api/users/${googleId}`);
+        const userData = userInfo.data as AppUser;
+        setUser(userData); 
         navigate("/home");
       } else {
         alert("please Sign Up");
@@ -203,43 +202,58 @@ function FirstPage() {
 
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     setUserType(type);
+
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const googleId = user.uid;
 
-      if (user) {
-        const response = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            u_id: user.uid,
-            u_name: "",
-            u_email: user.email,
-            u_role: type,
-          }),
-        });
+      const checkResponse = await axios.post("/api/users/check-user", {
+        u_id: googleId,
+      });
 
-        if (!response.ok) {
-          throw new Error("Failed to create user");
-        }
+      const data = checkResponse.data as { exists: boolean };
 
-        // ดึงข้อมูล user ที่สมัครสำเร็จจาก API response ทันที
-        const userData = await response.json();
-        setUser(userData);
-
-        navigate("/permission");
+      if (data.exists) {
+        alert("This email is already registered. Please log in.");
+        await auth.signOut();
+        setUser(null);
+        navigate("/");
+        return;
       }
+
+      const createResponse = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          u_id: user.uid,
+          u_name: "",
+          u_email: user.email,
+          u_role: type,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      const userData = await createResponse.json();
+      setUser(userData.data); // <- ใช้ `.data` ที่มาจาก backend
+
+      navigate("/permission");
     } catch (error) {
       console.error("Error signing up with Google:", error);
+      alert("Signup failed. Please try again.");
     }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
+      setUser(null);
+      navigate("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }

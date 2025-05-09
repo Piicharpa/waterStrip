@@ -24,13 +24,13 @@ app.use(
 app.use(bodyParser.json());
 
 // Routes
-app.use("/users", usersRoutes);
-app.use("/strips", stripsRoutes);
-app.use("/brands", brandsRoutes);
-app.use("/parameters", parametersRoutes);
-app.use("/strips_parameter", stripsParametersRoutes);
-app.use("/colors", colorsRoutes);
-app.use("/strip-status", stripStatusRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/strips", stripsRoutes);
+app.use("/api/brands", brandsRoutes);
+app.use("/api/parameters", parametersRoutes);
+app.use("/api/strips_parameter", stripsParametersRoutes);
+app.use("/api/colors", colorsRoutes);
+app.use("/api/strip-status", stripStatusRoutes);
 
 // JSON Error Middleware
 const jsonErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
