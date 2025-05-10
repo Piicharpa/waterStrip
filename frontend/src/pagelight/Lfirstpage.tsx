@@ -24,6 +24,7 @@ const INITIAL_ZOOM = 14;
 // กำหนด interface สำหรับ props
 interface MapControllerProps {
   setShowText: React.Dispatch<React.SetStateAction<boolean>>;
+  navigateToNextPage: () => void; // เพิ่ม prop สำหรับการนำทาง
 }
 // เพิ่ม type ให้กับ window object
 declare global {
@@ -31,9 +32,22 @@ declare global {
     resetMap?: () => void;
   }
 }
-function MapController({ setShowText }: MapControllerProps) {
+function MapController({ setShowText, navigateToNextPage }: MapControllerProps) {
   const map = useMap();
 
+  // เพิ่ม event listener สำหรับการคลิกที่แผนที่
+  useEffect(() => {
+    const handleMapClick = () => {
+      setShowText(false);
+      navigateToNextPage(); // เรียกใช้ฟังก์ชันนำทางเมื่อคลิกที่แผนที่
+    };
+
+    map.on('click', handleMapClick);
+
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [map, setShowText, navigateToNextPage]);
 
   // ปรับปรุง window.resetMap เพื่อให้แสดง showText ด้วย
   useEffect(() => {
@@ -45,7 +59,6 @@ function MapController({ setShowText }: MapControllerProps) {
       window.resetMap = undefined;
     };
   }, [map, setShowText]);
-
 
   return null;
 }
@@ -64,6 +77,11 @@ function FirstPage() {
   const loginPopupRef = useRef<HTMLDivElement>(null);
   const signupPopupRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // สร้างฟังก์ชันสำหรับการนำทางไปยังหน้า panteefirstpage
+  const navigateToNextPage = () => {
+    navigate("/panteefirstpage");
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -280,7 +298,7 @@ function FirstPage() {
 
           <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <span className="text-base">{user.u_name}</span>
                 <button
                   onClick={handleLogout}
@@ -491,7 +509,7 @@ function FirstPage() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-            <MapController setShowText={setShowText} />
+            <MapController setShowText={setShowText} navigateToNextPage={navigateToNextPage} />
           </MapContainer>
           {/* Text overlay */}
           {showText && (
@@ -508,7 +526,7 @@ function FirstPage() {
                 {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
                 <button
                   className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/panteefirstpage")}
+                  onClick={navigateToNextPage}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
