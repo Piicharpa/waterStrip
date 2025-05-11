@@ -6,7 +6,7 @@ import './index.css';
 
 import FirstPage from './pagelight/Lfirstpage';
 import Pantee from './pagelight/Lpantee';
-import Panteefirstpage from './pagelight/Lpanteefirstpage';
+// import Panteefirstpage from './pagelight/Lpanteefirstpage';
 import PermissionPage from './pagelight/Lpermission';
 import DfirstPage from './pagedark/Dfirstpage';
 import Dpantee from './pagedark/Dpantee';
@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<FirstPage />} />
         <Route path="/pantee" element={<Pantee />} />
-        <Route path="/panteefirstpage" element={<Panteefirstpage />} />
+        {/* <Route path="/panteefirstpage" element={<Panteefirstpage />} /> */}
         <Route path="/permission" element={<PermissionPage />} />
         <Route path="/d" element={<DfirstPage />} />
         <Route path="/dpantee" element={<Dpantee />} />
