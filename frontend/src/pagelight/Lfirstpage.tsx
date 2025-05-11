@@ -5,7 +5,7 @@ import {
   Popup,
   CircleMarker,
   useMap,
-  useMapEvents,
+  
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect, FC } from "react";
@@ -69,29 +69,6 @@ const ChangeView: FC<{ center: Location }> = ({ center }) => {
   return null;
 };
 
-const MapController: FC<{ setShowText: React.Dispatch<React.SetStateAction<boolean>> }> = ({
-  setShowText,
-}) => {
-  const map = useMap();
-
-  useMapEvents({
-    movestart: () => setShowText(false),
-    zoomstart: () => setShowText(false),
-  });
-
-  useEffect(() => {
-    window.resetMap = () => {
-      map.flyTo([INITIAL_CENTER.lat, INITIAL_CENTER.lng], INITIAL_ZOOM);
-      setShowText(true);
-    };
-    return () => {
-      window.resetMap = undefined;
-    };
-  }, [map, setShowText]);
-
-  return null;
-};
-
 const PlaceMarker: FC<{
   place: Place;
   refCallback: (ref: L.CircleMarker | null) => void;
@@ -103,67 +80,8 @@ const PlaceMarker: FC<{
     fillOpacity={1}
     stroke={false}
     ref={refCallback}
-  >
-    <Popup>
-      <div>
-        <h3 style={{ fontWeight: "bold", marginBottom: 5 }}>{place.title}</h3>
-        <p style={{ marginBottom: 5 }}>{place.date}</p>
-      </div>
-    </Popup>
-  </CircleMarker>
+  ></CircleMarker>
 );
-
-const PlaceCard: FC<{ place: Place; onClick: (id: number) => void }> = ({
-  place,
-  onClick,
-}) => {
-  const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    target.style.transform = "translateY(-2px)";
-    target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-  };
-  const handleMouseOut = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    target.style.transform = "translateY(0)";
-    target.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
-  };
-
-
-  return (
-    <div
-      onClick={() => onClick(place.id)}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        padding: 12,
-        borderRadius: 8,
-        backgroundColor: "white",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
-        marginBottom: 12,
-        cursor: "pointer",
-        transition: "transform 0.2s, box-shadow 0.2s",
-      }}
-    >
-      <div
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: "50%",
-          backgroundColor: place.color,
-          marginRight: 15,
-          marginLeft: 4,
-          flexShrink: 0,
-        }}
-      />
-      <div>
-        <h3 style={{ fontSize: 16, fontWeight: "bold", margin: 0 }}>{place.title}</h3>
-        <p style={{ margin: 0, fontSize: 14, color: "#666" }}>{place.date}</p>
-      </div>
-    </div>
-  );
-};
 
 const Navbar: FC<{
   user: AppUser | null;
@@ -356,9 +274,7 @@ const FirstPage = () => {
   const [currentLocation, setCurrentLocation] = useState<Location>(INITIAL_CENTER);
   const [viewLocation, setViewLocation] = useState<Location>(INITIAL_CENTER);
   const [places, setPlaces] = useState<Place[]>([]);
-  const [qualityFilter, setQualityFilter] = useState<string>("");
-  const [brandFilter, setBrandFilter] = useState<string>("");
-
+ 
   const dmsToDecimal = (dms: string): number => {
     const regex = /(\d+)[°](\d+)'(\d+\.\d+)"([NSEW])/;
     const match = dms.match(regex);
@@ -373,33 +289,35 @@ const FirstPage = () => {
     return direction === "S" || direction === "W" ? -decimal : decimal;
   };
 
-  const getFormattedDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-  };
-
   useEffect(() => {
-    // Fetch places once on mount
-    (async () => {
+    const fetchPlacesData = async () => {
       try {
+        // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
         const response = await fetch("http://localhost:3003/strip-status/public");
         const data = await response.json();
-        const mappedPlaces = data.map((strip: any) => ({
-          id: strip.s_id,
-          title: strip.brand_name || "Unknown Brand",
-          date: getFormattedDate(strip.s_date),
-          location: {
-            lat: dmsToDecimal(strip.s_latitude),
-            lng: dmsToDecimal(strip.s_longitude),
-          },
-          color: strip.s_qualitycolor,
-          quality: strip.s_quality,
-        }));
+
+        // Map ข้อมูลให้อยู่ในรูปแบบที่ frontend ใช้
+        const mappedPlaces = data.map((strip: any) => {
+          const lat = dmsToDecimal(strip.s_latitude);
+          const lng = dmsToDecimal(strip.s_longitude);
+
+          return {
+            id: strip.s_id,
+            location: {
+              lat,
+              lng,
+            },
+            color: strip.s_qualitycolor
+          };
+        });
+
         setPlaces(mappedPlaces);
       } catch (error) {
         console.error("Error fetching public strip data:", error);
       }
-    })();
+    };
+
+    fetchPlacesData();
   }, []);
 
   useEffect(() => {
@@ -456,37 +374,6 @@ const FirstPage = () => {
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, [showLoginPopup, showSignupPopup]);
-
-  const handleLocate = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setCurrentLocation(location);
-          setViewLocation(location);
-        },
-        (err) => {
-          alert(`ไม่สามารถค้นหาตำแหน่งของคุณได้: ${err.message}`);
-        }
-      );
-    } else {
-      alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
-    }
-  };
-
-  const filteredPlaces = places
-    .filter((place) => (qualityFilter ? place.color === qualityFilter : true))
-    .filter((place) => (brandFilter ? place.brand === brandFilter : true))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 10);
-
-  const handleCardClick = (placeId: number) => {
-    const marker = markersRef.current[placeId];
-    if (marker) marker.openPopup();
-
-    const place = places.find((p) => p.id === placeId);
-    if (place) setViewLocation(place.location);
-  };
 
   const handleLoginClick = () => {
     setActiveButton("login");
@@ -598,11 +485,6 @@ const FirstPage = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <Marker position={[currentLocation.lat, currentLocation.lng]}>
-            <Popup>
-              <h3 style={{ margin: 0, fontWeight: "bold" }}>ตำแหน่งของคุณ</h3>
-            </Popup>
-          </Marker>
           {places.map((place) => (
             <PlaceMarker
               key={place.id}
@@ -613,39 +495,43 @@ const FirstPage = () => {
             />
           ))}
           <ChangeView center={viewLocation} />
-          <MapController setShowText={setShowText} />
+         
         </MapContainer>
       </div>
-      <div
-        style={{
-          position: "fixed",
-          top: 60,
-          right: 12,
-          width: 300,
-          maxHeight: "calc(100vh - 80px)",
-          padding: 16,
-          overflowY: "auto",
-          backgroundColor: "transparent",
-          zIndex: 1000,
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {places.map((place) => (
-          <PlaceCard key={place.id} place={place} onClick={handleCardClick} />
-        ))}
-      </div>
       {showText && (
-        <div className="absolute bottom-10 left-10 z-[1000] bg-opacity-80 p-4 rounded">
-          <p className="text-base font-medium">Check and read the values of substances in water</p>
-          <p className="text-base font-medium">from strip photography</p>
-          <div className="flex items-center gap-3 mt-2">
-            <div>
-              <p className="text-3xl font-bold">AQUA,</p>
-              <p className="text-3xl font-bold">Quality</p>
+            <div className="absolute bottom-10 left-10 z-[1000]">
+              <p className="text-base font-medium">
+                Check and read the values of substances in water
+              </p>
+              <p className="text-base font-medium">from strip photography</p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-3xl font-bold">AQUA,</p>
+                  <p className="text-3xl font-bold">Quality</p>
+                </div>
+                {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
+                <button
+                  className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
+                  onClick={() => navigate("/panteefirstpage")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
     </div>
   );
 };
