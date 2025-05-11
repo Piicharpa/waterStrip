@@ -25,12 +25,14 @@ export default function PermissionPage() {
                     if (!response.ok) throw new Error("Failed to fetch user");
     
                     const userData = await response.json();
+                    console.log(userData);
                     if (userData.u_name) {
                         setName(userData.u_name);
                         setSubmitted(true);
 
                         // ✅ เก็บ username ไว้ใน sessionStorage
                         sessionStorage.setItem("username", userData.u_name);
+                        sessionStorage.setItem("userId", userId);
                     }
                 } catch (error) {
                     console.error("Error fetching user data:", error);

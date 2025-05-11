@@ -8,7 +8,6 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaLocationCrosshairs } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -33,6 +32,7 @@ interface Place {
   location: Location;
   color: string;
   quality: string;
+  brand: string; // Add brand to the place
 }
 
 function ChangeView({ center }: { center: Location }) {
@@ -53,6 +53,8 @@ function Panteefirstpage() {
     lng: 98.9853,
   });
   const [places, setPlaces] = useState<Place[]>([]);
+  const [qualityFilter, setQualityFilter] = useState<string>(""); // Water quality filter
+  const [brandFilter, setBrandFilter] = useState<string>(""); // Brand filter
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
 
   // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
@@ -65,7 +67,7 @@ function Panteefirstpage() {
       const seconds = parseFloat(match[3]);
       const direction = match[4];
 
-      let decimal = degrees + minutes / 60 + seconds / 3600;
+      let decimal = degrees + (minutes / 60) + (seconds / 3600);
 
       // Adjust for N/S/E/W directions
       if (direction === "S" || direction === "W") {
@@ -81,9 +83,7 @@ function Panteefirstpage() {
   // Utility function to format the date (if needed)
   const getFormattedDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${
-      date.getMonth() + 1
-    }/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   };
 
   useEffect(() => {
@@ -120,104 +120,66 @@ function Panteefirstpage() {
     fetchPlacesData();
   }, []);
 
-  const handleLocate = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setCurrentLocation(newLocation);
-          setViewLocation(newLocation);
-        },
-        (error) => {
-          console.error("Error fetching location:", error);
-          alert("ไม่สามารถค้นหาตำแหน่งของคุณได้: " + error.message);
-        }
-      );
-    } else {
-      alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
-    }
-  };
-
-  // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
     if (marker) {
-      // ทำการเปิด popup ของ marker
       marker.openPopup();
-
-      // เลื่อนไปที่ตำแหน่งของสถานที่
-      const place = places.find((p) => p.id === placeId);
+      const place = places.find(p => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
     }
   };
 
+  // Filter places based on selected filters
+  const filteredPlaces = places
+    .filter((place) => (qualityFilter ? place.color === qualityFilter : true))
+    .filter((place) => (brandFilter ? place.brand === brandFilter : true))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by most recent date
+    .slice(0, 10); // Limit to 10 recent places
+
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
-      {/* Navbar */}
-        <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
-          {/* Logo Section */}
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src="/image/logo2.png" alt="Logo" className="h-10" />
-              <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-            </Link>
-  
-            {/* Menu Links */}
-            <Link 
-              to="/home"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-            >
-              Home
-            </Link>
-
-            {/*Map Link */}
-            <Link 
-              to="/pantee"
-              className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-            >
-              Map
-            </Link>
-          </div>
-        {/* Search Box */}
+      <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="/image/logo2.png" alt="Logo" className="h-10" />
+            <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+          </Link>
+        </div>
         <div className="relative">
-          <input
-            type="text"
-            placeholder="Search"
+          {/* Filter Inputs */}
+          <select
+            onChange={(e) => setQualityFilter(e.target.value)}
+            value={qualityFilter}
             className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-            style={{
-              borderTopLeftRadius: "4000px",
-              borderBottomLeftRadius: "4000px",
-              borderTopRightRadius: "9999px",
-              borderBottomRightRadius: "9999px",
-            }}
-          />
-          <button
-            onClick={handleLocate}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full   outline-none focus:ring-0"
           >
-            <FaLocationCrosshairs />
-          </button>
+            <option value="">Filter by Quality</option>
+            <option value="#00FF00">Green</option>
+            <option value="#FFFF00">Yellow</option>
+            <option value="#FF0000">Red</option>
+          </select>
+          <select
+            onChange={(e) => setBrandFilter(e.target.value)}
+            value={brandFilter}
+            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+          >
+            <option value="">Filter by Brand</option>
+            {Array.from(new Set(places.map(place => place.brand))).map(brand => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
         </div>
       </nav>
+
       {/* Map Section */}
-      <div
-        style={{
-          position: "absolute",
-          top: 60,
-          left: 15,
-          right: 15,
-          bottom: 20,
-        }}
-      >
+      <div style={{ position: "absolute", top: 60, left: 15, right: 15, bottom: 20 }}>
         <MapContainer
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
-          className="mt-1 rounded-4xl  "
+          className="mt-1 rounded-4xl"
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
@@ -233,7 +195,7 @@ function Panteefirstpage() {
               </div>
             </Popup>
           </Marker>
-          {places.map((place) => (
+          {filteredPlaces.map((place) => (
             <CircleMarker
               key={place.id}
               center={[place.location.lat, place.location.lng]}
@@ -250,8 +212,7 @@ function Panteefirstpage() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0" }}>{place.date}</p>
-                  {/* <span>คุณภาพน้ำ: {place.quality}</span> */}
+                  <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
                 </div>
               </Popup>
             </CircleMarker>
@@ -259,7 +220,8 @@ function Panteefirstpage() {
           <ChangeView center={viewLocation} />
         </MapContainer>
       </div>
-      {/* Sidebar or additional content */}
+
+      {/* Sidebar */}
       <div
         style={{
           position: "fixed",
@@ -272,7 +234,7 @@ function Panteefirstpage() {
           zIndex: 1000,
         }}
       >
-        {places.map((place) => (
+        {filteredPlaces.map((place) => (
           <div
             key={place.id}
             style={{
@@ -294,8 +256,7 @@ function Panteefirstpage() {
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
+              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
             }}
           >
             <div
@@ -310,12 +271,7 @@ function Panteefirstpage() {
               }}
             />
             <div>
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                }}
-              >
+              <h3 style={{ fontSize: "16px", fontWeight: "bold" }}>
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>

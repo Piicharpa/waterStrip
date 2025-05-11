@@ -2,7 +2,7 @@ import { dbClient } from "../../db/client";
 import { eq } from "drizzle-orm";
 import { Parameter, Strip, StripParameter } from "../../db/schema";
 
-export async function evaluateStripQuality(s_id: number): Promise<void> {
+export async function evaluateStripQuality(s_id: string): Promise<void> {
   const stripParams = await dbClient
     .select({
       sp_value: StripParameter.sp_value,
@@ -48,7 +48,6 @@ export async function evaluateStripQuality(s_id: number): Promise<void> {
     color = "#FFFF00";
   }
 
-  // ✅ อัปเดตค่าในตาราง Strip
   await dbClient
     .update(Strip)
     .set({
