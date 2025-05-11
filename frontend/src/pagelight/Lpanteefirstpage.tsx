@@ -152,7 +152,7 @@ function Panteefirstpage() {
           <select
             onChange={(e) => setQualityFilter(e.target.value)}
             value={qualityFilter}
-            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            className="w-70 h-12 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
           >
             <option value="">Filter by Quality</option>
             <option value="#00FF00">Green</option>
@@ -162,7 +162,7 @@ function Panteefirstpage() {
           <select
             onChange={(e) => setBrandFilter(e.target.value)}
             value={brandFilter}
-            className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            className="w-70 h-12 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
           >
             <option value="">Filter by Brand</option>
             {Array.from(new Set(places.map(place => place.brand))).map(brand => (
