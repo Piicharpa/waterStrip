@@ -2,13 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
-import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
-import axios from "axios"; // Import axios for API requests
+import { MdKeyboardArrowLeft, MdOutlineChevronRight, MdClose, MdUndo } from "react-icons/md";
+import axios from "axios";
 
 type User = {
   u_id: string;
   u_name: string;
 };
+
+type DeletedCardInfo = {
+  card: any;
+  index: number;
+};
+
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +24,11 @@ const Lhome: React.FC = () => {
   const [zoomedCardIndex, setZoomedCardIndex] = useState<number | null>(null);
   const [cards, setCards] = useState<any[]>([]); // Store API data
   const navigate = useNavigate();
+  
+  // For handling deleted cards and toast notification
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [deletedCardInfo, setDeletedCardInfo] = useState<DeletedCardInfo | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch data from API
   useEffect(() => {
@@ -99,6 +110,73 @@ const Lhome: React.FC = () => {
     }).format(new Date(isoString));
   };
 
+  // Handle card deletion
+  const handleDeleteCard = (index: number) => {
+    // Store the deleted card info for potential undo
+    const deletedCard = cards[index];
+    setDeletedCardInfo({ card: deletedCard, index });
+    
+    // Remove the card from the UI
+    const newCards = [...cards];
+    newCards.splice(index, 1);
+    setCards(newCards);
+    
+    // Show toast notification
+    setShowDeleteToast(true);
+    
+    // Auto-hide toast after 3 seconds
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    
+    toastTimerRef.current = setTimeout(() => {
+      setShowDeleteToast(false);
+      // Permanently delete the card from backend after toast disappears
+      if (deletedCard && deletedCard.s_id) {
+        deleteCardFromBackend(deletedCard.s_id);
+      }
+    }, 3000);
+  };
+  
+  // Function to delete card from backend
+  const deleteCardFromBackend = async (cardId: string) => {
+    try {
+      // Here you would normally call your API to delete the card
+      // await axios.delete(`http://localhost:3003/strips/${cardId}`);
+      console.log(`Card ${cardId} permanently deleted`);
+    } catch (error) {
+      console.error("Error deleting card:", error);
+    }
+  };
+  
+  // Handle undo delete
+  const handleUndoDelete = () => {
+    if (deletedCardInfo) {
+      const { card, index } = deletedCardInfo;
+      const newCards = [...cards];
+      newCards.splice(index, 0, card);
+      setCards(newCards);
+      setShowDeleteToast(false);
+      
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    }
+  };
+  
+  // Handle close toast
+  const handleCloseToast = () => {
+    setShowDeleteToast(false);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    
+    // Permanently delete the card from backend when toast is closed
+    if (deletedCardInfo && deletedCardInfo.card && deletedCardInfo.card.s_id) {
+      deleteCardFromBackend(deletedCardInfo.card.s_id);
+    }
+  };
+
   // Handle search functionality
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = event.target.value;
@@ -131,10 +209,10 @@ const Lhome: React.FC = () => {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.floor(
-          (scrollLeft / maxScrollLeft) * (cards.length - 1)
-        ); // Use cards.length for number of dots
-        setScrollIndex(index);
+        const index = Math.round(
+          (scrollLeft / maxScrollLeft) * (Math.max(cards.length - 1, 0))
+        );
+        setScrollIndex(isNaN(index) ? 0 : index);
       }
     };
 
@@ -264,17 +342,17 @@ const Lhome: React.FC = () => {
                       <Card
                         imageUrl={card.s_url}
                         brand={card.b_name}
-                        dateTime={formatDate(card.s_date)} // Adjust based on API response
+                        dateTime={formatDate(card.s_date)}
                         location={`${card.s_latitude}, ${card.s_longitude}`}
                         waterQualityColor={card.s_qualitycolor}
                         onClick={() => {
                           if (card.s_id) {
-                            // console.log(`Navigating to /cardinfo/${card.s_id}`);
                             navigate(`/cardinfo/${card.s_id}`);
                           } else {
                             console.error("Card ID is missing");
                           }
                         }}
+                        onDelete={() => handleDeleteCard(index)}
                       />
                     </div>
                   ))}
@@ -324,6 +402,26 @@ const Lhome: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Delete Toast Notification */}
+      {showDeleteToast && (
+        <div className="fixed bottom-8 left-8 bg-black text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
+          <span>deleted</span>
+          <button 
+            onClick={handleUndoDelete}
+            className="flex items-center bg-transparent border border-white rounded-md px-2 py-1  text-sm hover:bg-gray-700 transition"
+          >
+            <MdUndo className="mr-1" />
+            undo
+          </button>
+          <button 
+            onClick={handleCloseToast}
+            className="-ml-2 text-gray-300 hover:text-white"
+          >
+            <MdClose size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
