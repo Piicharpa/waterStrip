@@ -190,7 +190,7 @@ const Ladd: React.FC = () => {
   const handleSaveEditedImage = async (editedImageDataUrl: string) => {
     setImagePreview(editedImageDataUrl);
     setShowImageEditor(false);
-    
+
     // Convert data URL to File object
     const response = await fetch(editedImageDataUrl);
     const blob = await response.blob();
@@ -204,6 +204,35 @@ const Ladd: React.FC = () => {
     setTempImageUrl(null);
   };
 
+  function rotateImage90(imageSrc: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Cannot get 2D context");
+          return;
+        }
+
+        // ปรับขนาด canvas สำหรับการหมุนทวนเข็ม
+        canvas.width = img.height;
+        canvas.height = img.width;
+
+        // เลื่อน canvas และหมุน -90 องศา
+        ctx.translate(0, canvas.height);
+        ctx.rotate((-90 * Math.PI) / 180);
+        ctx.drawImage(img, 0, 0);
+
+        const rotatedImage = canvas.toDataURL();
+        resolve(rotatedImage);
+      };
+      img.onerror = reject;
+      img.src = imageSrc;
+    });
+  }
+
   const handleAnalyze = async () => {
     if (isLocationSelected && selectedFile && selectedBrandId) {
       const locationParts = location.split(", ");
@@ -215,24 +244,28 @@ const Ladd: React.FC = () => {
         return;
       }
 
-      // Save data to localStorage
       localStorage.setItem("stripBrand", selectedBrandId.toString());
       localStorage.setItem("location", location);
+
+      let rotatedImagePreview = imagePreview;
       if (imagePreview) {
-        localStorage.setItem("uploadedImage", imagePreview);
+        try {
+          rotatedImagePreview = await rotateImage90(imagePreview);
+          localStorage.setItem("uploadedImage", rotatedImagePreview);
+        } catch (err) {
+          console.error("Error rotating image:", err);
+        }
       }
 
-      // ข้อมูลที่ต้องส่งไปยัง API
       const data = {
         b_id: selectedBrandId,
         s_latitude: latitude,
         s_longitude: longitude,
         u_id: userId,
-        s_url: imagePreview,
+        s_url: rotatedImagePreview,
       };
 
       try {
-        // ส่งข้อมูลไปยัง API
         const response = await axios.post(
           "http://localhost:3003/strips",
           data,
@@ -255,12 +288,10 @@ const Ladd: React.FC = () => {
             await axios.get(`http://localhost:3003/strips/predict/${stripId}`);
           } catch (predictError) {
             console.error("Prediction failed:", predictError);
-            // คุณอาจใส่ alert หรือแสดงข้อความเตือนผู้ใช้ได้ตรงนี้
           }
-        
+
           navigate(`/cardinfo/${stripId}`);
-        }
-         else {
+        } else {
           console.error("Error: s_id is undefined", responseData);
         }
       } catch (error) {
@@ -269,7 +300,7 @@ const Ladd: React.FC = () => {
       }
     }
   };
-  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md mx-auto space-y-6 text-center">
@@ -392,7 +423,7 @@ const Ladd: React.FC = () => {
 
       {/* Image Editor Modal */}
       {showImageEditor && tempImageUrl && (
-        <ImageEditor 
+        <ImageEditor
           imageUrl={tempImageUrl}
           onClose={handleCancelEdit}
           onSave={handleSaveEditedImage}

@@ -3,7 +3,7 @@ import { FaTimes } from "react-icons/fa";
 import { FaArrowsRotate } from "react-icons/fa6";
 import { MdOutlineGridOn } from "react-icons/md";
 import { HiZoomIn, HiZoomOut } from "react-icons/hi";
-import { Crop, Check } from "lucide-react";
+import { Crop, Check, AlertTriangle } from "lucide-react";
 
 interface ImageEditorProps {
   imageUrl: string;
@@ -30,6 +30,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
   const [activeCorner, setActiveCorner] = useState<number | null>(null);
   const [mode, setMode] = useState("transform"); // transform or crop
   const [showGrid, setShowGrid] = useState(true); // Add grid state
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -67,7 +68,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     if (imgRef.current) {
       drawImage();
     }
-  }, [rotation, scale, position, cornerPoints, mode, showGrid]);
+  }, [rotation, scale, position, cornerPoints, mode, showGrid, validationError]);
 
   const drawImage = () => {
     if (!canvasRef.current) return;
@@ -226,7 +227,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     setDragStart({ x, y });
   };
 
-  // แก้ไขฟังก์ชันนี้เพื่อให้การเลื่อนรูปหลังจาก rotate เสถียร
+  // Modified to make image movement after rotation more stable
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging && activeCorner === null) return;
     if (!canvasRef.current) return;
@@ -240,12 +241,15 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       const newCornerPoints = [...cornerPoints];
       newCornerPoints[activeCorner] = { x, y };
       setCornerPoints(newCornerPoints);
+      
+      // Clear any validation errors when adjusting corners
+      if (validationError) setValidationError(null);
     } else if (isDragging) {
-      // คำนวณการเคลื่อนที่โดยคำนึงถึงการหมุน
+      // Calculate movement considering rotation
       const dx = x - dragStart.x;
       const dy = y - dragStart.y;
 
-      // แปลงค่าการเคลื่อนที่ตามการหมุน
+      // Transform movement according to rotation
       const radians = (rotation * Math.PI) / 180;
       const adjustedDx = dx * Math.cos(radians) + dy * Math.sin(radians);
       const adjustedDy = -dx * Math.sin(radians) + dy * Math.cos(radians);
@@ -272,10 +276,56 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
   const handleRotationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRotation(parseInt(e.target.value, 10));
+    // Clear any validation errors when adjusting rotation
+    if (validationError) setValidationError(null);
+  };
+
+  // Function to check if the shape is a horizontal rectangle
+  const isHorizontalRectangle = (): boolean => {
+    if (mode !== "crop") return true; // Only validate in crop mode
+    
+    // Sort points by y-coordinate to identify top and bottom pairs
+    const sortedByY = [...cornerPoints].sort((a, b) => a.y - b.y);
+    
+    // Top two points and bottom two points
+    const topPoints = sortedByY.slice(0, 2);
+    const bottomPoints = sortedByY.slice(2, 4);
+    
+    // Sort top points by x-coordinate
+    topPoints.sort((a, b) => a.x - b.x);
+    // Sort bottom points by x-coordinate
+    bottomPoints.sort((a, b) => a.x - b.x);
+    
+    // Check if the shape is approximately a rectangle
+    const topWidth = Math.abs(topPoints[1].x - topPoints[0].x);
+    const bottomWidth = Math.abs(bottomPoints[1].x - bottomPoints[0].x);
+    const leftHeight = Math.abs(bottomPoints[0].y - topPoints[0].y);
+    const rightHeight = Math.abs(bottomPoints[1].y - topPoints[1].y);
+    
+    // Calculate aspect ratio (width to height)
+    const avgWidth = (topWidth + bottomWidth) / 2;
+    const avgHeight = (leftHeight + rightHeight) / 2;
+    const aspectRatio = avgWidth / avgHeight;
+    
+    // Check if sides are roughly parallel (allowing for some tolerance)
+    const isRoughlyRectangular = 
+      Math.abs(topWidth - bottomWidth) < 20 && 
+      Math.abs(leftHeight - rightHeight) < 20;
+    
+    // Check if it's horizontal (width > height)
+    const isHorizontal = aspectRatio > 1;
+    
+    return isRoughlyRectangular && isHorizontal;
   };
 
   const handleSave = () => {
     if (!canvasRef.current || !imgRef.current) return;
+
+    // Validate shape before saving
+    if (!isHorizontalRectangle()) {
+      setValidationError("Please adjust to form a horizontal rectangle before saving.");
+      return;
+    }
 
     // Create a fresh canvas for the final image without overlays
     const canvas = document.createElement("canvas");
@@ -348,11 +398,13 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     }
 
     const dataUrl = canvas.toDataURL("image/jpeg");
+    setValidationError(null);
     onSave(dataUrl);
   };
 
   const switchMode = () => {
     setMode(mode === "transform" ? "crop" : "transform");
+    setValidationError(null);
 
     // Reset corner points when switching to crop mode
     if (mode === "transform" && canvasRef.current) {
@@ -382,25 +434,24 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             <h2 className="text-base">
               Rotate the image so the strip's top edge is on the left, then crop
               by placing circles at each corner as{" "}
-              <span 
-          className="relative cursor-pointer text-black underline"
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-        >
-          example
-          {showTooltip && (
-            <div className="absolute z-10 left-0 -bottom-32 w-64">
-              <div className="bg-white p-1.5 rounded-md shadow-lg border border-gray-300">
-                <img 
-                  src="/image/examplepic.png" 
-                  alt="Example crop" 
-                  className="w-320 "
-                />
-               
-              </div>
-            </div>
-          )}
-        </span>
+              <span
+                className="relative cursor-pointer text-black underline"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                example
+                {showTooltip && (
+                  <div className="absolute z-10 left-0 -bottom-32 w-64">
+                    <div className="bg-white p-1.5 rounded-md shadow-lg border border-gray-300">
+                      <img
+                        src="/image/examplepic.png"
+                        alt="Example crop"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+              </span>
             </h2>
           </div>
 
@@ -429,11 +480,19 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
           />
         </div>
 
+        {/* Validation error message */}
+        {validationError && (
+          <div className="mt-4 flex items-center text-red-600">
+            <AlertTriangle className="w-5 h-5 mr-2" />
+            <span>{validationError}</span>
+          </div>
+        )}
+
         {/* Controls */}
         <div className="mt-4 flex flex-col gap-4">
           {/* Rotation control */}
           <div className="flex items-center gap-2.5">
-            <FaArrowsRotate className="text-black " />
+            <FaArrowsRotate className="text-black" />
             <input
               type="range"
               min="-360"
@@ -441,14 +500,13 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
               value={rotation}
               onChange={handleRotationChange}
               className="flex-grow"
-            
             />
             <span className="w-12 text-center">{rotation}°</span>
           </div>
 
           {/* Zoom controls */}
           <div className="flex items-center gap-2">
-            <HiZoomOut className="text-black text-xl " />
+            <HiZoomOut className="text-black text-xl" />
             <input
               type="range"
               min="0.1"
@@ -458,7 +516,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
               onChange={(e) => setScale(parseFloat(e.target.value))}
               className="flex-grow"
             />
-            <HiZoomIn className="text-black text-xl " />
+            <HiZoomIn className="text-black text-xl" />
             <span className="w-12 text-center">{Math.round(scale * 100)}%</span>
           </div>
 
@@ -468,7 +526,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
                   mode === "crop"
-                    ? "bg-gray-300 text-black "
+                    ? "bg-gray-300 text-black"
                     : "bg-gray-100 text-black"
                 }`}
                 onClick={switchMode}
@@ -480,7 +538,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
                   showGrid
-                    ? "bg-gray-300 text-black "
+                    ? "bg-gray-300 text-black"
                     : "bg-gray-100 text-black"
                 }`}
                 onClick={toggleGrid}
