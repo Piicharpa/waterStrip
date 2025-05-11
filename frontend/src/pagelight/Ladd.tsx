@@ -204,34 +204,6 @@ const Ladd: React.FC = () => {
     setTempImageUrl(null);
   };
 
-  function rotateImage90(
-    imageSrc: string, // base64 string หรือ data URL
-    callback: (rotatedImage: string) => void // ฟังก์ชันที่รับ base64 string
-  ): void {
-    const img = new Image();
-    img.onload = function () {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-  
-      if (!ctx) {
-        console.error("Cannot get 2D context");
-        return;
-      }
-  
-      canvas.width = img.height;
-      canvas.height = img.width;
-  
-      ctx.translate(canvas.width, 0);
-      ctx.rotate(90 * Math.PI / 180);
-      ctx.drawImage(img, 0, 0);
-  
-      const rotatedImage = canvas.toDataURL();
-      callback(rotatedImage);
-    };
-    img.src = imageSrc;
-  }
-  
-
   const handleAnalyze = async () => {
     if (isLocationSelected && selectedFile && selectedBrandId) {
       const locationParts = location.split(", ");
@@ -247,9 +219,7 @@ const Ladd: React.FC = () => {
       localStorage.setItem("stripBrand", selectedBrandId.toString());
       localStorage.setItem("location", location);
       if (imagePreview) {
-        rotateImage90(imagePreview, function(rotatedImage) {
-          localStorage.setItem("uploadedImage", rotatedImage);
-        });
+        localStorage.setItem("uploadedImage", imagePreview);
       }
 
       // ข้อมูลที่ต้องส่งไปยัง API
