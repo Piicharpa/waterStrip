@@ -315,7 +315,7 @@ function Panteefirstpage() {
             {/* Dropdown Menu */}
             {isWaterQualityDropdownOpen && (
               <div 
-                className="absolute top-full left-0 w-25 mt-5 bg-white rounded-lg shadow-lg z-[10001]"
+                className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001]"
               >
                 {waterQualityOptions.map((option) => (
                   <div
@@ -365,7 +365,7 @@ function Panteefirstpage() {
             {/* Dropdown Menu */}
             {isBrandDropdownOpen && (
               <div 
-                className="absolute top-full left-0 w-full mt-5 bg-white  rounded-lg shadow-lg z-[10001] max-h-60 overflow-y-auto"
+                className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white  rounded-lg shadow-lg z-[10001] max-h-60 overflow-y-auto"
               >
                 <div
                   key="all-brands"
