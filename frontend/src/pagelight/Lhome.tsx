@@ -356,7 +356,7 @@ const Lhome: React.FC = () => {
           </nav>
         </div>
 
-        <div className="flex-grow flex justify-center mt-3 gap-4">
+        <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
           {/* Water Quality Dropdown */}
           <div 
             ref={waterQualityDropdownRef}
@@ -426,7 +426,7 @@ const Lhome: React.FC = () => {
           {/* Brand Dropdown */}
           <div 
             ref={brandDropdownRef}
-            className="relative w-84 z-[10000]"
+            className="relative w-64 z-[10000]"
           >
             {/* Dropdown Trigger */}
             <div 
