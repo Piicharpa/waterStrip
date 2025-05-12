@@ -400,7 +400,7 @@ const Lhome: React.FC = () => {
             {/* Dropdown Menu */}
             {isWaterQualityDropdownOpen && (
               <div 
-                className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001]"
+                className="absolute top-full left-0 w-25 mt-2 border border-gray-200 bg-white rounded-lg  z-[10001]"
               >
                 {waterQualityOptions.map((option) => (
                   <div
@@ -450,7 +450,7 @@ const Lhome: React.FC = () => {
             {/* Dropdown Menu */}
             {isBrandDropdownOpen && (
               <div 
-                className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001] max-h-60 overflow-y-auto"
+                className="absolute top-full left-0 w-full mt-2 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto"
               >
                 <div
                   key="all-brands"

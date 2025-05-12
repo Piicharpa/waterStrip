@@ -339,7 +339,7 @@ function Pantee() {
 
             {/* Dropdown Menu */}
             {isWaterQualityDropdownOpen && (
-              <div className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001]">
+              <div className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]">
                 {waterQualityOptions.map((option) => (
                   <div
                     key={option.value}
@@ -387,7 +387,7 @@ function Pantee() {
 
             {/* Dropdown Menu */}
             {isBrandDropdownOpen && (
-              <div className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001] max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto">
                 <div
                   key="all-brands"
                   onClick={() => handleBrandSelect("")}
