@@ -17,24 +17,64 @@ type DeletedCardInfo = {
 
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedQuality, setSelectedQuality] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [scrollIndex, setScrollIndex] = useState(0);
   const [zoomedCardIndex, setZoomedCardIndex] = useState<number | null>(null);
   const [cards, setCards] = useState<any[]>([]); // Store API data
+  const [allCards, setAllCards] = useState<any[]>([]); // Keep original cards for filtering
+  const [brands, setBrands] = useState<string[]>([]);
   const navigate = useNavigate();
+  
+  // Dropdown state
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] = useState(false);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
   
   // For handling deleted cards and toast notification
   const [showDeleteToast, setShowDeleteToast] = useState(false);
   const [deletedCardInfo, setDeletedCardInfo] = useState<DeletedCardInfo | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Water quality options
+  const waterQualityOptions = [
+    { value: "", label: "All", color: "" },
+    { value: "Good", label: "Good", color: "green" },
+    { value: "Fair", label: "Fair", color: "yellow" },
+    { value: "Bad", label: "Bad", color: "red" }
+  ];
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        waterQualityDropdownRef.current && 
+        !waterQualityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsWaterQualityDropdownOpen(false);
+      }
+
+      if (
+        brandDropdownRef.current && 
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBrandDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Fetch data from API
   useEffect(() => {
     // ดึงข้อมูล userId จาก sessionStorage ก่อน
     const storedUserId = sessionStorage.getItem("userId");
-    // console.log("Stored userId:", storedUserId);
     // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
     if (!storedUserId) {
       console.error("User ID not found in sessionStorage");
@@ -62,7 +102,16 @@ const Lhome: React.FC = () => {
           b_name: bandsMap.get(strip.b_id) || "Unknown",
         }));
 
+        // Set all cards and original array for filtering
         setCards(updatedCards);
+        setAllCards(updatedCards);
+
+        // Extract unique brand names for dropdown
+        const uniqueBrands = Array.from(
+          new Set(updatedCards.map((card) => card.b_name))
+        ).sort();
+        
+        setBrands(uniqueBrands);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -71,6 +120,7 @@ const Lhome: React.FC = () => {
     fetchData();
   }, []);
 
+  // Fetch username
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
 
@@ -98,6 +148,27 @@ const Lhome: React.FC = () => {
     fetchUsername();
   }, [navigate]);
 
+  // Filter cards when brand or quality selection changes
+  useEffect(() => {
+    let filtered = allCards;
+
+    if (selectedBrand !== "") {
+      filtered = filtered.filter(card => card.b_name === selectedBrand);
+    }
+
+    if (selectedQuality !== "") {
+      filtered = filtered.filter(card => card.s_quality === selectedQuality);
+    }
+
+    setCards(filtered);
+    
+    // Reset scroll and zoomed state
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+    setZoomedCardIndex(null);
+  }, [selectedBrand, selectedQuality, allCards]);
+
   const formatDate = (isoString: string) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -120,6 +191,7 @@ const Lhome: React.FC = () => {
     const newCards = [...cards];
     newCards.splice(index, 1);
     setCards(newCards);
+    setAllCards(allCards.filter(card => card.s_id !== deletedCard.s_id));
     
     // Show toast notification
     setShowDeleteToast(true);
@@ -156,6 +228,7 @@ const Lhome: React.FC = () => {
       const newCards = [...cards];
       newCards.splice(index, 0, card);
       setCards(newCards);
+      setAllCards([...allCards, card]);
       setShowDeleteToast(false);
       
       if (toastTimerRef.current) {
@@ -174,31 +247,6 @@ const Lhome: React.FC = () => {
     // Permanently delete the card from backend when toast is closed
     if (deletedCardInfo && deletedCardInfo.card && deletedCardInfo.card.s_id) {
       deleteCardFromBackend(deletedCardInfo.card.s_id);
-    }
-  };
-
-  // Handle search functionality
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSearchTerm = event.target.value;
-    setSearchTerm(newSearchTerm);
-
-    if (newSearchTerm === "") {
-      scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
-      setZoomedCardIndex(null);
-      return;
-    }
-
-    const foundIndex = cards.findIndex((card) =>
-      card.b_name.toLowerCase().includes(newSearchTerm.toLowerCase())
-    );
-
-    if (foundIndex !== -1 && cardRefs.current[foundIndex]) {
-      cardRefs.current[foundIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-      setZoomedCardIndex(foundIndex);
     }
   };
 
@@ -227,7 +275,6 @@ const Lhome: React.FC = () => {
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
-      // const containerWidth = scrollRef.current.clientWidth;
       const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,
@@ -261,10 +308,22 @@ const Lhome: React.FC = () => {
     }
   };
 
+  // Handle water quality selection
+  const handleQualitySelect = (quality: string) => {
+    setSelectedQuality(quality);
+    setIsWaterQualityDropdownOpen(false);
+  };
+
+  // Handle brand selection
+  const handleBrandSelect = (brand: string) => {
+    setSelectedBrand(brand);
+    setIsBrandDropdownOpen(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
-        <div className="fixed top-0  bg-white  border-gray-200   px-6 py-3 gap-8 z-50">
+        <div className="fixed top-0 bg-white border-gray-200 px-6 py-3 gap-8 z-50">
           <nav className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-6">
@@ -289,7 +348,7 @@ const Lhome: React.FC = () => {
               {/*Map Link */}
               <Link
                 to="/pantee"
-                className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
+                className="text-gray-800 text-base hover:underline px-2 py-2 rounded-lg transition-colors"
               >
                 Map
               </Link>
@@ -297,14 +356,121 @@ const Lhome: React.FC = () => {
           </nav>
         </div>
 
-        <div className="flex-grow flex justify-center mt-3">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={handleSearch}
-            className="border outline-none rounded-full ml-10 px-6 py-3 w-100 h-10"
-          />
+        <div className="flex-grow flex justify-center mt-3 gap-4">
+          {/* Water Quality Dropdown */}
+          <div 
+            ref={waterQualityDropdownRef}
+            className="relative w-14 z-[10000]"
+          >
+            {/* Dropdown Trigger */}
+            <div 
+              onClick={() => {
+                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
+                // Close brand dropdown if open
+                setIsBrandDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
+            >
+              <div className="flex items-center">
+                {selectedQuality === "" ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
+                  </>
+                ) : (
+                  <>
+                    <div 
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        selectedQuality === "Good" ? "bg-green-500" :
+                        selectedQuality === "Fair" ? "bg-yellow-500" :
+                        "bg-red-500"
+                      }`}
+                    ></div>
+                  </>
+                )}
+              </div>
+              <svg 
+                className="w-4 h-4" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isWaterQualityDropdownOpen && (
+              <div 
+                className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001]"
+              >
+                {waterQualityOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => handleQualitySelect(option.value)}
+                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
+                  >
+                    <div 
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        option.value === "" ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500" :
+                        option.value === "Good" ? "bg-green-500" :
+                        option.value === "Fair" ? "bg-yellow-500" :
+                        "bg-red-500"
+                      }`}
+                    ></div>
+                    <span>{option.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Brand Dropdown */}
+          <div 
+            ref={brandDropdownRef}
+            className="relative w-84 z-[10000]"
+          >
+            {/* Dropdown Trigger */}
+            <div 
+              onClick={() => {
+                setIsBrandDropdownOpen(!isBrandDropdownOpen);
+                // Close water quality dropdown if open
+                setIsWaterQualityDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black cursor-pointer"
+            >
+              <span>{selectedBrand || "Select Brand"}</span>
+              <svg 
+                className="w-4 h-4 ml-2" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isBrandDropdownOpen && (
+              <div 
+                className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white rounded-lg shadow-lg z-[10001] max-h-60 overflow-y-auto"
+              >
+                <div
+                  key="all-brands"
+                  onClick={() => handleBrandSelect("")}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  All Brands
+                </div>
+                {brands.map((brand) => (
+                  <div
+                    key={brand}
+                    onClick={() => handleBrandSelect(brand)}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {brand}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
@@ -405,18 +571,18 @@ const Lhome: React.FC = () => {
       
       {/* Delete Toast Notification */}
       {showDeleteToast && (
-        <div className="fixed bottom-8 left-8 bg-black text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
+        <div className="fixed bottom-20 left-8 bg-white border border-black text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
           <span>deleted</span>
           <button 
             onClick={handleUndoDelete}
-            className="flex items-center bg-transparent border border-white rounded-md px-2 py-1  text-sm hover:bg-gray-700 transition"
+            className="flex items-center bg-black border text-white border-black rounded-md px-2 py-1 text-sm "
           >
-            <MdUndo className="mr-1" />
+            <MdUndo className="mr-1 text-white" />
             undo
           </button>
           <button 
             onClick={handleCloseToast}
-            className="-ml-2 text-gray-300 hover:text-white"
+            className="-ml-2 text-gray-300 hover:text-black"
           >
             <MdClose size={20} />
           </button>
