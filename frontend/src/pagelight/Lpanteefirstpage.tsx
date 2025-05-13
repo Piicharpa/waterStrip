@@ -78,9 +78,9 @@ function Panteefirstpage() {
   // Water quality options matching the image
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "Good", label: "Good", color: "green" },
-    { value: "Fair", label: "Fair", color: "yellow" },
-    { value: "Bad", label: "Bad", color: "red" }
+    { value: "#00FF00", label: "Good", color: "green" },
+    { value: "#FFFF00", label: "Fair", color: "yellow" },
+    { value: "#FF0000", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
@@ -141,9 +141,12 @@ function Panteefirstpage() {
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
-        // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
-        const response = await fetch("/api/strip-status/public");
-        const data: StripStatusResponse[] = await response.json();
+        const params = new URLSearchParams();
+      if (selectedBrand) params.append("brand", selectedBrand);
+      if (selectedQuality) params.append("quality", selectedQuality);
+
+      const response = await fetch(`/api/strip-status/public?${params.toString()}`);
+      const data: StripStatusResponse[] = await response.json();
 
         // Map data with explicit type conversion
         const mappedPlaces = data.map((strip): Place => {
@@ -178,7 +181,7 @@ function Panteefirstpage() {
     };
 
     fetchPlacesData();
-  }, []);
+  }, [selectedBrand, selectedQuality]);
 
   // Filter places when brand or quality selection changes
   useEffect(() => {
@@ -189,7 +192,7 @@ function Panteefirstpage() {
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter(place => place.quality === selectedQuality);
+      filtered = filtered.filter(place => place.color === selectedQuality);
     }
 
     setFilteredPlaces(filtered);
@@ -294,8 +297,8 @@ function Panteefirstpage() {
                   <>
                     <div 
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "Good" ? "bg-green-500" :
-                        selectedQuality === "Fair" ? "bg-yellow-500" :
+                        selectedQuality === "#00FF00" ? "bg-green-500" :
+                        selectedQuality === "#FFFF00" ? "bg-yellow-500" :
                         "bg-red-500"
                       }`}
                     ></div>
@@ -326,8 +329,8 @@ function Panteefirstpage() {
                     <div 
                       className={`w-5 h-5 mr-2  rounded-full ${
                         option.value === "" ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500" :
-                        option.value === "Good" ? "bg-green-500" :
-                        option.value === "Fair" ? "bg-yellow-500" :
+                        option.value === "#00FF00" ? "bg-green-500" :
+                        option.value === "#FFFF00" ? "bg-yellow-500" :
                         "bg-red-500"
                       }`}
                     ></div>

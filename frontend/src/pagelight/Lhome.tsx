@@ -146,7 +146,6 @@ const Lhome: React.FC = () => {
     }
   };
 
-  // ✅ ใส่ useEffect ตัวนี้แทน useEffect([]) ตัวเดิม
   useEffect(() => {
     fetchData();
   }, [selectedBrand, selectedQuality]);
