@@ -84,9 +84,9 @@ function Pantee() {
   // Water quality options matching the image
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "Good", label: "Good", color: "green" },
-    { value: "Fair", label: "Fair", color: "yellow" },
-    { value: "Bad", label: "Bad", color: "red" },
+    { value: "#00FF00", label: "Good", color: "green" },
+    { value: "#FFFF00", label: "Fair", color: "yellow" },
+    { value: "#FF0000", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
@@ -204,7 +204,7 @@ function Pantee() {
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter((place) => place.quality === selectedQuality);
+      filtered = filtered.filter((place) => place.color === selectedQuality);
     }
 
     setFilteredPlaces(filtered);
@@ -319,9 +319,9 @@ function Pantee() {
                   <>
                     <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "Good"
+                        selectedQuality === "#00FF00"
                           ? "bg-green-500"
-                          : selectedQuality === "Fair"
+                          : selectedQuality === "#FFFF00"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
@@ -351,9 +351,9 @@ function Pantee() {
                       className={`w-5 h-5 mr-2 rounded-full ${
                         option.value === ""
                           ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "Good"
+                          : option.value === "#00FF00"
                           ? "bg-green-500"
-                          : option.value === "Fair"
+                          : option.value === "#FFFF00"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}

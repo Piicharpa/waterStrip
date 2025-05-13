@@ -11,7 +11,6 @@ import {
   StripStatus,
 } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
-import axios from "axios";
 
 const router = express.Router();
 
@@ -23,25 +22,6 @@ router.get("/", async (req, res, next) => {
     next(err);
   }
 });
-
-// router.get("/card/:id", async (req, res, next) => {
-//   const { id } = req.params;
-
-//   try {
-//     const results = await dbClient
-//       .select()
-//       .from(Strip)
-//       .where(eq(Strip.u_id, id));
-
-//     // if (results.length === 0) {
-//     //   res.status(404).json({ message: "No cards found for this user." });
-//     // }
-
-//     res.json(results);
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 router.post("/", async (req, res, next) => {
   console.log("Request Body:", req.body);
