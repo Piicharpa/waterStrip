@@ -9,6 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "react-router-dom";
+import { FaLocationCrosshairs } from "react-icons/fa6";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -33,7 +34,6 @@ interface Place {
   location: Location;
   color: string;
   quality: string;
-  brand: string; // Add brand to the place
 }
 
 interface Strip {
@@ -112,6 +112,7 @@ function Pantee() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
   // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
   const dmsToDecimal = (dms: string) => {
     const regex = /(\d+)[°](\d+)'(\d+\.\d+)"([N|S|E|W])/;
@@ -234,7 +235,8 @@ function Pantee() {
       alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
     }
   };
- // Handle quality selection
+
+  // Handle quality selection
   const handleQualitySelect = (quality: string) => {
     setSelectedQuality(quality);
     setIsWaterQualityDropdownOpen(false);
@@ -250,20 +252,16 @@ function Pantee() {
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
     if (marker) {
+      // ทำการเปิด popup ของ marker
       marker.openPopup();
-      const place = places.find(p => p.id === placeId);
+
+      // เลื่อนไปที่ตำแหน่งของสถานที่
+      const place = places.find((p) => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
     }
   };
-
-  // Filter places based on selected filters
-  const filteredPlaces = places
-    .filter((place) => (qualityFilter ? place.color === qualityFilter : true))
-    .filter((place) => (brandFilter ? place.brand === brandFilter : true))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by most recent date
-    .slice(0, 10); // Limit to 10 recent places
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
@@ -423,7 +421,15 @@ function Pantee() {
       </nav>
 
       {/* Map Section */}
-      <div style={{ position: "absolute", top: 60, left: 15, right: 15, bottom: 20 }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 60,
+          left: 15,
+          right: 15,
+          bottom: 20,
+        }}
+      >
         <MapContainer
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
@@ -523,7 +529,12 @@ function Pantee() {
               }}
             />
             <div>
-              <h3 style={{ fontSize: "16px", fontWeight: "bold" }}>
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                }}
+              >
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
