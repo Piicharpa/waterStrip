@@ -214,7 +214,7 @@ const Lhome: React.FC = () => {
   const deleteCardFromBackend = async (cardId: string) => {
     try {
       // Here you would normally call your API to delete the card
-      // await axios.delete(`http://localhost:3003/strips/${cardId}`);
+      await axios.delete(`/api/strips/${cardId}`);
       console.log(`Card ${cardId} permanently deleted`);
     } catch (error) {
       console.error("Error deleting card:", error);
