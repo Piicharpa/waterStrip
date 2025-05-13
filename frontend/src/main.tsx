@@ -17,7 +17,7 @@ import Dhome from './pagedark/Dhome';
 import Ladd from './pagelight/Ladd';
 import AddMap from './pagelight/Laddmap';
 import LCardInfo from './pagelight/Lcardinfo';
-import Loading from './pagelight/loading';
+import Loading from './pagelight/Loading';
 
 
 createRoot(document.getElementById('root')!).render(

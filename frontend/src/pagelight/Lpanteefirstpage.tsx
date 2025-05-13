@@ -143,7 +143,7 @@ function Panteefirstpage() {
       try {
         // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
         const response = await fetch("/api/strip-status/public");
-        const data = await response.json();
+        const data: StripStatusResponse[] = await response.json();
 
         // Map data with explicit type conversion
         const mappedPlaces = data.map((strip): Place => {
