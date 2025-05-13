@@ -8,6 +8,7 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { FaLocationCrosshairs } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -33,7 +34,6 @@ interface Place {
   location: Location;
   color: string;
   quality: string;
-  brand: string; // Add brand to the place
 }
 
 // Define the shape of the API response
@@ -65,7 +65,6 @@ function Panteefirstpage() {
     lng: 98.9853,
   });
   const [places, setPlaces] = useState<Place[]>([]);
-
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
@@ -118,7 +117,7 @@ function Panteefirstpage() {
       const seconds = parseFloat(match[3]);
       const direction = match[4];
 
-      let decimal = degrees + (minutes / 60) + (seconds / 3600);
+      let decimal = degrees + minutes / 60 + seconds / 3600;
 
       // Adjust for N/S/E/W directions
       if (direction === "S" || direction === "W") {
@@ -134,7 +133,9 @@ function Panteefirstpage() {
   // Utility function to format the date (if needed)
   const getFormattedDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${
+      date.getMonth() + 1
+    }/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   };
 
   useEffect(() => {
@@ -239,20 +240,16 @@ function Panteefirstpage() {
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
     if (marker) {
+      // ทำการเปิด popup ของ marker
       marker.openPopup();
-      const place = places.find(p => p.id === placeId);
+
+      // เลื่อนไปที่ตำแหน่งของสถานที่
+      const place = places.find((p) => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
     }
   };
-
-  // Filter places based on selected filters
-  const filteredPlaces = places
-    .filter((place) => (qualityFilter ? place.color === qualityFilter : true))
-    .filter((place) => (brandFilter ? place.brand === brandFilter : true))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by most recent date
-    .slice(0, 10); // Limit to 10 recent places
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
@@ -404,9 +401,16 @@ function Panteefirstpage() {
         </div>
       </nav>
       
-
       {/* Map Section */}
-      <div style={{ position: "absolute", top: 60, left: 15, right: 15, bottom: 20 }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 60,
+          left: 15,
+          right: 15,
+          bottom: 20,
+        }}
+      >
         <MapContainer
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
@@ -443,8 +447,7 @@ function Panteefirstpage() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-
-                  <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
+                  <p style={{ margin: "0 0 5px 0" }}>{place.date}</p>
                 </div>
               </Popup>
             </CircleMarker>
@@ -452,10 +455,8 @@ function Panteefirstpage() {
           <ChangeView center={viewLocation} />
         </MapContainer>
       </div>
-
       
       {/* Sidebar with filtered places */}
-
       <div
         style={{
           position: "fixed",
@@ -491,7 +492,6 @@ function Panteefirstpage() {
               target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
             }}
             onMouseOut={(e) => {
-
               const target = e.currentTarget as HTMLDivElement;
               target.style.transform = "translateY(0)";
               target.style.boxShadow =
@@ -510,7 +510,12 @@ function Panteefirstpage() {
               }}
             />
             <div>
-              <h3 style={{ fontSize: "16px", fontWeight: "bold" }}>
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                }}
+              >
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
