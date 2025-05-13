@@ -148,12 +148,13 @@ function Pantee() {
     const fetchPlacesData = async () => {
       try {
         // Fetch strip data
-        const stripsResponse = await fetch("http://localhost:3003/strips");
-        const stripsData: Strip[] = await stripsResponse.json();
+
+        const stripsResponse = await fetch('/api/strips');
+        const stripsData = await stripsResponse.json();
 
         // Fetch brand data
-        const brandResponse = await fetch("http://localhost:3003/brands");
-        const brandData: Brand[] = await brandResponse.json();
+        const brandResponse = await fetch('/api/brands');
+        const brandData = await brandResponse.json();
 
         // Map the strip data and link it with the corresponding brand
         const storedUserId = sessionStorage.getItem("userId");

@@ -141,9 +141,9 @@ function Panteefirstpage() {
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
-        // Fetch API with correct type annotation
-        const response = await fetch("http://localhost:3003/strip-status/public");
-        const data: StripStatusResponse[] = await response.json();
+        // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
+        const response = await fetch("/api/strip-status/public");
+        const data = await response.json();
 
         // Map data with explicit type conversion
         const mappedPlaces = data.map((strip): Place => {
