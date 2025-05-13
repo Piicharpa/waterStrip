@@ -4,9 +4,6 @@ import { dbClient } from "../../db/client";
 import {
   Strip,
   Brand,
-  Parameter,
-  StripParameter,
-  Color,
   StripStatus,
 } from "../../db/schema";
 
