@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -35,6 +36,17 @@ interface Place {
   brand: string; // Add brand to the place
 }
 
+// Define the shape of the API response
+interface StripStatusResponse {
+  s_id: number;
+  brand_name: string;
+  s_latitude: string;
+  s_longitude: string;
+  s_date: string;
+  s_qualitycolor: string;
+  s_quality: string;
+}
+
 function ChangeView({ center }: { center: Location }) {
   const map = useMap();
   useEffect(() => {
@@ -53,9 +65,48 @@ function Panteefirstpage() {
     lng: 98.9853,
   });
   const [places, setPlaces] = useState<Place[]>([]);
-  const [qualityFilter, setQualityFilter] = useState<string>(""); // Water quality filter
-  const [brandFilter, setBrandFilter] = useState<string>(""); // Brand filter
+
+  const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState("");
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
+
+  // Water quality options matching the image
+  const waterQualityOptions = [
+    { value: "", label: "All", color: "" },
+    { value: "#00FF00", label: "Good", color: "green" },
+    { value: "#FFFF00", label: "Fair", color: "yellow" },
+    { value: "#FF0000", label: "Bad", color: "red" },
+  ];
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        waterQualityDropdownRef.current && 
+        !waterQualityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsWaterQualityDropdownOpen(false);
+      }
+
+      if (
+        brandDropdownRef.current && 
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBrandDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
   const dmsToDecimal = (dms: string) => {
@@ -89,12 +140,15 @@ function Panteefirstpage() {
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
-        // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
-        const response = await fetch("http://localhost:3003/strip-status/public");
-        const data = await response.json();
+        const params = new URLSearchParams();
+      if (selectedBrand) params.append("brand", selectedBrand);
+      if (selectedQuality) params.append("quality", selectedQuality);
 
-        // Map ข้อมูลให้อยู่ในรูปแบบที่ frontend ใช้
-        const mappedPlaces = data.map((strip: any) => {
+      const response = await fetch(`/api/strip-status/public?${params.toString()}`);
+      const data: StripStatusResponse[] = await response.json();
+
+        // Map data with explicit type conversion
+        const mappedPlaces = data.map((strip): Place => {
           const lat = dmsToDecimal(strip.s_latitude);
           const lng = dmsToDecimal(strip.s_longitude);
 
@@ -112,14 +166,76 @@ function Panteefirstpage() {
         });
 
         setPlaces(mappedPlaces);
+        setFilteredPlaces(mappedPlaces);
+        
+        // Extract unique brand names for dropdown
+        const uniqueBrands = Array.from(
+          new Set(mappedPlaces.map((place) => place.title))
+        ).sort();
+        
+        setBrands(uniqueBrands);
       } catch (error) {
         console.error("Error fetching public strip data:", error);
       }
     };
 
     fetchPlacesData();
-  }, []);
+  }, [selectedBrand, selectedQuality]);
 
+  // Filter places when brand or quality selection changes
+  useEffect(() => {
+    let filtered = places;
+
+    if (selectedBrand !== "") {
+      filtered = filtered.filter(place => place.title === selectedBrand);
+    }
+
+    if (selectedQuality !== "") {
+      filtered = filtered.filter(place => place.color === selectedQuality);
+    }
+
+    setFilteredPlaces(filtered);
+    
+    // If there are filtered results, center the map on the first one
+    if (filtered.length > 0) {
+      setViewLocation(filtered[0].location);
+    }
+  }, [selectedBrand, selectedQuality, places]);
+
+  const handleLocate = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setCurrentLocation(newLocation);
+          setViewLocation(newLocation);
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+          alert("ไม่สามารถค้นหาตำแหน่งของคุณได้: " + error.message);
+        }
+      );
+    } else {
+      alert("เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง");
+    }
+  };
+
+  // Handle quality selection
+  const handleQualitySelect = (quality: string) => {
+    setSelectedQuality(quality);
+    setIsWaterQualityDropdownOpen(false);
+  };
+
+  // Handle brand selection
+  const handleBrandSelect = (brand: string) => {
+    setSelectedBrand(brand);
+    setIsBrandDropdownOpen(false);
+  };
+
+  // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
     if (marker) {
@@ -140,39 +256,154 @@ function Panteefirstpage() {
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
+      {/* Navbar */}
       <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
+        {/* Logo Section */}
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/image/logo2.png" alt="Logo" className="h-10" />
             <span className="text-xl font-bold text-gray-800">AQUAlity</span>
           </Link>
+
+          {/* Menu Links */}
+          <Link 
+            to="/"
+            className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
+          >
+            Home
+          </Link>
         </div>
-        <div className="relative">
-          {/* Filter Inputs */}
-          <select
-            onChange={(e) => setQualityFilter(e.target.value)}
-            value={qualityFilter}
-            className="w-70 h-12 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+        
+        {/* Navigation and controls wrapper */}
+        <div className="flex items-center gap-4">
+          {/* Water Quality Dropdown */}
+          <div 
+            ref={waterQualityDropdownRef}
+            className="relative w-14 z-[10000]"
           >
-            <option value="">Filter by Quality</option>
-            <option value="#00FF00">Green</option>
-            <option value="#FFFF00">Yellow</option>
-            <option value="#FF0000">Red</option>
-          </select>
-          <select
-            onChange={(e) => setBrandFilter(e.target.value)}
-            value={brandFilter}
-            className="w-70 h-12 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
+            {/* Dropdown Trigger */}
+            <div 
+              onClick={() => {
+                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
+                // Close brand dropdown if open
+                setIsBrandDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
+            >
+              <div className="flex items-center">
+                {selectedQuality === "" ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
+                
+                  </>
+                ) : (
+                  <>
+                    <div 
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        selectedQuality === "#00FF00" ? "bg-green-500" :
+                        selectedQuality === "#FFFF00" ? "bg-yellow-500" :
+                        "bg-red-500"
+                      }`}
+                    ></div>
+                   
+                  </>
+                )}
+              </div>
+              <svg 
+                className="w-4 h-4" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isWaterQualityDropdownOpen && (
+              <div 
+                className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]"
+              >
+                {waterQualityOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => handleQualitySelect(option.value)}
+                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
+                  >
+                    <div 
+                      className={`w-5 h-5 mr-2  rounded-full ${
+                        option.value === "" ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500" :
+                        option.value === "#00FF00" ? "bg-green-500" :
+                        option.value === "#FFFF00" ? "bg-yellow-500" :
+                        "bg-red-500"
+                      }`}
+                    ></div>
+                    <span>{option.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Brand Dropdown */}
+          <div 
+            ref={brandDropdownRef}
+            className="relative w-64 z-[10000]"
           >
-            <option value="">Filter by Brand</option>
-            {Array.from(new Set(places.map(place => place.brand))).map(brand => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
+            {/* Dropdown Trigger */}
+            <div 
+              onClick={() => {
+                setIsBrandDropdownOpen(!isBrandDropdownOpen);
+                // Close water quality dropdown if open
+                setIsWaterQualityDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black  cursor-pointer"
+            >
+              <span>{selectedBrand || "Select Brand"}</span>
+              <svg 
+                className="w-4 h-4 ml-2" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isBrandDropdownOpen && (
+              <div 
+                className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white  rounded-lg  z-[10001] max-h-60 overflow-y-auto"
+              >
+                <div
+                  key="all-brands"
+                  onClick={() => handleBrandSelect("")}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  All Brands
+                </div>
+                {brands.map((brand) => (
+                  <div
+                    key={brand}
+                    onClick={() => handleBrandSelect(brand)}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {brand}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Location button */}
+          <button
+            onClick={handleLocate}
+            className="bg-white hover:bg-black text-black hover:text-white p-2 rounded-full  outline-none focus:ring-0 transition-colors"
+            title="Find my location"
+          >
+            <FaLocationCrosshairs size={20} />
+          </button>
         </div>
       </nav>
+      
 
       {/* Map Section */}
       <div style={{ position: "absolute", top: 60, left: 15, right: 15, bottom: 20 }}>
@@ -212,6 +443,7 @@ function Panteefirstpage() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
+
                   <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
                 </div>
               </Popup>
@@ -221,7 +453,9 @@ function Panteefirstpage() {
         </MapContainer>
       </div>
 
-      {/* Sidebar */}
+      
+      {/* Sidebar with filtered places */}
+
       <div
         style={{
           position: "fixed",
@@ -232,6 +466,7 @@ function Panteefirstpage() {
           overflowY: "auto",
           backgroundColor: "transparent",
           zIndex: 1000,
+          maxHeight: "calc(100vh - 100px)"
         }}
       >
         {filteredPlaces.map((place) => (
@@ -251,12 +486,16 @@ function Panteefirstpage() {
             }}
             onClick={() => handleCardClick(place.id)}
             onMouseOver={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+              const target = e.currentTarget as HTMLDivElement;
+              target.style.transform = "translateY(-2px)";
+              target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
+
+              const target = e.currentTarget as HTMLDivElement;
+              target.style.transform = "translateY(0)";
+              target.style.boxShadow =
+                "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
             }}
           >
             <div

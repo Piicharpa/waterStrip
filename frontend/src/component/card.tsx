@@ -1,4 +1,5 @@
 import React from "react";
+import { FaTrash } from "react-icons/fa6";
 
 interface CardProps {
   imageUrl: string;
@@ -6,51 +7,70 @@ interface CardProps {
   dateTime: string;
   location: string;
   waterQualityColor?: string; // สีของคุณภาพน้ำ
-  cardColor?: string;  // เพิ่มสีพื้นหลังของการ์ด
-  textColor?: string;  // เพิ่มสีข้อความของแบรนด์
+  cardColor?: string; // สีพื้นหลังของการ์ด
+  textColor?: string; // สีข้อความของแบรนด์
   textColorLocation?: string; // สีข้อความสำหรับ location
   textColorDateTime?: string; // สีข้อความสำหรับ dateTime
   onClick?: () => void; // ฟังก์ชันที่เรียกเมื่อการ์ดถูกคลิก
+  onDelete?: () => void; // ฟังก์ชันสำหรับจัดการการกดปุ่มลบ
 }
-
-
-// const getWaterQualityColor = (quality: number) => {
-//   if (quality >= 0 && quality <= 24) return "#e74c3c";
-//   if (quality >= 25 && quality <= 49) return "#FF8A24";
-//   if (quality >= 50 && quality <= 74) return "#FFE521";
-//   return "#7ECF1B";
-// };
 
 const Card: React.FC<CardProps> = ({
   imageUrl,
   brand,
   dateTime,
   location,
-  waterQualityColor, // ใช้สีเริ่มต้น
+  waterQualityColor,
   onClick,
-  cardColor = "bg-black",  // ใช้ค่าเริ่มต้น
-  textColor = "text-white", // ใช้ค่าเริ่มต้น
-  textColorLocation = "text-gray-400", // สีเริ่มต้นของ location
-  textColorDateTime = "text-white", // สีเริ่มต้นของ dateTime
-  
+  onDelete,
+  cardColor = "bg-black",
+  textColor = "text-white",
+  textColorLocation = "text-gray-400",
+  textColorDateTime = "text-white",
 }) => {
-  // const validBase64 = `data:image/png;base64,${imageUrl}`;
+  // จัดการการคลิกปุ่มลบโดยไม่ให้กระจายไปยัง onClick ของการ์ด
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // ป้องกันไม่ให้ event กระจายไปยัง parent (card)
+    if (onDelete) {
+      onDelete();
+    }
+  };
+
   return (
-    <div 
-    className={`w-60 h-70 ${cardColor} text-white p-4 rounded-2xl shadow-lg`} 
-    onClick={onClick} // Here, bind the onClick to the card div
-    style={{ cursor: "pointer" }} // Make it look clickable
-  >
-      <div className="w-full h-32 bg-blue-400 rounded-xl overflow-hidden">
-        <img src={imageUrl} alt="Brand" className="w-full h-full object-cover" />
+    <div
+      className={`w-60 h-70 ${cardColor} text-white p-4 rounded-2xl shadow-lg relative`}
+      onClick={onClick}
+      style={{ cursor: "pointer" }}
+    >
+      {/* ปุ่มถังขยะที่มุมบนขวา */}
+      {onDelete && (
+        <div 
+          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black bg-opacity-30 hover:bg-opacity-50 transition"
+          onClick={handleDeleteClick}
+        >
+          <FaTrash size={16} className="text-white" />
+        </div>
+      )}
+
+      <div className="w-full h-32 bg-transparent overflow-hidden flex items-center justify-center">
+        <img
+          src={imageUrl}
+          alt="Brand"
+          className="h-52 object-cover"
+          style={{ transform: "rotate(90deg)" }}
+        />
       </div>
+      
       <div className="mt-3">
         <h2 className={`text-lg font-bold ${textColor}`}>{brand}</h2>
         <p className={`text-sm mt-1 ${textColorLocation}`}>{location}</p>
         <p className={`text-base ${textColorDateTime}`}>{dateTime}</p>
       </div>
       <div className="mt-3 flex justify-end">
-        <div className="w-6 h-6 rounded-full" style={{ backgroundColor: waterQualityColor }}></div>
+        <div
+          className="w-6 h-6 rounded-full"
+          style={{ backgroundColor: waterQualityColor }}
+        ></div>
       </div>
     </div>
   );

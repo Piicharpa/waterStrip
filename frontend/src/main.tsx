@@ -17,6 +17,7 @@ import Dhome from './pagedark/Dhome';
 import Ladd from './pagelight/Ladd';
 import AddMap from './pagelight/Laddmap';
 import LCardInfo from './pagelight/Lcardinfo';
+import Loading from './pagelight/Loading';
 
 
 createRoot(document.getElementById('root')!).render(
@@ -36,6 +37,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/add" element={<Ladd />} />
         <Route path="/addmap" element={<AddMap />} />
         <Route path="/cardinfo/:stripId" element={<LCardInfo />} />
+        <Route path="/loading" element={<Loading />} />
       </Routes>
     </Router>
   </StrictMode>

@@ -61,6 +61,7 @@ declare global {
   }
 }
 
+
 const ChangeView: FC<{ center: Location }> = ({ center }) => {
   const map = useMap();
   useEffect(() => {
@@ -393,7 +394,6 @@ const FirstPage = () => {
       provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
       const response = await axios.post("http://localhost:3003/users/check-user", { u_id: user.uid });
       if ((response.data as { exists: boolean }).exists) {
         navigate("/home");
@@ -415,7 +415,7 @@ const FirstPage = () => {
       provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
+      const googleId = user.uid;
       if (user) {
         const response = await fetch("http://localhost:3003/users", {
           method: "POST",
@@ -434,14 +434,22 @@ const FirstPage = () => {
         setUser(userData);
         navigate("/permission");
       }
+
+      const userData = await createResponse.json();
+      setUser(userData.data); // <- ใช้ `.data` ที่มาจาก backend
+
+      navigate("/permission");
     } catch (error) {
       console.error("Error signing up with Google:", error);
+      alert("Signup failed. Please try again.");
     }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
+      setUser(null);
+      navigate("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }

@@ -2,64 +2,83 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
-import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
-import axios from "axios"; // Import axios for API requests
+import {
+  MdKeyboardArrowLeft,
+  MdOutlineChevronRight,
+  MdClose,
+  MdUndo,
+} from "react-icons/md";
+import axios from "axios";
 
 type User = {
   u_id: string;
   u_name: string;
 };
+
+type DeletedCardInfo = {
+  card: any;
+  index: number;
+};
+
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedQuality, setSelectedQuality] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [scrollIndex, setScrollIndex] = useState(0);
   const [zoomedCardIndex, setZoomedCardIndex] = useState<number | null>(null);
   const [cards, setCards] = useState<any[]>([]); // Store API data
+  const [allCards, setAllCards] = useState<any[]>([]); // Keep original cards for filtering
+  const [brands, setBrands] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  // Fetch data from API
+  // Dropdown state
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
+    useState(false);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+
+  // For handling deleted cards and toast notification
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [deletedCardInfo, setDeletedCardInfo] =
+    useState<DeletedCardInfo | null>(null);
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Water quality options
+  const waterQualityOptions = [
+    { value: "", label: "All", color: "" },
+    { value: "#00FF00", label: "Good", color: "green" },
+    { value: "#FFFF00", label: "Fair", color: "yellow" },
+    { value: "#FF0000", label: "Bad", color: "red" },
+  ];
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    // ดึงข้อมูล userId จาก sessionStorage ก่อน
-    const storedUserId = sessionStorage.getItem("userId");
-    // console.log("Stored userId:", storedUserId);
-    // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
-    if (!storedUserId) {
-      console.error("User ID not found in sessionStorage");
-      return;
-    }
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        waterQualityDropdownRef.current &&
+        !waterQualityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsWaterQualityDropdownOpen(false);
+      }
 
-    const fetchData = async () => {
-      try {
-        const userId = encodeURIComponent(storedUserId || "");
-        const [stripsRes, bandsRes] = await Promise.all([
-          axios.get<any[]>(`http://localhost:3003/strips/card/${userId}`),
-          axios.get<any[]>("http://localhost:3003/brands"),
-        ]);
-
-        const bandsMap = new Map(
-          bandsRes.data.map((band) => [band.b_id, band.b_name])
-        );
-
-        // กรอง strips ตาม u_id
-        const filteredStrips = stripsRes.data.filter(
-          (strip) => strip.u_id === storedUserId
-        );
-        const updatedCards = filteredStrips.map((strip) => ({
-          ...strip,
-          b_name: bandsMap.get(strip.b_id) || "Unknown",
-        }));
-
-        setCards(updatedCards);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (
+        brandDropdownRef.current &&
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBrandDropdownOpen(false);
       }
     };
 
-    fetchData();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
+  // Fetch username
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
 
@@ -70,9 +89,7 @@ const Lhome: React.FC = () => {
 
     const fetchUsername = async () => {
       try {
-        const response = await axios.get<User>(
-          `http://localhost:3003/users/${storedUserId}`
-        );
+        const response = await axios.get<User>(`/api/users/${storedUserId}`);
         const userData = response.data;
         if (userData?.u_name) {
           setUsername(userData.u_name);
@@ -87,6 +104,73 @@ const Lhome: React.FC = () => {
     fetchUsername();
   }, [navigate]);
 
+  const fetchData = async () => {
+    const storedUserId = sessionStorage.getItem("userId");
+    if (!storedUserId) {
+      console.error("User ID not found in sessionStorage");
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (selectedBrand) queryParams.append("brand", selectedBrand);
+      if (selectedQuality) queryParams.append("quality", selectedQuality);
+
+      console.log("Query params:", queryParams.toString());
+
+      const stripsUrl = `/api/strips/card/${storedUserId}?${queryParams.toString()}`;
+      const [stripsRes, brandsRes] = await Promise.all([
+        axios.get<any[]>(stripsUrl),
+        axios.get<any[]>("/api/brands"),
+      ]);
+
+      const bandsMap = new Map(
+        brandsRes.data.map((band) => [band.b_id, band.b_name])
+      );
+
+      const updatedCards = stripsRes.data.map((strip) => ({
+        ...strip,
+        b_name: strip.brandName || bandsMap.get(strip.b_id) || "Unknown",
+      }));
+
+      setCards(updatedCards);
+      setAllCards(updatedCards);
+
+      const uniqueBrands = Array.from(
+        new Set(updatedCards.map((card) => card.b_name))
+      ).sort();
+
+      setBrands(uniqueBrands);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedBrand, selectedQuality]);
+
+  // Filter cards when brand or quality selection changes
+  useEffect(() => {
+    let filtered = allCards;
+
+    if (selectedBrand !== "") {
+      filtered = filtered.filter((card) => card.b_name === selectedBrand);
+    }
+
+    if (selectedQuality !== "") {
+      filtered = filtered.filter((card) => card.s_qualitycolor === selectedQuality);
+    }
+
+    setCards(filtered);
+
+    // Reset scroll and zoomed state
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+    setZoomedCardIndex(null);
+  }, [selectedBrand, selectedQuality, allCards]);
+
   const formatDate = (isoString: string) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -99,28 +183,72 @@ const Lhome: React.FC = () => {
     }).format(new Date(isoString));
   };
 
-  // Handle search functionality
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSearchTerm = event.target.value;
-    setSearchTerm(newSearchTerm);
+  // Handle card deletion
+  const handleDeleteCard = (index: number) => {
+    // Store the deleted card info for potential undo
+    const deletedCard = cards[index];
+    setDeletedCardInfo({ card: deletedCard, index });
 
-    if (newSearchTerm === "") {
-      scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
-      setZoomedCardIndex(null);
-      return;
+    // Remove the card from the UI
+    const newCards = [...cards];
+    newCards.splice(index, 1);
+    setCards(newCards);
+    setAllCards(allCards.filter((card) => card.s_id !== deletedCard.s_id));
+
+    // Show toast notification
+    setShowDeleteToast(true);
+
+    // Auto-hide toast after 3 seconds
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
     }
 
-    const foundIndex = cards.findIndex((card) =>
-      card.b_name.toLowerCase().includes(newSearchTerm.toLowerCase())
-    );
+    toastTimerRef.current = setTimeout(() => {
+      setShowDeleteToast(false);
+      // Permanently delete the card from backend after toast disappears
+      if (deletedCard && deletedCard.s_id) {
+        deleteCardFromBackend(deletedCard.s_id);
+      }
+    }, 3000);
+  };
 
-    if (foundIndex !== -1 && cardRefs.current[foundIndex]) {
-      cardRefs.current[foundIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-      setZoomedCardIndex(foundIndex);
+  // Function to delete card from backend
+  const deleteCardFromBackend = async (cardId: string) => {
+    try {
+      // Here you would normally call your API to delete the card
+      await axios.delete(`/api/strips/${cardId}`);
+      console.log(`Card ${cardId} permanently deleted`);
+    } catch (error) {
+      console.error("Error deleting card:", error);
+    }
+  };
+
+  // Handle undo delete
+  const handleUndoDelete = () => {
+    if (deletedCardInfo) {
+      const { card, index } = deletedCardInfo;
+      const newCards = [...cards];
+      newCards.splice(index, 0, card);
+      setCards(newCards);
+      setAllCards([...allCards, card]);
+      setShowDeleteToast(false);
+
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    }
+  };
+
+  // Handle close toast
+  const handleCloseToast = () => {
+    setShowDeleteToast(false);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    // Permanently delete the card from backend when toast is closed
+    if (deletedCardInfo && deletedCardInfo.card && deletedCardInfo.card.s_id) {
+      deleteCardFromBackend(deletedCardInfo.card.s_id);
     }
   };
 
@@ -131,10 +259,10 @@ const Lhome: React.FC = () => {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.floor(
-          (scrollLeft / maxScrollLeft) * (cards.length - 1)
-        ); // Use cards.length for number of dots
-        setScrollIndex(index);
+        const index = Math.round(
+          (scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0)
+        );
+        setScrollIndex(isNaN(index) ? 0 : index);
       }
     };
 
@@ -149,7 +277,6 @@ const Lhome: React.FC = () => {
   const handleDotClick = (dotIndex: number) => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
-      // const containerWidth = scrollRef.current.clientWidth;
       const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
       scrollRef.current.scrollTo({
         left: scrollTo,
@@ -183,10 +310,22 @@ const Lhome: React.FC = () => {
     }
   };
 
+  // Handle water quality selection
+  const handleQualitySelect = (quality: string) => {
+    setSelectedQuality(quality);
+    setIsWaterQualityDropdownOpen(false);
+  };
+
+  // Handle brand selection
+  const handleBrandSelect = (brand: string) => {
+    setSelectedBrand(brand);
+    setIsBrandDropdownOpen(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
-        <div className="fixed top-0  bg-white  border-gray-200   px-6 py-3 gap-8 z-50">
+        <div className="fixed top-0 bg-white border-gray-200 px-6 py-3 gap-8 z-50">
           <nav className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-6">
@@ -203,7 +342,7 @@ const Lhome: React.FC = () => {
               {/* Menu Links */}
               <Link
                 to="/home"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
               >
                 Home
               </Link>
@@ -211,7 +350,7 @@ const Lhome: React.FC = () => {
               {/*Map Link */}
               <Link
                 to="/pantee"
-                className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                className="text-gray-800 text-base hover:underline px-2 py-2 rounded-lg transition-colors"
               >
                 Map
               </Link>
@@ -219,14 +358,119 @@ const Lhome: React.FC = () => {
           </nav>
         </div>
 
-        <div className="flex-grow flex justify-center mt-3">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchTerm}
-            onChange={handleSearch}
-            className="border outline-none rounded-full px-6 py-3 w-120 h-10"
-          />
+        <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
+          {/* Water Quality Dropdown */}
+          <div
+            ref={waterQualityDropdownRef}
+            className="relative w-14 z-[10000]"
+          >
+            {/* Dropdown Trigger */}
+            <div
+              onClick={() => {
+                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
+                // Close brand dropdown if open
+                setIsBrandDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
+            >
+              <div className="flex items-center">
+                {selectedQuality === "" ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        selectedQuality === "#00FF00"
+                          ? "bg-green-500"
+                          : selectedQuality === "#FFFF00"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
+                    ></div>
+                  </>
+                )}
+              </div>
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isWaterQualityDropdownOpen && (
+              <div className="absolute top-full left-0 w-25 mt-2 border border-gray-200 bg-white rounded-lg  z-[10001]">
+                {waterQualityOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => handleQualitySelect(option.value)}
+                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
+                  >
+                    <div
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        option.value === ""
+                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
+                          : option.value === "#00FF00"
+                          ? "bg-green-500"
+                          : option.value === "#FFFF00"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
+                    ></div>
+                    <span>{option.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Brand Dropdown */}
+          <div ref={brandDropdownRef} className="relative w-64 z-[10000]">
+            {/* Dropdown Trigger */}
+            <div
+              onClick={() => {
+                setIsBrandDropdownOpen(!isBrandDropdownOpen);
+                // Close water quality dropdown if open
+                setIsWaterQualityDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black cursor-pointer"
+            >
+              <span>{selectedBrand || "Select Brand"}</span>
+              <svg
+                className="w-4 h-4 ml-2"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isBrandDropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-2 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto">
+                <div
+                  key="all-brands"
+                  onClick={() => handleBrandSelect("")}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  All Brands
+                </div>
+                {brands.map((brand) => (
+                  <div
+                    key={brand}
+                    onClick={() => handleBrandSelect(brand)}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {brand}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
@@ -264,17 +508,17 @@ const Lhome: React.FC = () => {
                       <Card
                         imageUrl={card.s_url}
                         brand={card.b_name}
-                        dateTime={formatDate(card.s_date)} // Adjust based on API response
+                        dateTime={formatDate(card.s_date)}
                         location={`${card.s_latitude}, ${card.s_longitude}`}
                         waterQualityColor={card.s_qualitycolor}
                         onClick={() => {
                           if (card.s_id) {
-                            // console.log(`Navigating to /cardinfo/${card.s_id}`);
                             navigate(`/cardinfo/${card.s_id}`);
                           } else {
                             console.error("Card ID is missing");
                           }
                         }}
+                        onDelete={() => handleDeleteCard(index)}
                       />
                     </div>
                   ))}
@@ -324,6 +568,26 @@ const Lhome: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Toast Notification */}
+      {showDeleteToast && (
+        <div className="fixed bottom-20 left-8 bg-white border border-black text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
+          <span>deleted</span>
+          <button
+            onClick={handleUndoDelete}
+            className="flex items-center bg-black border text-white border-black rounded-md px-2 py-1 text-sm "
+          >
+            <MdUndo className="mr-1 text-white" />
+            undo
+          </button>
+          <button
+            onClick={handleCloseToast}
+            className="-ml-2 text-gray-300 hover:text-black"
+          >
+            <MdClose size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

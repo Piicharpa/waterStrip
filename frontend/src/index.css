@@ -8,3 +8,35 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  /* สไตล์สำหรับ input[type="range"] */
+  input[type="range"] {
+    -webkit-appearance: none; /* สำหรับ Safari */
+    -moz-appearance: none; /* สำหรับ Firefox */
+    appearance: none; /* สำหรับบราวเซอร์ทั่วไป */
+  
+    width: 100%; /* ความกว้างของสไลด์ */
+    height: 3px; /* ความสูงของแถบสไลด์ */
+    background: black; /* สีพื้นหลังของแถบ */
+    border-radius: 5px; /* การโค้งมุมแถบ */
+  }
+  
+  /* สไตล์สำหรับปุ่มสไลด์ */
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: black; /* สีของปุ่มสไลด์ */
+    border-radius: 50%; /* ปรับให้ปุ่มสไลด์เป็นวงกลม */
+    cursor: pointer;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: blueviolet;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
