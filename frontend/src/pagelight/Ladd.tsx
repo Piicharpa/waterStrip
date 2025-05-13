@@ -6,6 +6,7 @@ import axios from "axios";
 import imageCompression from "browser-image-compression";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
+import ImageEditor from "./ImageEditor"; // Import the new component
 
 // Utility function to convert decimal to DMS
 const toDMS = (decimal: number, isLat: boolean = true) => {
@@ -32,6 +33,8 @@ const Ladd: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLocationSelected, setIsLocationSelected] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -129,11 +132,11 @@ const Ladd: React.FC = () => {
           alwaysKeepResolution: true, // คงสัดส่วนเดิม
         });
 
-        // อ่านไฟล์เป็น Base64 เพื่อใช้แสดงรูป preview
+        // อ่านไฟล์เป็น Base64 เพื่อใช้แสดงรูป preview และเปิด editor
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImagePreview(reader.result as string);
-          setSelectedFile(compressedFile); // ย้ายมาที่นี่เพื่อให้แน่ใจว่าถูกตั้งค่าหลังจาก compression
+          setTempImageUrl(reader.result as string);
+          setShowImageEditor(true);
         };
         reader.readAsDataURL(compressedFile);
       } catch (error) {
@@ -152,12 +155,11 @@ const Ladd: React.FC = () => {
     event.stopPropagation();
     const file = event.dataTransfer.files[0];
     if (file && isLocationSelected) {
-      setSelectedFile(file);
-
-      // Create image preview
+      // Create temporary image preview and open editor
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setTempImageUrl(reader.result as string);
+        setShowImageEditor(true);
       };
       reader.readAsDataURL(file);
     }
@@ -184,6 +186,53 @@ const Ladd: React.FC = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  // Handler for when editor saves the image
+  const handleSaveEditedImage = async (editedImageDataUrl: string) => {
+    setImagePreview(editedImageDataUrl);
+    setShowImageEditor(false);
+
+    // Convert data URL to File object
+    const response = await fetch(editedImageDataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], "edited-image.jpg", { type: "image/jpeg" });
+    setSelectedFile(file);
+  };
+
+  // Handle cancel from editor
+  const handleCancelEdit = () => {
+    setShowImageEditor(false);
+    setTempImageUrl(null);
+  };
+
+  function rotateImage90(imageSrc: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          reject("Cannot get 2D context");
+          return;
+        }
+
+        // ปรับขนาด canvas สำหรับการหมุนทวนเข็ม
+        canvas.width = img.height;
+        canvas.height = img.width;
+
+        // เลื่อน canvas และหมุน -90 องศา
+        ctx.translate(0, canvas.height);
+        ctx.rotate((-90 * Math.PI) / 180);
+        ctx.drawImage(img, 0, 0);
+
+        const rotatedImage = canvas.toDataURL();
+        resolve(rotatedImage);
+      };
+      img.onerror = reject;
+      img.src = imageSrc;
+    });
+  }
+
   const handleAnalyze = async () => {
     if (isLocationSelected && selectedFile && selectedBrandId) {
       const locationParts = location.split(", ");
@@ -195,24 +244,28 @@ const Ladd: React.FC = () => {
         return;
       }
 
-      // Save data to localStorage
       localStorage.setItem("stripBrand", selectedBrandId.toString());
       localStorage.setItem("location", location);
+
+      let rotatedImagePreview = imagePreview;
       if (imagePreview) {
-        localStorage.setItem("uploadedImage", imagePreview);
+        try {
+          rotatedImagePreview = await rotateImage90(imagePreview);
+          localStorage.setItem("uploadedImage", rotatedImagePreview);
+        } catch (err) {
+          console.error("Error rotating image:", err);
+        }
       }
 
-      // ข้อมูลที่ต้องส่งไปยัง API
       const data = {
         b_id: selectedBrandId,
         s_latitude: latitude,
         s_longitude: longitude,
         u_id: userId,
-        s_url: imagePreview,
+        s_url: rotatedImagePreview,
       };
 
       try {
-        // ส่งข้อมูลไปยัง API
         const response = await axios.post(
           "/api/strips",
           data,
@@ -235,12 +288,10 @@ const Ladd: React.FC = () => {
             await axios.get(`/api/strips/predict/${stripId}`);
           } catch (predictError) {
             console.error("Prediction failed:", predictError);
-            // คุณอาจใส่ alert หรือแสดงข้อความเตือนผู้ใช้ได้ตรงนี้
           }
-        
+
           navigate(`/cardinfo/${stripId}`);
-        }
-         else {
+        } else {
           console.error("Error: s_id is undefined", responseData);
         }
       } catch (error) {
@@ -249,6 +300,7 @@ const Ladd: React.FC = () => {
       }
     }
   };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md mx-auto space-y-6 text-center">
@@ -283,7 +335,7 @@ const Ladd: React.FC = () => {
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className={`w-171 h-30 -ml-29 p-6 ${
+          className={`w-full p-6 ${
             selectedFile
               ? ""
               : isLocationSelected
@@ -299,6 +351,7 @@ const Ladd: React.FC = () => {
             justifyContent: "center",
             alignItems: "center",
           }}
+          onClick={triggerFileInput}
         >
           <input
             type="file"
@@ -312,7 +365,7 @@ const Ladd: React.FC = () => {
             <img
               src={imagePreview}
               alt="Preview"
-              className="w-30 h-30 object-cover rounded-lg"
+              className="h-15 object-cover rounded-lg"
             />
           ) : (
             <>
@@ -321,7 +374,7 @@ const Ladd: React.FC = () => {
                   isLocationSelected ? "text-[#a3a2a2]" : "text-gray-400"
                 } mt-5 mb-5`}
               >
-                Drag your photo here
+                Drag the photo or Upload file
               </p>
               {isLocationSelected && !selectedFile && (
                 <button
@@ -339,8 +392,12 @@ const Ladd: React.FC = () => {
           <select
             value={selectedBrandId || ""}
             onChange={(e) => setSelectedBrandId(Number(e.target.value))}
-            className="w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0"
-            disabled={!isLocationSelected}
+            className={`w-full px-5 py-2 border rounded-l-full outline-none focus:ring-0 ${
+              isLocationSelected && selectedFile
+                ? "text-black border-black"
+                : "text-gray-400 border-[#f1f1f1] cursor-not-allowed"
+            }`}
+            disabled={!(isLocationSelected && selectedFile)}
           >
             <option value="">Select a Brand</option>
             {brands.map((brand) => (
@@ -363,6 +420,15 @@ const Ladd: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Image Editor Modal */}
+      {showImageEditor && tempImageUrl && (
+        <ImageEditor
+          imageUrl={tempImageUrl}
+          onClose={handleCancelEdit}
+          onSave={handleSaveEditedImage}
+        />
+      )}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import { FaLocationCrosshairs } from "react-icons/fa6";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -35,6 +36,22 @@ interface Place {
   quality: string;
 }
 
+interface Strip {
+  s_id: number;
+  u_id: string;
+  b_id: number;
+  s_latitude: string;
+  s_longitude: string;
+  s_date: string;
+  s_qualitycolor: string;
+  s_quality: string;
+}
+
+interface Brand {
+  b_id: number;
+  b_name: string;
+}
+
 function ChangeView({ center }: { center: Location }) {
   const map = useMap();
   useEffect(() => {
@@ -53,8 +70,48 @@ function Pantee() {
     lng: 98.9853,
   });
   const [places, setPlaces] = useState<Place[]>([]);
+  const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
+    useState(false);
+  const [selectedQuality, setSelectedQuality] = useState("");
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
-  
+
+  // Water quality options matching the image
+  const waterQualityOptions = [
+    { value: "", label: "All", color: "" },
+    { value: "Good", label: "Good", color: "green" },
+    { value: "Fair", label: "Fair", color: "yellow" },
+    { value: "Bad", label: "Bad", color: "red" },
+  ];
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        waterQualityDropdownRef.current &&
+        !waterQualityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsWaterQualityDropdownOpen(false);
+      }
+
+      if (
+        brandDropdownRef.current &&
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBrandDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Function to convert DMS (Degrees, Minutes, Seconds) to Decimal Degrees
   const dmsToDecimal = (dms: string) => {
@@ -66,7 +123,7 @@ function Pantee() {
       const seconds = parseFloat(match[3]);
       const direction = match[4];
 
-      let decimal = degrees + (minutes / 60) + (seconds / 3600);
+      let decimal = degrees + minutes / 60 + seconds / 3600;
 
       // Adjust for N/S/E/W directions
       if (direction === "S" || direction === "W") {
@@ -82,14 +139,16 @@ function Pantee() {
   // Utility function to format the date (if needed)
   const getFormattedDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${
+      date.getMonth() + 1
+    }/${date.getDate()}/${date.getFullYear()}, ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   };
 
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
-
         // Fetch strip data
+
         const stripsResponse = await fetch('/api/strips');
         const stripsData = await stripsResponse.json();
 
@@ -99,34 +158,62 @@ function Pantee() {
 
         // Map the strip data and link it with the corresponding brand
         const storedUserId = sessionStorage.getItem("userId");
-        const mappedPlaces = stripsData
-        .filter((strip: any) => strip.u_id === storedUserId )
-        .map((strip: any) => {
-          const brand = brandData.find((b: any) => b.b_id === strip.b_id);
-          const lat = dmsToDecimal(strip.s_latitude);
-          const lng = dmsToDecimal(strip.s_longitude);
+        const mappedPlaces: Place[] = stripsData
+          .filter((strip: Strip) => strip.u_id === storedUserId)
+          .map((strip: Strip) => {
+            const brand = brandData.find((b: Brand) => b.b_id === strip.b_id);
+            const lat = dmsToDecimal(strip.s_latitude);
+            const lng = dmsToDecimal(strip.s_longitude);
 
-          return {
-            id: strip.s_id,
-            title: brand ? brand.b_name : "Unknown Brand",
-            date: getFormattedDate(strip.s_date), // Or use your date formatting function
-            location: {
-              lat,
-              lng,
-            },
-            color: strip.s_qualitycolor, // Assuming this is the color for water quality
-            quality: strip.s_quality
-          };
-        });
+            return {
+              id: strip.s_id,
+              title: brand ? brand.b_name : "Unknown Brand",
+              date: getFormattedDate(strip.s_date),
+              location: {
+                lat,
+                lng,
+              },
+              color: strip.s_qualitycolor,
+              quality: strip.s_quality,
+            };
+          });
 
         setPlaces(mappedPlaces);
+        setFilteredPlaces(mappedPlaces);
+
+        // Extract unique brand names for dropdown
+        const uniqueBrands: string[] = Array.from(
+          new Set(mappedPlaces.map((place) => place.title))
+        ).sort();
+
+        setBrands(uniqueBrands);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 
     fetchPlacesData();
   }, []);
+
+  // Filter places when brand or quality selection changes
+  useEffect(() => {
+    let filtered = places;
+
+    if (selectedBrand !== "") {
+      filtered = filtered.filter((place) => place.title === selectedBrand);
+    }
+
+    if (selectedQuality !== "") {
+      filtered = filtered.filter((place) => place.quality === selectedQuality);
+    }
+
+    setFilteredPlaces(filtered);
+
+    // If there are filtered results, center the map on the first one
+    if (filtered.length > 0) {
+      setViewLocation(filtered[0].location);
+    }
+  }, [selectedBrand, selectedQuality, places]);
 
   const handleLocate = () => {
     if (navigator.geolocation) {
@@ -149,15 +236,27 @@ function Pantee() {
     }
   };
 
+  // Handle quality selection
+  const handleQualitySelect = (quality: string) => {
+    setSelectedQuality(quality);
+    setIsWaterQualityDropdownOpen(false);
+  };
+
+  // Handle brand selection
+  const handleBrandSelect = (brand: string) => {
+    setSelectedBrand(brand);
+    setIsBrandDropdownOpen(false);
+  };
+
   // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
     if (marker) {
       // ทำการเปิด popup ของ marker
       marker.openPopup();
-      
+
       // เลื่อนไปที่ตำแหน่งของสถานที่
-      const place = places.find(p => p.id === placeId);
+      const place = places.find((p) => p.id === placeId);
       if (place) {
         setViewLocation(place.location);
       }
@@ -167,51 +266,160 @@ function Pantee() {
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
       {/* Navbar */}
-            <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
-              {/* Logo Section */}
-              <div className="flex items-center gap-6">
-                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                  <img src="/image/logo2.png" alt="Logo" className="h-10" />
-                  <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-                </Link>
-      
-                {/* Menu Links */}
-                <Link 
-                  to="/home"
-                  className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Home
-                </Link>
+      <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
+        {/* Logo Section */}
+        <div className="flex items-center gap-6">
+          <Link
+            to="/"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <img src="/image/logo2.png" alt="Logo" className="h-10" />
+            <span className="text-xl font-bold text-gray-800">AQUAlity</span>
+          </Link>
 
-                {/*Map Link */}
-                <Link 
-                  to="/pantee"
-                  className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-                >
-                  Map
-                </Link>
+          {/* Menu Links */}
+          <Link
+            to="/home"
+            className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
+          >
+            Home
+          </Link>
+
+          {/*Map Link */}
+          <Link
+            to="/pantee"
+            className="text-gray-800 text-base hover:underline px-2 py-2 rounded-lg transition-colors"
+          >
+            Map
+          </Link>
+        </div>
+
+        {/* Navigation and controls wrapper */}
+        <div className="flex items-center gap-4">
+          {/* Water Quality Dropdown */}
+          <div
+            ref={waterQualityDropdownRef}
+            className="relative w-14 z-[10000]"
+          >
+            {/* Dropdown Trigger */}
+            <div
+              onClick={() => {
+                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
+                // Close brand dropdown if open
+                setIsBrandDropdownOpen(false);
+              }}
+              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
+            >
+              <div className="flex items-center">
+                {selectedQuality === "" ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        selectedQuality === "Good"
+                          ? "bg-green-500"
+                          : selectedQuality === "Fair"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
+                    ></div>
+                  </>
+                )}
               </div>
-        {/* Search Box */}
-        <div className="relative">
-        <input 
-          type="text" 
-          placeholder="Search" 
-          className="w-70 h-10 p-3 pr-12 bg-white border border-black rounded-l-md rounded-r-full outline-none focus:ring-0"
-        style={{
-          borderTopLeftRadius: '4000px',
-          borderBottomLeftRadius: '4000px',
-          borderTopRightRadius: '9999px',
-          borderBottomRightRadius: '9999px'
-        }}
-        />
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isWaterQualityDropdownOpen && (
+              <div className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]">
+                {waterQualityOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => handleQualitySelect(option.value)}
+                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
+                  >
+                    <div
+                      className={`w-5 h-5 mr-2 rounded-full ${
+                        option.value === ""
+                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
+                          : option.value === "Good"
+                          ? "bg-green-500"
+                          : option.value === "Fair"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
+                    ></div>
+                    <span>{option.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Brand Dropdown */}
+          <div ref={brandDropdownRef} className="relative w-64 z-[10000]">
+            {/* Dropdown Trigger */}
+            <div
+              onClick={() => {
+                setIsBrandDropdownOpen(!isBrandDropdownOpen);
+                // Close water quality dropdown if open
+                setIsWaterQualityDropdownOpen(false);
+              }}
+              className="flex items-center justify-between text-base w-full h-10 p-2 bg-white border rounded-r-full border-black cursor-pointer"
+            >
+              <span>{selectedBrand || "Select Brand"}</span>
+              <svg
+                className="w-4 h-4 ml-2"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isBrandDropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto">
+                <div
+                  key="all-brands"
+                  onClick={() => handleBrandSelect("")}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  All Brands
+                </div>
+                {brands.map((brand) => (
+                  <div
+                    key={brand}
+                    onClick={() => handleBrandSelect(brand)}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {brand}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Location button */}
           <button
             onClick={handleLocate}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent hover:bg-black text-black p-2 hover:text-white rounded-full outline-none focus:ring-0"
+            className="bg-white hover:bg-black text-black hover:text-white p-2 rounded-full outline-none focus:ring-0 transition-colors"
+            title="Find my location"
           >
-            <FaLocationCrosshairs />
+            <FaLocationCrosshairs size={20} />
           </button>
         </div>
       </nav>
+
       {/* Map Section */}
       <div
         style={{
@@ -225,7 +433,7 @@ function Pantee() {
         <MapContainer
           center={[viewLocation.lat, viewLocation.lng]}
           zoom={13}
-          className="mt-1 rounded-4xl  "
+          className="mt-1 rounded-4xl"
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
@@ -241,7 +449,7 @@ function Pantee() {
               </div>
             </Popup>
           </Marker>
-          {places.map((place) => (
+          {filteredPlaces.map((place) => (
             <CircleMarker
               key={place.id}
               center={[place.location.lat, place.location.lng]}
@@ -258,8 +466,7 @@ function Pantee() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0"}}>{place.date}</p>
-                  {/* <span>คุณภาพน้ำ: {place.quality}</span> */}
+                  <p style={{ margin: "0 0 5px 0" }}>{place.date}</p>
                 </div>
               </Popup>
             </CircleMarker>
@@ -267,7 +474,8 @@ function Pantee() {
           <ChangeView center={viewLocation} />
         </MapContainer>
       </div>
-      {/* Sidebar or additional content */}
+
+      {/* Sidebar with filtered places */}
       <div
         style={{
           position: "fixed",
@@ -278,9 +486,10 @@ function Pantee() {
           overflowY: "auto",
           backgroundColor: "transparent",
           zIndex: 1000,
+          maxHeight: "calc(100vh - 100px)",
         }}
       >
-        {places.map((place) => (
+        {filteredPlaces.map((place) => (
           <div
             key={place.id}
             style={{
@@ -297,12 +506,15 @@ function Pantee() {
             }}
             onClick={() => handleCardClick(place.id)}
             onMouseOver={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+              const target = e.currentTarget as HTMLDivElement;
+              target.style.transform = "translateY(-2px)";
+              target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
+              const target = e.currentTarget as HTMLDivElement;
+              target.style.transform = "translateY(0)";
+              target.style.boxShadow =
+                "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
             }}
           >
             <div
