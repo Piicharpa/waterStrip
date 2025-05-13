@@ -293,7 +293,7 @@ const FirstPage = () => {
     const fetchPlacesData = async () => {
       try {
         // เรียก API ใหม่ที่รวมข้อมูลไว้เรียบร้อยแล้ว
-        const response = await fetch("http://localhost:3003/strip-status/public");
+        const response = await fetch("/api/strip-status/public");
         const data = await response.json();
 
         // Map ข้อมูลให้อยู่ในรูปแบบที่ frontend ใช้
@@ -325,7 +325,7 @@ const FirstPage = () => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
-          const response = await fetch(`http://localhost:3003/users/${currentUser.uid}`);
+          const response = await fetch(`/api/users/${currentUser.uid}`);
           if (response.ok) {
             const userData = await response.json();
             sessionStorage.setItem("userId", userData.u_id);
@@ -391,11 +391,25 @@ const FirstPage = () => {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
+
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const googleId = user.uid;
 
-      const response = await axios.post("http://localhost:3003/users/check-user", { u_id: user.uid });
-      if ((response.data as { exists: boolean }).exists) {
+      // console.log("Google UID:", googleId);
+
+      // เช็คว่าผู้ใช้มีบัญชีหรือไม่
+      const response = await axios.post("/api/users/check-user", {
+        u_id: googleId,
+      });
+      // console.log("Check-user response:", response.data);
+
+      const data = response.data as { exists: boolean };
+
+      if (data.exists) {
+        const userInfo = await axios.get(`/api/users/${googleId}`);
+        const userData = userInfo.data as AppUser;
+        setUser(userData); 
         navigate("/home");
       } else {
         alert("please Sign Up");
@@ -407,7 +421,6 @@ const FirstPage = () => {
   };
 
   const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
-    if (!type) return;
     setUserType(type);
 
     try {
@@ -415,37 +428,57 @@ const FirstPage = () => {
       provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const googleId = user.uid;
 
-      if (user) {
-        const response = await fetch("http://localhost:3003/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            u_id: user.uid,
-            u_name: "",
-            u_email: user.email,
-            u_role: type,
-          }),
-        });
+      const checkResponse = await axios.post("/api/users/check-user", {
+        u_id: googleId,
+      });
 
-        if (!response.ok) throw new Error("Failed to create user");
+      const data = checkResponse.data as { exists: boolean };
 
-        const userData = await response.json();
-        setUser(userData);
-        navigate("/permission");
+      if (data.exists) {
+        alert("This email is already registered. Please log in.");
+        await auth.signOut();
+        setUser(null);
+        navigate("/");
+        return;
       }
+
+      const createResponse = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          u_id: user.uid,
+          u_name: "",
+          u_email: user.email,
+          u_role: type,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      const userData = await createResponse.json();
+      setUser(userData.data); // <- ใช้ `.data` ที่มาจาก backend
+
+      navigate("/permission");
     } catch (error) {
       console.error("Error signing up with Google:", error);
+      alert("Signup failed. Please try again.");
     }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
+      setUser(null);
+      navigate("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
+
 
   return (
     <div ref={pageRef} className="w-full h-screen flex flex-col" style={{ position: "fixed" }}>
