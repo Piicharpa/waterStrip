@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
-import { MdKeyboardArrowLeft, MdOutlineChevronRight, MdClose, MdUndo } from "react-icons/md";
+import {
+  MdKeyboardArrowLeft,
+  MdOutlineChevronRight,
+  MdClose,
+  MdUndo,
+} from "react-icons/md";
 import axios from "axios";
 
 type User = {
@@ -27,97 +32,50 @@ const Lhome: React.FC = () => {
   const [allCards, setAllCards] = useState<any[]>([]); // Keep original cards for filtering
   const [brands, setBrands] = useState<string[]>([]);
   const navigate = useNavigate();
-  
+
   // Dropdown state
-  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] = useState(false);
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
+    useState(false);
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
   const brandDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // For handling deleted cards and toast notification
   const [showDeleteToast, setShowDeleteToast] = useState(false);
-  const [deletedCardInfo, setDeletedCardInfo] = useState<DeletedCardInfo | null>(null);
+  const [deletedCardInfo, setDeletedCardInfo] =
+    useState<DeletedCardInfo | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Water quality options
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "Good", label: "Good", color: "green" },
-    { value: "Fair", label: "Fair", color: "yellow" },
-    { value: "Bad", label: "Bad", color: "red" }
+    { value: "#00FF00", label: "Good", color: "green" },
+    { value: "#FFFF00", label: "Fair", color: "yellow" },
+    { value: "#FF0000", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        waterQualityDropdownRef.current && 
+        waterQualityDropdownRef.current &&
         !waterQualityDropdownRef.current.contains(event.target as Node)
       ) {
         setIsWaterQualityDropdownOpen(false);
       }
 
       if (
-        brandDropdownRef.current && 
+        brandDropdownRef.current &&
         !brandDropdownRef.current.contains(event.target as Node)
       ) {
         setIsBrandDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
-
-  // Fetch data from API
-  useEffect(() => {
-    // ดึงข้อมูล userId จาก sessionStorage ก่อน
-    const storedUserId = sessionStorage.getItem("userId");
-    // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
-    if (!storedUserId) {
-      console.error("User ID not found in sessionStorage");
-      return;
-    }
-
-    const fetchData = async () => {
-      try {
-        const userId = encodeURIComponent(storedUserId || "");
-        const [stripsRes, bandsRes] = await Promise.all([
-          axios.get<any[]>(`/api/strips/card/${userId}`),
-          axios.get<any[]>("/api/brands"),
-        ]);
-
-        const bandsMap = new Map(
-          bandsRes.data.map((band) => [band.b_id, band.b_name])
-        );
-
-        // กรอง strips ตาม u_id
-        const filteredStrips = stripsRes.data.filter(
-          (strip) => strip.u_id === storedUserId
-        );
-        const updatedCards = filteredStrips.map((strip) => ({
-          ...strip,
-          b_name: bandsMap.get(strip.b_id) || "Unknown",
-        }));
-
-        // Set all cards and original array for filtering
-        setCards(updatedCards);
-        setAllCards(updatedCards);
-
-        // Extract unique brand names for dropdown
-        const uniqueBrands = Array.from(
-          new Set(updatedCards.map((card) => card.b_name))
-        ).sort();
-        
-        setBrands(uniqueBrands);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
   }, []);
 
   // Fetch username
@@ -131,9 +89,7 @@ const Lhome: React.FC = () => {
 
     const fetchUsername = async () => {
       try {
-        const response = await axios.get<User>(
-          `/api/users/${storedUserId}`
-        );
+        const response = await axios.get<User>(`/api/users/${storedUserId}`);
         const userData = response.data;
         if (userData?.u_name) {
           setUsername(userData.u_name);
@@ -148,20 +104,67 @@ const Lhome: React.FC = () => {
     fetchUsername();
   }, [navigate]);
 
+  const fetchData = async () => {
+    const storedUserId = sessionStorage.getItem("userId");
+    if (!storedUserId) {
+      console.error("User ID not found in sessionStorage");
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (selectedBrand) queryParams.append("brand", selectedBrand);
+      if (selectedQuality) queryParams.append("quality", selectedQuality);
+
+      console.log("Query params:", queryParams.toString());
+
+      const stripsUrl = `/api/strips/card/${storedUserId}?${queryParams.toString()}`;
+      const [stripsRes, brandsRes] = await Promise.all([
+        axios.get<any[]>(stripsUrl),
+        axios.get<any[]>("/api/brands"),
+      ]);
+
+      const bandsMap = new Map(
+        brandsRes.data.map((band) => [band.b_id, band.b_name])
+      );
+
+      const updatedCards = stripsRes.data.map((strip) => ({
+        ...strip,
+        b_name: strip.brandName || bandsMap.get(strip.b_id) || "Unknown",
+      }));
+
+      setCards(updatedCards);
+      setAllCards(updatedCards);
+
+      const uniqueBrands = Array.from(
+        new Set(updatedCards.map((card) => card.b_name))
+      ).sort();
+
+      setBrands(uniqueBrands);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  // ✅ ใส่ useEffect ตัวนี้แทน useEffect([]) ตัวเดิม
+  useEffect(() => {
+    fetchData();
+  }, [selectedBrand, selectedQuality]);
+
   // Filter cards when brand or quality selection changes
   useEffect(() => {
     let filtered = allCards;
 
     if (selectedBrand !== "") {
-      filtered = filtered.filter(card => card.b_name === selectedBrand);
+      filtered = filtered.filter((card) => card.b_name === selectedBrand);
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter(card => card.s_quality === selectedQuality);
+      filtered = filtered.filter((card) => card.s_qualitycolor === selectedQuality);
     }
 
     setCards(filtered);
-    
+
     // Reset scroll and zoomed state
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
@@ -186,21 +189,21 @@ const Lhome: React.FC = () => {
     // Store the deleted card info for potential undo
     const deletedCard = cards[index];
     setDeletedCardInfo({ card: deletedCard, index });
-    
+
     // Remove the card from the UI
     const newCards = [...cards];
     newCards.splice(index, 1);
     setCards(newCards);
-    setAllCards(allCards.filter(card => card.s_id !== deletedCard.s_id));
-    
+    setAllCards(allCards.filter((card) => card.s_id !== deletedCard.s_id));
+
     // Show toast notification
     setShowDeleteToast(true);
-    
+
     // Auto-hide toast after 3 seconds
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current);
     }
-    
+
     toastTimerRef.current = setTimeout(() => {
       setShowDeleteToast(false);
       // Permanently delete the card from backend after toast disappears
@@ -209,7 +212,7 @@ const Lhome: React.FC = () => {
       }
     }, 3000);
   };
-  
+
   // Function to delete card from backend
   const deleteCardFromBackend = async (cardId: string) => {
     try {
@@ -220,7 +223,7 @@ const Lhome: React.FC = () => {
       console.error("Error deleting card:", error);
     }
   };
-  
+
   // Handle undo delete
   const handleUndoDelete = () => {
     if (deletedCardInfo) {
@@ -230,20 +233,20 @@ const Lhome: React.FC = () => {
       setCards(newCards);
       setAllCards([...allCards, card]);
       setShowDeleteToast(false);
-      
+
       if (toastTimerRef.current) {
         clearTimeout(toastTimerRef.current);
       }
     }
   };
-  
+
   // Handle close toast
   const handleCloseToast = () => {
     setShowDeleteToast(false);
     if (toastTimerRef.current) {
       clearTimeout(toastTimerRef.current);
     }
-    
+
     // Permanently delete the card from backend when toast is closed
     if (deletedCardInfo && deletedCardInfo.card && deletedCardInfo.card.s_id) {
       deleteCardFromBackend(deletedCardInfo.card.s_id);
@@ -258,7 +261,7 @@ const Lhome: React.FC = () => {
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
         const index = Math.round(
-          (scrollLeft / maxScrollLeft) * (Math.max(cards.length - 1, 0))
+          (scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0)
         );
         setScrollIndex(isNaN(index) ? 0 : index);
       }
@@ -358,12 +361,12 @@ const Lhome: React.FC = () => {
 
         <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
           {/* Water Quality Dropdown */}
-          <div 
+          <div
             ref={waterQualityDropdownRef}
             className="relative w-14 z-[10000]"
           >
             {/* Dropdown Trigger */}
-            <div 
+            <div
               onClick={() => {
                 setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
                 // Close brand dropdown if open
@@ -378,19 +381,21 @@ const Lhome: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <div 
+                    <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "Good" ? "bg-green-500" :
-                        selectedQuality === "Fair" ? "bg-yellow-500" :
-                        "bg-red-500"
+                        selectedQuality === "#00FF00"
+                          ? "bg-green-500"
+                          : selectedQuality === "#FFFF00"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       }`}
                     ></div>
                   </>
                 )}
               </div>
-              <svg 
-                className="w-4 h-4" 
-                xmlns="http://www.w3.org/2000/svg" 
+              <svg
+                className="w-4 h-4"
+                xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
               >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -399,21 +404,22 @@ const Lhome: React.FC = () => {
 
             {/* Dropdown Menu */}
             {isWaterQualityDropdownOpen && (
-              <div 
-                className="absolute top-full left-0 w-25 mt-2 border border-gray-200 bg-white rounded-lg  z-[10001]"
-              >
+              <div className="absolute top-full left-0 w-25 mt-2 border border-gray-200 bg-white rounded-lg  z-[10001]">
                 {waterQualityOptions.map((option) => (
                   <div
                     key={option.value}
                     onClick={() => handleQualitySelect(option.value)}
                     className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
                   >
-                    <div 
+                    <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        option.value === "" ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500" :
-                        option.value === "Good" ? "bg-green-500" :
-                        option.value === "Fair" ? "bg-yellow-500" :
-                        "bg-red-500"
+                        option.value === ""
+                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
+                          : option.value === "#00FF00"
+                          ? "bg-green-500"
+                          : option.value === "#FFFF00"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       }`}
                     ></div>
                     <span>{option.label}</span>
@@ -424,12 +430,9 @@ const Lhome: React.FC = () => {
           </div>
 
           {/* Brand Dropdown */}
-          <div 
-            ref={brandDropdownRef}
-            className="relative w-64 z-[10000]"
-          >
+          <div ref={brandDropdownRef} className="relative w-64 z-[10000]">
             {/* Dropdown Trigger */}
-            <div 
+            <div
               onClick={() => {
                 setIsBrandDropdownOpen(!isBrandDropdownOpen);
                 // Close water quality dropdown if open
@@ -438,9 +441,9 @@ const Lhome: React.FC = () => {
               className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black cursor-pointer"
             >
               <span>{selectedBrand || "Select Brand"}</span>
-              <svg 
-                className="w-4 h-4 ml-2" 
-                xmlns="http://www.w3.org/2000/svg" 
+              <svg
+                className="w-4 h-4 ml-2"
+                xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
               >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -449,9 +452,7 @@ const Lhome: React.FC = () => {
 
             {/* Dropdown Menu */}
             {isBrandDropdownOpen && (
-              <div 
-                className="absolute top-full left-0 w-full mt-2 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto"
-              >
+              <div className="absolute top-full left-0 w-full mt-2 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto">
                 <div
                   key="all-brands"
                   onClick={() => handleBrandSelect("")}
@@ -568,19 +569,19 @@ const Lhome: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Delete Toast Notification */}
       {showDeleteToast && (
         <div className="fixed bottom-20 left-8 bg-white border border-black text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
           <span>deleted</span>
-          <button 
+          <button
             onClick={handleUndoDelete}
             className="flex items-center bg-black border text-white border-black rounded-md px-2 py-1 text-sm "
           >
             <MdUndo className="mr-1 text-white" />
             undo
           </button>
-          <button 
+          <button
             onClick={handleCloseToast}
             className="-ml-2 text-gray-300 hover:text-black"
           >
