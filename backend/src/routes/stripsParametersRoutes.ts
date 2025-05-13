@@ -63,7 +63,7 @@ router.post("/pH", async (req, res, next) => {
     if (response.status !== 200) {
       throw new Error("Error fetching prediction from the API");
     }
-    const prediction = response.data.prediction;
+    const prediction = (response.data as { prediction: number }).prediction;
 
     // Insert new strip
     const result = await dbClient

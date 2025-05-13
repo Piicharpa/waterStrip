@@ -388,7 +388,7 @@ const Lcardinfo: React.FC = () => {
           {/* Image and Color Scale Section */}
           <div className="flex space-x-6 ml-auto mr-35 -mt-18 h-126">
             {/* Gray box for uploaded image */}
-            <div className="h-80 w-80 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
+            <div className="h-30 w-150 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
               {imageUrl ? (
                 <img
                   src={imageUrl}
