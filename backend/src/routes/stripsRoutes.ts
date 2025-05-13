@@ -263,9 +263,6 @@ router.get("/card/:userId", async (req, res) => {
   const { userId } = req.params;
   const { brand, quality } = req.query;
 
-  console.log("Decoded query:", { brand, quality });
-
-
   try {
     const conditions = [eq(Strip.u_id, userId)];
 

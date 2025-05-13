@@ -89,7 +89,19 @@ router.patch("/", async (req, res) => {
 });
 
 router.get("/public", async (req, res) => {
+  const { brand, quality } = req.query;
+
   try {
+    const conditions = [eq(StripStatus.status, "public")];
+
+    if (brand) {
+      conditions.push(eq(Brand.b_name, String(brand)));
+    }
+
+    if (quality) {
+      conditions.push(eq(Strip.s_qualitycolor, String(quality)));
+    }
+
     const strips = await dbClient
       .select({
         s_id: Strip.s_id,
@@ -103,7 +115,7 @@ router.get("/public", async (req, res) => {
       .from(StripStatus)
       .innerJoin(Strip, eq(Strip.s_id, StripStatus.s_id))
       .innerJoin(Brand, eq(Strip.b_id, Brand.b_id))
-      .where(eq(StripStatus.status, "public"));
+      .where(and(...conditions)); // ใช้ where แค่ครั้งเดียว
 
     res.json(strips);
   } catch (err) {
@@ -111,6 +123,7 @@ router.get("/public", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // เช็คสถานะของ strip สำหรับ u_id และ s_id
 router.get("/:u_id/:s_id", async (req, res) => {
