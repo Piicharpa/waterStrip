@@ -1,8 +1,6 @@
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  Popup,
   CircleMarker,
   useMap,
   
@@ -258,7 +256,7 @@ const Navbar: FC<{
 );
 
 const FirstPage = () => {
-  const [showText, setShowText] = useState(true);
+  const [showText] = useState(true);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
@@ -271,8 +269,8 @@ const FirstPage = () => {
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
   const navigate = useNavigate();
 
-  const [currentLocation, setCurrentLocation] = useState<Location>(INITIAL_CENTER);
-  const [viewLocation, setViewLocation] = useState<Location>(INITIAL_CENTER);
+  // const [currentLocation, setCurrentLocation] = useState<Location>(INITIAL_CENTER);
+  const [viewLocation] = useState<Location>(INITIAL_CENTER);
   const [places, setPlaces] = useState<Place[]>([]);
  
   const dmsToDecimal = (dms: string): number => {
