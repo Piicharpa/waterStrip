@@ -3,16 +3,12 @@ import base64
 import numpy as np
 from PIL import Image
 import io
-import tensorflow as tf
-import pickle
-from tensorflow.keras.models import load_model
 import cv2
 from io import BytesIO
+from joblib import load
 
-# Load model and scaler
-model = tf.keras.models.load_model("my_model.h5")
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
+# Load model
+model = load('ph_model.joblib')
 
 app = Flask(__name__)
 
@@ -26,28 +22,28 @@ def extract_features_from_image(image_b64):
     if missing_padding:
         image_b64 += "=" * (4 - missing_padding)
         
-    # Step 1: Decode the base64 image and ensure RGB mode
+    # Decode base64 and convert to PIL Image
     image_data = base64.b64decode(image_b64)
     pil_image = Image.open(io.BytesIO(image_data)).convert("RGB")
     
-    # Step 2: Convert to numpy array (OpenCV format)
-    image = np.array(pil_image)
+    # Resize to 50x50 using the same method as in notebook
+    pil_image = pil_image.resize((50, 50), Image.BILINEAR)  # or whatever you used
+    np_img = np.array(pil_image)
     
-    # Step 3: Convert the image to HSV (for H, S, V)
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # Compute average RGB (EXACTLY as in notebook)
+    avg_rgb = np.mean(np_img.reshape(-1, 3), axis=0)
     
-    # Step 4: Extract RGB features (mean values of each channel)
-    mean_rgb = np.mean(image, axis=(0, 1))  # Mean across height and width
-    mean_r, mean_g, mean_b = mean_rgb[2], mean_rgb[1], mean_rgb[0]  # OpenCV uses BGR by default
+    # Convert to HSV using the EXACT same pipeline as notebook
+    # Note: This matches your notebook's RGB→BGR→HSV conversion
+    np_img_bgr = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
+    np_img_hsv = cv2.cvtColor(np_img_bgr, cv2.COLOR_BGR2HSV)
+    avg_hsv = np.mean(np_img_hsv.reshape(-1, 3), axis=0)
     
-    # Step 5: Extract HSV features (mean values of each channel)
-    mean_hsv = np.mean(hsv_image, axis=(0, 1))  # Mean across height and width
-    mean_h, mean_s, mean_v = mean_hsv[0], mean_hsv[1], mean_hsv[2]
+    # Concatenate features in the SAME order
+    features = np.concatenate([avg_rgb, avg_hsv])
     
-    # Step 6: Return the 6 features (R, G, B, H, S, V)
-    features = [mean_r, mean_g, mean_b, mean_h, mean_s, mean_v]
-    
-    # Return the extracted features
+    # Debug output to verify
+    print("Extracted Features (R,G,B,H,S,V):", features)
     return features
   
 @app.route("/", methods=["GET"])
@@ -68,9 +64,13 @@ def predict():
             return jsonify({"error": "No image provided"}), 400
 
         features = extract_features_from_image(image_b64)
-        scaled_features = scaler.transform([features])
-        prediction = model.predict(scaled_features)
-        return jsonify({"prediction": prediction.tolist()})
+        # Make prediction (reshape for single sample)
+        prediction = model.predict([features])[0]
+        
+        # Ensure pH is in 0-14 range
+        final_prediction = max(0, min(14, round(prediction, 2)))
+
+        return jsonify({"prediction": final_prediction}), 200
 
     except Exception as e:
         # log to console and return the error

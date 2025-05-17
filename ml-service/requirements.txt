@@ -1,7 +1,7 @@
 flask
 numpy
 pillow
-tensorflow
 scikit-learn
+joblib
 opencv-python-headless
 
