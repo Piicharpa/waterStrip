@@ -9,6 +9,7 @@ import {
   MdUndo,
 } from "react-icons/md";
 import axios from "axios";
+import { logout } from "../oauth/auth"; // Adjust the import path as necessary
 
 type User = {
   u_id: string;
@@ -322,6 +323,14 @@ const Lhome: React.FC = () => {
     setIsBrandDropdownOpen(false);
   };
 
+
+   const [showLogout, setShowLogout] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/"); // or redirect to login if needed
+  };
+
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
@@ -357,6 +366,20 @@ const Lhome: React.FC = () => {
             </div>
           </nav>
         </div>
+
+        {/* User Greeting */}
+
+        <div className="relative">
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="absolute top-14 right-0 bg-white border border-gray-300 px-4 py-2 rounded shadow text-sm"
+            >
+              Logout
+            </button>
+          )}
+         </div>
+
 
         <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
           {/* Water Quality Dropdown */}
@@ -473,9 +496,26 @@ const Lhome: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
+        {/* <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
           {username.charAt(0)}
-        </div>
+        </div> */}
+        <div className="relative">
+      <div
+        className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6 cursor-pointer"
+        onClick={() => setShowLogout(!showLogout)}
+      >
+        {username.charAt(0)}
+      </div>
+
+      {showLogout && (
+        <button
+          onClick={handleLogout}
+          className="absolute top-14 right-0 bg-white border border-gray-300 px-4 py-2 rounded shadow text-sm"
+        >
+          Logout
+        </button>
+      )}
+    </div>
       </div>
 
       <div className="flex flex-col items-center flex-grow">
