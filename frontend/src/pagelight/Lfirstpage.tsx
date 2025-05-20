@@ -2,24 +2,30 @@ import {
   MapContainer,
   TileLayer,
   CircleMarker,
-  useMap,
   
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect, FC } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { logout, auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
+// import { logout, auth } from "../firebase";
 import {
   onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
+
 } from "firebase/auth";
-import axios from "axios";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+// FirstPage.tsx
+import {
+  loginWithGoogle,
+  signupWithGoogle,
+  logout,
+} from "../oauth/auth";
+import { auth } from "../firebase";
+import Navbar from "../component/navbar_fp";
 
 
+//logo
 const DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -28,6 +34,7 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+//user
 interface AppUser {
   u_id: string;
   u_email: string | null;
@@ -35,11 +42,13 @@ interface AppUser {
   u_role?: "researcher" | "regular";
 }
 
+//location
 interface Location {
   lat: number;
   lng: number;
 }
 
+//water data in each location
 interface Place {
   id: number;
   title: string;
@@ -50,25 +59,26 @@ interface Place {
   brand?: string;
 }
 
+// Initial map center and zoom level
 const INITIAL_CENTER: Location = { lat: 18.7883, lng: 98.9853 };
 const INITIAL_ZOOM = 14;
 
+//ตั้งให้แผนที่มีขนาดเต็มจอ
 declare global {
   interface Window {
     resetMap?: () => void;
   }
 }
 
-const ChangeView: FC<{ center: Location }> = ({ center }) => {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([center.lat, center.lng], INITIAL_ZOOM);
-  }, [center, map]);
+//move from dot to dot ไม่ได้ใช้แต่ต้องมี
+const ChangeView: FC<{ center: Location }> = ({ }) => {
   return null;
 };
 
+//ข้อมูลในdots
 const PlaceMarker: FC<{
   place: Place;
+  //ใช้ refCallback เพื่อเก็บ reference ของ CircleMarker เพื่อให้สามารถเข้าถึงได้จากภายนอกดูว่าเป็นdotsอันไหน
   refCallback: (ref: L.CircleMarker | null) => void;
 }> = ({ place, refCallback }) => (
   <CircleMarker
@@ -79,180 +89,6 @@ const PlaceMarker: FC<{
     stroke={false}
     ref={refCallback}
   ></CircleMarker>
-);
-
-const Navbar: FC<{
-  user: AppUser | null;
-  activeButton: string | null;
-  onLoginClick: () => void;
-  onSignupClick: () => void;
-  showLoginPopup: boolean;
-  showSignupPopup: boolean;
-  loginPopupRef: React.RefObject<HTMLDivElement>;
-  signupPopupRef: React.RefObject<HTMLDivElement>;
-  userType: "researcher" | "regular" | null;
-  setUserType: React.Dispatch<React.SetStateAction<"researcher" | "regular" | null>>;
-  handleGoogleSignIn: () => Promise<void>;
-  handleGoogleSignupWithType: (type: "researcher" | "regular") => Promise<void>;
-  handleLogout: () => Promise<void>;
-}> = ({
-  user,
-  activeButton,
-  onLoginClick,
-  onSignupClick,
-  showLoginPopup,
-  showSignupPopup,
-  loginPopupRef,
-  signupPopupRef,
-  userType,
-  setUserType,
-  handleGoogleSignIn,
-  handleGoogleSignupWithType,
-  handleLogout,
-}) => (
-  <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9">
-    <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-      <img src="/image/logo2.png" alt="Logo" className="h-10" />
-      <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-    </Link>
-    <div className="flex md:flex-row md:flex items-center gap-6 w-full md:!flex">
-      {user && (
-        <>
-          <Link
-            to="/home"
-            className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            to="/pantee"
-            className="text-gray-800 text-xl font-bold hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-          >
-            Map
-          </Link>
-        </>
-      )}
-      <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
-        {user ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm">{user.u_name}</span>
-            <button onClick={handleLogout} className="bg-black text-white px-4 py-1 rounded-lg">
-              Logout
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="relative">
-              <button
-                className={`px-4 py-1 rounded-lg border ${
-                  activeButton === "signup"
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
-                }`}
-                onClick={onSignupClick}
-              >
-                Sign up
-              </button>
-              {showSignupPopup && (
-                <div
-                  ref={signupPopupRef}
-                  className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200"
-                >
-                  <h3 className="text-lg font-semibold mb-3 text-center">SIGN UP FOR A NEW ACCOUNT</h3>
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-500 mb-2 text-center">User type:</p>
-                    <div className="flex gap-4 justify-center mb-3">
-                      {["researcher", "regular"].map((type) => (
-                        <label key={type} className="flex items-center gap-2 cursor-pointer">
-                          <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                              userType === type ? "border-black bg-black" : "border-gray-300"
-                            }`}
-                          >
-                            {userType === type && <div className="w-2 h-2 bg-white rounded-full" />}
-                          </div>
-                          <span className={`${userType === type ? "font-base" : ""}`} style={{ textTransform: "capitalize" }}>
-                            {type}
-                          </span>
-                          <input
-                            type="radio"
-                            name="userType"
-                            value={type}
-                            className="sr-only"
-                            checked={userType === type}
-                            onChange={() => setUserType(type as "researcher" | "regular")}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => handleGoogleSignupWithType(userType || "regular")}
-                      disabled={!userType}
-                      className={`py-2 px-4 rounded flex items-center justify-center gap-2 ${
-                        !userType
-                          ? "bg-[#f1f1f1] text-gray-400 cursor-not-allowed border border-[#f1f1f1]"
-                          : "bg-white hover:bg-gray-100 text-gray-700 border border-[#d6d6d6]"
-                      }`}
-                    >
-                      {/* Google icon */}
-                      <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                        <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
-                          <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L..." />
-                          <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L..." />
-                          <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C..." />
-                          <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L..." />
-                        </g>
-                      </svg>
-                      Sign up with Google
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="relative">
-              <button
-                className={`px-4 py-1 rounded-lg border ${
-                  activeButton === "login"
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-black border-transparent hover:bg-black hover:text-white hover:border-black"
-                }`}
-                onClick={onLoginClick}
-              >
-                Login
-              </button>
-              {showLoginPopup && (
-                <div
-                  ref={loginPopupRef}
-                  className="absolute right-0 mt-5 bg-white shadow-lg rounded-lg p-4 z-[2000] w-100 border border-gray-200"
-                >
-                  <h3 className="text-lg font-semibold mb-3 text-center">LOG IN TO YOUR USER ACCOUNT</h3>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={handleGoogleSignIn}
-                      className="bg-white hover:bg-gray-100 text-gray-700 py-2 px-4 rounded border border-gray-300 flex items-center justify-center gap-2"
-                    >
-                      {/* Google icon */}
-                      <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                        <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
-                          <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L..." />
-                          <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L..." />
-                          <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C..." />
-                          <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L..." />
-                        </g>
-                      </svg>
-                      Log in with Google
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  </nav>
 );
 
 const FirstPage = () => {
@@ -386,86 +222,40 @@ const FirstPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const googleId = user.uid;
-
-      // console.log("Google UID:", googleId);
-
-      // เช็คว่าผู้ใช้มีบัญชีหรือไม่
-      const response = await axios.post("/api/users/check-user", {
-        u_id: googleId,
-      });
-      // console.log("Check-user response:", response.data);
-
-      const data = response.data as { exists: boolean };
-
-      if (data.exists) {
-        const userInfo = await axios.get(`/api/users/${googleId}`);
-        const userData = userInfo.data as AppUser;
-        setUser(userData); 
-        navigate("/home");
-      } else {
-        alert("please Sign Up");
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
+  try {
+    const userData = await loginWithGoogle() as AppUser;
+    if (userData && userData.u_id && userData.u_email) {
+      setUser(userData);
+      navigate("/home");
+    } else {
+      alert("please Sign Up");
+      navigate("/");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+  }
+};
 
-  const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
-    setUserType(type);
+const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
+  setUserType(type);
 
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const googleId = user.uid;
-
-      const checkResponse = await axios.post("/api/users/check-user", {
-        u_id: googleId,
-      });
-
-      const data = checkResponse.data as { exists: boolean };
-
-      if (data.exists) {
-        alert("This email is already registered. Please log in.");
-        await auth.signOut();
-        setUser(null);
-        navigate("/");
-        return;
-      }
-
-      const createResponse = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          u_id: user.uid,
-          u_name: "",
-          u_email: user.email,
-          u_role: type,
-        }),
-      });
-
-      if (!createResponse.ok) {
-        throw new Error("Failed to create user");
-      }
-
-      const userData = await createResponse.json();
-      setUser(userData.data); // <- ใช้ `.data` ที่มาจาก backend
-
-      navigate("/permission");
-    } catch (error) {
-      console.error("Error signing up with Google:", error);
+  try {
+    const userData = await signupWithGoogle(type);
+    setUser(userData);
+    navigate("/permission");
+  } catch (error: any) {
+    if (error.message === "already_registered") {
+      alert("This email is already registered. Please log in.");
+      await logout();
+      setUser(null);
+      navigate("/");
+    } else {
+      console.error("Signup error:", error);
       alert("Signup failed. Please try again.");
     }
-  };
+  }
+};
+
 
   const handleLogout = async () => {
     try {
