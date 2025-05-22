@@ -281,20 +281,20 @@ const Lcardinfo: React.FC = () => {
             </Link>
 
             {/* Menu Links */}
-                          <Link
-                            to="/home"
-                            className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
-                          >
-                            Home
-                          </Link>
-            
-                          {/*Map Link */}
-                          <Link
-                            to="/pantee"
-                            className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
-                          >
-                            Map
-                          </Link>
+            <Link
+              to="/home"
+              className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
+            >
+              Home
+            </Link>
+
+            {/*Map Link */}
+            <Link
+              to="/pantee"
+              className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
+            >
+              Map
+            </Link>
           </div>
         </nav>
 
@@ -333,11 +333,11 @@ const Lcardinfo: React.FC = () => {
         {/* Image, Measurements, and Color Scale Section */}
         <div className="flex flex-grow">
           {/* Container ครอบ Scroll Frame + Pagination */}
-          <div className="flex flex-col items-center mt-4">
+          <div className="flex flex-col items-center mt-4 ">
             {/* Horizontal Scrollable Frame */}
             <div
               ref={scrollContainerRef}
-              className="ml-50 w-120  flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide -mt-1"
+              className="ml-50 w-130  bg-transparent flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide -mt-1"
               style={{
                 scrollbarWidth: "none", // For Firefox
                 msOverflowStyle: "none", // For Internet Explorer and Edge
@@ -345,30 +345,30 @@ const Lcardinfo: React.FC = () => {
               }}
             >
               {paginatedMeasurements.map((page, index) => (
-                <div
-                  key={index}
-                  className="w-120 h-120 bg-transparent mt-3 flex-shrink-0 snap-cente "
-                >
-                  {page.map((measurement, index) => {
-                    const scaleSetIndex = index % scaleColorSets.length;
-                    const scaleSet = scaleColorSets[scaleSetIndex] ?? {
-                      colors: [],
-                      values: [],
-                    };
-
-                    return (
-                      <Scale
-                        key={index}
-                        name={measurement.name}
-                        concentration={measurement.unit}
-                        value={measurement.value}
-                        scaleColors={scaleSet.colors}
-                        scaleValues={scaleSet.values}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
+  <div
+    key={index}
+    className="w-120 h-120  mt-3 flex-shrink-0 snap-cente "
+  >
+    {page.map((measurement, index) => {
+      const scaleSetIndex = index % scaleColorSets.length;
+      const scaleSet = scaleColorSets[scaleSetIndex] ?? {
+        colors: [],
+        values: [],
+      };
+      
+      return (
+        <Scale
+          key={index}
+          name={measurement.name}
+          concentration={measurement.unit}
+          value={parseFloat(Number(measurement.value).toFixed(2))}
+          scaleColors={scaleSet.colors}
+          scaleValues={scaleSet.values}
+        />
+      );
+    })}
+  </div>
+))}
             </div>
 
             {/* Pagination Dots */}

@@ -260,12 +260,12 @@ function Panteefirstpage() {
           </Link>
 
           {/* Menu Links */}
-          <Link 
+          {/* <Link 
             to="/"
             className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
           >
             Home
-          </Link>
+          </Link> */}
         </div>
         
         {/* Navigation and controls wrapper */}

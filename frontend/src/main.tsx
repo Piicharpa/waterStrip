@@ -1,6 +1,5 @@
-
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot } from 'react-dom/client'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './index.css';
 
@@ -17,7 +16,7 @@ import Dhome from './pagedark/Dhome';
 import Ladd from './pagelight/Ladd';
 import AddMap from './pagelight/Laddmap';
 import LCardInfo from './pagelight/Lcardinfo';
-import Loading from './pagelight/loading';
+import Loading from './pagelight/Loading';
 
 
 createRoot(document.getElementById('root')!).render(
