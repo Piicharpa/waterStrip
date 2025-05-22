@@ -462,7 +462,7 @@ const Lhome: React.FC = () => {
             <div className="flex gap-4 px-4 mx-auto">
               <button
                 onClick={() => navigate("/add")}
-                className="w-40 h-70 bg-[#dbdbdb] hover:bg-[#d2d2d2] hover:text-gray-200 hover:scale-110 hover:z-10 transition text-gray-400 flex items-center justify-center rounded-lg text-4xl"
+                className="w-40 h-70 text-gray-400 bg-gray-200 hover:bg-gray-300 hover:scale-110 hover:z-10 transition  flex items-center justify-center rounded-lg text-4xl"
               >
                 +
               </button>
@@ -565,7 +565,7 @@ const Lhome: React.FC = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={cancelDelete}
-                className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
               >
                 Cancel
               </button>

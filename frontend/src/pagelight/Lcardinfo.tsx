@@ -268,8 +268,8 @@ const Lcardinfo: React.FC = () => {
 
   return (
     <div className="fixed flex flex-col h-screen w-screen overflow-hidden">
-      <div className="flex flex-col flex-grow overflow-hidden ">
-        <nav className="flex items-center justify-between  px-6 py-3 gap-8 z-50">
+      <div className="flex flex-col flex-grow overflow-hidden">
+        <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
           {/* Logo Section */}
           <div className="flex items-center gap-6">
             <Link
@@ -291,138 +291,160 @@ const Lcardinfo: React.FC = () => {
             {/*Map Link */}
             <Link
               to="/pantee"
-              className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
+              className="text-gray-800 text-base hover:underline px-2 py-2 rounded-lg transition-colors"
             >
               Map
             </Link>
           </div>
         </nav>
 
-        {/* Top section with Strip Brand and Date */}
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <h2 className="text-3xl font-bold text-black mt-4 ml-45">
-              {stripBrand}
-            </h2>
-            <p className="text-gray-400 ml-45 mt-2 text-sm">
-              {formatDate(analyzeDate)}
-            </p>
-            <p
-              className="absolute  top-18.5 right-50  text-black text-base hover:underline cursor-pointer"
-              onClick={() => navigate("/pantee")}
-            >
-              {location}
-            </p>
-
-            {/* Water Quality Indicator - Moved to left side */}
-            <div className="flex items-center space-x-3 mt-6 ml-45">
+        {/* Main Content - Split into Left and Right */}
+        <div className="flex flex-grow p-4 gap-8 mt-8">
+          {/* Left Side */}
+          <div className="flex-1 flex flex-col space-y-6 ml-45">
+            {/* Water Quality Indicator - บนสุด */}
+            <div className="flex items-center space-x-3">
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center"
+                className="w-13 h-13 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: qualityColor }}
               ></div>
               <div className="flex flex-col">
-                <span className="text-black text-lg font-semibold">
-                  Water Quality:
+                <h1 className="text-black text-3xl font-semibold -mt-2">
+                  Water Quality
+                </h1>
+                <h6 className="text-black">Bad</h6>
+              </div>
+            </div>
+
+            {/* Quality Message - ถัดลงมา */}
+            <div className="bg-transparent mt-2 rounded-lg max-h-64 overflow-y-auto">
+              <div className="text-base text-black whitespace-pre-wrap break-words">
+                {qualityMessage}
+              </div>
+            </div>
+
+            <div className="border-t w-110">
+              <h1 className="text-sm text-gray-400 mt-6">Location</h1>
+              <p className="text-black text-base">
+                <span
+                  className="hover:underline cursor-pointer"
+                  onClick={() => navigate("/pantee")}
+                >
+                  {location}
                 </span>
-                <span className="text-gray-900 font-bold"></span>
+              </p>
+            </div>
+
+            <div>
+              <h1 className="text-sm text-gray-400">Date</h1>
+              <h2 className="text-base  text-black">
+                {formatDate(analyzeDate)}
+              </h2>
+            </div>
+
+            {/* Brand - ถัดลงมา */}
+            <div>
+              <h1 className="text-sm text-gray-400">Brand</h1>
+              <h2 className="text-base  text-black">{stripBrand}</h2>
+            </div>
+          </div>
+
+          {/* Right Side */}
+          {/* Toggle Button */}
+          <div className="fixed top-26 right-45 flex items-center space-x-4">
+            <span className="text-gray-700">
+              {isPrivate ? "Private" : "Private"}
+            </span>
+
+            <button
+              onClick={handleToggle}
+              className={`relative inline-flex items-center h-7 rounded-full w-11 transition-colors duration-300 ${
+                isPrivate ? "bg-gray-400" : "bg-black"
+              }`}
+            >
+              <span
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${
+                  isPrivate ? "translate-x-1" : "translate-x-6"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="mr-41 bg-transparent w-2xl items-start">
+            {/* Image - บนสุด ชิดขอบบน */}
+            <div className="flex justify-center">
+              <div className="h-62 w-auto">
+                {" "}
+                {/* กำหนดความสูง h-15, ความกว้างปรับตามอัตราส่วน */}
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt="Uploaded water test strip"
+                    className="h-full w-auto object-contain transform rotate-90" // ใช้ h-full w-auto เพื่อให้รูปปรับตามความสูงที่กำหนด
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">กำลังโหลดรูปภาพ..</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Horizontal Scrollable Frame - ห่างจากรูป mt-4 */}
+            <div className="-mt-18">
+              {/* Scrollable Container */}
+              <div
+                ref={scrollContainerRef}
+                className="w-full max-w-2xl bg-transparent flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide"
+                style={{
+                  scrollbarWidth: "none", // For Firefox
+                  msOverflowStyle: "none", // For Internet Explorer and Edge
+                  WebkitOverflowScrolling: "touch", // Smooth scrolling for iOS
+                }}
+              >
+                {paginatedMeasurements.map((page, pageIndex) => (
+                  <div
+                    key={pageIndex}
+                    className="bg-transparent p-3 flex-shrink-0 snap-center"
+                  >
+                    {page.map((measurement, index) => {
+                      const scaleSetIndex = index % scaleColorSets.length;
+                      const scaleSet = scaleColorSets[scaleSetIndex] ?? {
+                        colors: [],
+                        values: [],
+                      };
+
+                      return (
+                        <Scale
+                          key={index}
+                          name={measurement.name}
+                          concentration={measurement.unit}
+                          value={parseFloat(
+                            Number(measurement.value).toFixed(2)
+                          )}
+                          scaleColors={scaleSet.colors}
+                          scaleValues={scaleSet.values}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Dots */}
+              <div className="flex flex-col items-center space-x-2 mt-4">
+                {paginatedMeasurements.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full cursor-pointer ${
+                      index === currentPage ? "bg-black" : "bg-gray-300"
+                    }`}
+                    onClick={() => handleDotClick(index)}
+                  />
+                ))}
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Image, Measurements, and Color Scale Section */}
-        <div className="flex flex-grow">
-          {/* Container ครอบ Scroll Frame + Pagination */}
-          <div className="flex flex-col items-center mt-4 ">
-            {/* Horizontal Scrollable Frame */}
-            <div
-              ref={scrollContainerRef}
-              className="ml-50 w-130  bg-transparent flex overflow-x-auto snap-x snap-mandatory scroll-container scrollbar-hide -mt-1"
-              style={{
-                scrollbarWidth: "none", // For Firefox
-                msOverflowStyle: "none", // For Internet Explorer and Edge
-                WebkitOverflowScrolling: "touch", // Smooth scrolling for iOS
-              }}
-            >
-              {paginatedMeasurements.map((page, index) => (
-  <div
-    key={index}
-    className="w-120 h-120  mt-3 flex-shrink-0 snap-cente "
-  >
-    {page.map((measurement, index) => {
-      const scaleSetIndex = index % scaleColorSets.length;
-      const scaleSet = scaleColorSets[scaleSetIndex] ?? {
-        colors: [],
-        values: [],
-      };
-      
-      return (
-        <Scale
-          key={index}
-          name={measurement.name}
-          concentration={measurement.unit}
-          value={parseFloat(Number(measurement.value).toFixed(2))}
-          scaleColors={scaleSet.colors}
-          scaleValues={scaleSet.values}
-        />
-      );
-    })}
-  </div>
-))}
-            </div>
-
-            {/* Pagination Dots */}
-            <div className="flex space-x-2 mt-4 ml-30">
-              {paginatedMeasurements.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full cursor-pointer  ${
-                    index === currentPage ? "bg-black " : "bg-gray-300"
-                  }`}
-                  onClick={() => handleDotClick(index)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Image and Color Scale Section */}
-          <div className="flex space-x-6 ml-auto mr-35 -mt-18 h-126">
-            {/* Gray box for uploaded image */}
-            <div className="h-80 w-80 bg-gray-200 rounded-lg overflow-hidden ml-auto mr-15">
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt="Uploaded water test strip"
-                  className="w-full h-full object-contain bg-gray-200"
-                />
-              ) : (
-                <p>กำลังโหลดรูปภาพ..</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="scroll-container absolute -right-100 bg-transparent top-130 transform -translate-x-1/2 w-145 h-30 overflow-y-auto break-words whitespace-pre-wrap">
-          {qualityMessage}
-        </div>
-
-        <div className="fixed bottom-12 right-45 flex items-center space-x-4">
-          <span className="text-gray-700">
-            {isPrivate ? "ส่วนตัว" : "สาธารณะ"}
-          </span>
-
-          <button
-            onClick={handleToggle}
-            className={`relative inline-flex items-center h-7 rounded-full w-11 transition-colors duration-300 ${
-              isPrivate ? "bg-gray-400" : "bg-black"
-            }`}
-          >
-            <span
-              className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${
-                isPrivate ? "translate-x-1" : "translate-x-6"
-              }`}
-            />
-          </button>
         </div>
       </div>
     </div>
