@@ -354,7 +354,7 @@ const Lcardinfo: React.FC = () => {
           {/* Toggle Button */}
           <div className="fixed top-26 right-45 flex items-center space-x-4">
             <span className="text-black">
-              {isPrivate ? "Private" : "Private"}
+              {isPrivate ? "Public" : "Private"}
             </span>
 
             <button

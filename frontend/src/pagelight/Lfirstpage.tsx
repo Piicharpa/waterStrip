@@ -286,7 +286,7 @@ function FirstPage() {
                   onClick={handleLogout}
                   className="bg-black text-white  px-4 py-1 rounded-lg"
                 >
-                  Logout
+                  Log out
                 </button>
               </div>
             ) : (

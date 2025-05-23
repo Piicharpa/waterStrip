@@ -4,14 +4,17 @@ import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios";
+import { RxCross2 } from "react-icons/rx";
 
 type User = {
+  u_email: string;
   u_id: string;
   u_name: string;
 };
 
 const Lhome: React.FC = () => {
   const [username, setUsername] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedQuality, setSelectedQuality] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -24,6 +27,10 @@ const Lhome: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // User profile popup states
+  const [showUserPopup, setShowUserPopup] = useState(false);
+  const userPopupRef = useRef<HTMLDivElement>(null);
 
   // Dropdown state
   const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
@@ -55,6 +62,13 @@ const Lhome: React.FC = () => {
         !brandDropdownRef.current.contains(event.target as Node)
       ) {
         setIsBrandDropdownOpen(false);
+      }
+
+      if (
+        userPopupRef.current &&
+        !userPopupRef.current.contains(event.target as Node)
+      ) {
+        setShowUserPopup(false);
       }
     };
 
@@ -113,7 +127,7 @@ const Lhome: React.FC = () => {
     fetchData();
   }, []);
 
-  // Fetch username
+  // Fetch username and email
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
 
@@ -122,7 +136,7 @@ const Lhome: React.FC = () => {
       return;
     }
 
-    const fetchUsername = async () => {
+    const fetchUserData = async () => {
       try {
         const response = await axios.get<User>(
           `http://localhost:3003/users/${storedUserId}`
@@ -133,12 +147,19 @@ const Lhome: React.FC = () => {
         } else {
           console.error("No username in response");
         }
+
+        if (userData?.u_email) {
+          setUserEmail(userData.u_email);
+        } else {
+          const storedEmail = sessionStorage.getItem("userEmail");
+          setUserEmail(storedEmail || "user@example.com");
+        }
       } catch (error) {
-        console.error("Error fetching username:", error);
+        console.error("Error fetching user data:", error);
       }
     };
 
-    fetchUsername();
+    fetchUserData();
   }, [navigate]);
 
   // Filter cards when brand or quality selection changes
@@ -171,34 +192,38 @@ const Lhome: React.FC = () => {
   // Confirm deletion
   const confirmDelete = async () => {
     if (!cardToDelete) return;
-    
+
     try {
       // Call your API to delete the card
       await axios.delete(`http://localhost:3003/strips/${cardToDelete}`);
-      
+
       // Update the state by removing the deleted card
-      const updatedCards = allCards.filter(card => card.s_id !== cardToDelete);
+      const updatedCards = allCards.filter(
+        (card) => card.s_id !== cardToDelete
+      );
       setAllCards(updatedCards);
-      
+
       // Apply current filters to the updated cards
       let filtered = updatedCards;
-      
+
       if (selectedBrand !== "") {
         filtered = filtered.filter((card) => card.b_name === selectedBrand);
       }
 
       if (selectedQuality !== "") {
-        filtered = filtered.filter((card) => card.s_quality === selectedQuality);
+        filtered = filtered.filter(
+          (card) => card.s_quality === selectedQuality
+        );
       }
 
       setCards(filtered);
-      
+
       // Update brands list if necessary
       const updatedBrands = Array.from(
         new Set(updatedCards.map((card) => card.b_name))
       ).sort();
       setBrands(updatedBrands);
-      
+
       console.log("Card deleted successfully");
     } catch (error) {
       console.error("Error deleting card:", error);
@@ -213,6 +238,11 @@ const Lhome: React.FC = () => {
   const cancelDelete = () => {
     setShowDeleteModal(false);
     setCardToDelete(null);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    
   };
 
   const formatDate = (isoString: string) => {
@@ -304,10 +334,7 @@ const Lhome: React.FC = () => {
           <nav className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-6">
-              <Link
-                to="/"
-                className="flex items-center gap-3"
-              >
+              <Link to="/" className="flex items-center gap-3">
                 <img src="/image/logo2.png" alt="Logo" className="h-10" />
                 <span className="text-xl font-bold text-gray-800">
                   AQUAlity
@@ -335,10 +362,7 @@ const Lhome: React.FC = () => {
 
         <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
           {/* Water Quality Dropdown */}
-          <div
-            ref={waterQualityDropdownRef}
-            className="relative w-14 z-[10]"
-          >
+          <div ref={waterQualityDropdownRef} className="relative w-14 z-[10]">
             {/* Dropdown Trigger */}
             <div
               onClick={() => {
@@ -448,8 +472,56 @@ const Lhome: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
-          {username.charAt(0)}
+        {/* User Profile Circle with Popup */}
+        <div className="relative" ref={userPopupRef}>
+          <div
+            className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6 cursor-pointer "
+            onClick={() => setShowUserPopup(!showUserPopup)}
+          >
+            {username.charAt(0)}
+          </div>
+
+          {/* User Profile Popup */}
+          {showUserPopup && (
+            <div className="absolute top-full right-0 mt-2 w-70 bg-white border border-gray-200 rounded-lg shadow-lg z-[10001] mr-6">
+              {/* Header with email and close button */}
+              <div className="flex items-center justify-between p-3 border-gray-200">
+                <div></div> {/* spacer ด้านซ้าย */}
+                <div className="text-sm text-black truncate">
+                  {userEmail}
+                </div>
+                <button
+                  onClick={() => setShowUserPopup(false)}
+                  className="text-gray-400 hover:text-gray-600 text-lg font-bold"
+                >
+                  <RxCross2 />
+                </button>
+              </div>
+              {/* User Info Section */}
+              <div className="flex flex-col items-center -mt-2 p-4">
+                {/* User Avatar */}
+                <div className="w-15 h-15 bg-black text-white flex items-center justify-center rounded-full font-bold text-2xl mb-3">
+                  {username.charAt(0)}
+                </div>
+
+                {/* Greeting */}
+                <div className="text-center text-gray-800 mb-4">
+                  <span className="text-base">Hi, </span>
+                  <span className="text-base">{username}</span>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <div className="p-3 -mt-6 border-gray-200">
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-black text-white py-2 px-4 rounded-lg text-base"
+                >
+                  log out
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -546,22 +618,25 @@ const Lhome: React.FC = () => {
 
       {/* Delete Confirmation Modal - Positioned in the center of Lhome */}
       {showDeleteModal && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center z-[60]"
-          style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
           }}
         >
           <div className="bg-white w-100 rounded-lg p-6 max-w-sm mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-black mb-4">
               Would you like to delete this card?
             </h3>
-            <h6 className="text-sm text-black mb-4">This will delete this card permanently. You can not undo this action.</h6>
+            <h6 className="text-sm text-black mb-4">
+              This will delete this card permanently. You can not undo this
+              action.
+            </h6>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={cancelDelete}
