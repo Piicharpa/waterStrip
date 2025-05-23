@@ -250,7 +250,7 @@ function FirstPage() {
       <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9 ">
         <Link
           to="/"
-          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3"
         >
           <img src="/image/logo2.png" alt="Logo" className="h-10" />
           <span className="text-xl font-bold text-gray-800">AQUAlity</span>

@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
 import { Link } from "react-router-dom";
+import { FaLockOpen, FaLock } from "react-icons/fa";
 // import axios from "axios";
 
 interface ColorScaleSet {
@@ -274,7 +275,7 @@ const Lcardinfo: React.FC = () => {
           <div className="flex items-center gap-6">
             <Link
               to="/"
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 "
             >
               <img src="/image/logo2.png" alt="Logo" className="h-10" />
               <span className="text-xl font-bold text-gray-800">AQUAlity</span>
@@ -352,21 +353,27 @@ const Lcardinfo: React.FC = () => {
           {/* Right Side */}
           {/* Toggle Button */}
           <div className="fixed top-26 right-45 flex items-center space-x-4">
-            <span className="text-gray-700">
+            <span className="text-black">
               {isPrivate ? "Private" : "Private"}
             </span>
 
             <button
               onClick={handleToggle}
-              className={`relative inline-flex items-center h-7 rounded-full w-11 transition-colors duration-300 ${
+              className={`relative inline-flex items-center h-7 rounded-full w-12 transition-colors duration-300 ${
                 isPrivate ? "bg-gray-400" : "bg-black"
               }`}
             >
               <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${
-                  isPrivate ? "translate-x-1" : "translate-x-6"
+                className={`inline-flex items-center justify-center w-5 h-5 transform bg-white rounded-full transition-transform duration-300 ${
+                  isPrivate ? "translate-x-1.5" : "translate-x-5.5"
                 }`}
-              />
+              >
+                {isPrivate ? (
+                  <FaLockOpen className="text-gray-400 text-sm" />
+                ) : (
+                  <FaLock className="text-black text-sm" />
+                )}
+              </span>
             </button>
           </div>
 

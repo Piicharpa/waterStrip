@@ -270,7 +270,7 @@ function Pantee() {
         <div className="flex items-center gap-6">
           <Link
             to="/"
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3"
           >
             <img src="/image/logo2.png" alt="Logo" className="h-10" />
             <span className="text-xl font-bold text-gray-800">AQUAlity</span>
