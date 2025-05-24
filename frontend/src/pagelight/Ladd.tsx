@@ -266,15 +266,11 @@ const Ladd: React.FC = () => {
       };
 
       try {
-        const response = await axios.post(
-          "/api/strips",
-          data,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await axios.post("/api/strips", data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         const responseData = response.data as {
           msg: string;
@@ -412,7 +408,7 @@ const Ladd: React.FC = () => {
             disabled={!(isLocationSelected && selectedFile && selectedBrandId)}
             className={`w-full sm:w-32 py-3 rounded-r-full transition ${
               isLocationSelected && selectedFile && selectedBrandId
-                ? "bg-black text-white hover:bg-gray-800"
+                ? "bg-black text-white hover:bg-gray-800 cursor-pointer"
                 : "bg-[#f1f1f1] text-gray-400 cursor-not-allowed"
             }`}
           >
