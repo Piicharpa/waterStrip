@@ -5,6 +5,7 @@ import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios";
 import { RxCross2 } from "react-icons/rx";
+import { logout } from "../oauth/auth";
 
 type User = {
   u_email: string;
@@ -138,9 +139,7 @@ const Lhome: React.FC = () => {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get<User>(
-          `/api/users/${storedUserId}`
-        );
+        const response = await axios.get<User>(`/api/users/${storedUserId}`);
         const userData = response.data;
         if (userData?.u_name) {
           setUsername(userData.u_name);
@@ -241,8 +240,9 @@ const Lhome: React.FC = () => {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    
+  const handleLogout = async () => {
+    await logout();
+    navigate("/"); // or redirect to login if needed
   };
 
   const formatDate = (isoString: string) => {
@@ -334,7 +334,10 @@ const Lhome: React.FC = () => {
           <nav className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <Link
+                to="/"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
                 <img src="/image/logo2.png" alt="Logo" className="h-10" />
                 <span className="text-xl font-bold text-gray-800">
                   AQUAlity
@@ -487,9 +490,7 @@ const Lhome: React.FC = () => {
               {/* Header with email and close button */}
               <div className="flex items-center justify-between p-3 border-gray-200">
                 <div></div> {/* spacer ด้านซ้าย */}
-                <div className="text-sm text-black truncate">
-                  {userEmail}
-                </div>
+                <div className="text-sm text-black truncate">{userEmail}</div>
                 <button
                   onClick={() => setShowUserPopup(false)}
                   className="text-gray-400 hover:text-gray-600 text-lg font-bold"
@@ -515,7 +516,7 @@ const Lhome: React.FC = () => {
               <div className="p-3 -mt-6 border-gray-200">
                 <button
                   onClick={handleLogout}
-                  className="w-full bg-black text-white py-2 px-4 rounded-lg text-base"
+                  className="w-full bg-black text-white py-2 px-4 rounded-lg text-base cursor-pointer hover:bg-gray-800 transition"
                 >
                   log out
                 </button>
