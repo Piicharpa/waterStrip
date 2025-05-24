@@ -11,32 +11,12 @@ import {
   StripStatus,
 } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
-import axios from "axios";
 
 const router = express.Router();
 
 router.get("/", async (req, res, next) => {
   try {
     const results = await dbClient.query.Strip.findMany();
-    res.json(results);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/card/:id", async (req, res, next) => {
-  const { id } = req.params;
-
-  try {
-    const results = await dbClient
-      .select()
-      .from(Strip)
-      .where(eq(Strip.u_id, id));
-
-    // if (results.length === 0) {
-    //   res.status(404).json({ message: "No cards found for this user." });
-    // }
-
     res.json(results);
   } catch (err) {
     next(err);
@@ -205,7 +185,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
 // Get Strips Picture by s_id
 router.get("/predict/:id", async (req, res) => {
   try {
@@ -249,7 +228,7 @@ router.get("/predict/:id", async (req, res) => {
     // Insert prediction result into database
     await dbClient.insert(StripParameter).values({
       s_id: s_id,
-      p_id: 1, 
+      p_id: 1,
       sp_value: prediction,
     });
 
@@ -257,6 +236,45 @@ router.get("/predict/:id", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/card/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const { brand, quality } = req.query;
+
+  try {
+    const conditions = [eq(Strip.u_id, userId)];
+
+    if (brand) {
+      conditions.push(eq(Brand.b_name, String(brand)));
+    }
+
+    if (quality) {
+      conditions.push(eq(Strip.s_qualitycolor, String(quality)));
+    }
+
+    const strips = await dbClient
+      .select({
+        s_id: Strip.s_id,
+        u_id: Strip.u_id,
+        b_id: Strip.b_id,
+        s_date: Strip.s_date,
+        s_latitude: Strip.s_latitude,
+        s_longitude: Strip.s_longitude,
+        s_url: Strip.s_url,
+        s_quality: Strip.s_quality,
+        s_qualitycolor: Strip.s_qualitycolor,
+        b_name: Brand.b_name,
+      })
+      .from(Strip)
+      .innerJoin(Brand, eq(Strip.b_id, Brand.b_id))
+      .where(and(...conditions));
+
+    res.json(strips);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch strips" });
   }
 });
 

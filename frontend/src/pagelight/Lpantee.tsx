@@ -84,9 +84,9 @@ function Pantee() {
   // Water quality options matching the image
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "Good", label: "Good", color: "green" },
-    { value: "Fair", label: "Fair", color: "yellow" },
-    { value: "Bad", label: "Bad", color: "red" },
+    { value: "#00c951", label: "Good", color: "green" },
+    { value: "#f0b100", label: "Fair", color: "yellow" },
+    { value: "#fb2c36", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
@@ -148,12 +148,13 @@ function Pantee() {
     const fetchPlacesData = async () => {
       try {
         // Fetch strip data
-        const stripsResponse = await fetch("http://localhost:3003/strips");
-        const stripsData: Strip[] = await stripsResponse.json();
+
+        const stripsResponse = await fetch('/api/strips');
+        const stripsData = await stripsResponse.json();
 
         // Fetch brand data
-        const brandResponse = await fetch("http://localhost:3003/brands");
-        const brandData: Brand[] = await brandResponse.json();
+        const brandResponse = await fetch('/api/brands');
+        const brandData = await brandResponse.json();
 
         // Map the strip data and link it with the corresponding brand
         const storedUserId = sessionStorage.getItem("userId");
@@ -203,7 +204,7 @@ function Pantee() {
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter((place) => place.quality === selectedQuality);
+      filtered = filtered.filter((place) => place.color === selectedQuality);
     }
 
     setFilteredPlaces(filtered);
@@ -318,9 +319,9 @@ function Pantee() {
                   <>
                     <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "Good"
+                        selectedQuality === "#00c951"
                           ? "bg-green-500"
-                          : selectedQuality === "Fair"
+                          : selectedQuality === "#f0b100"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
@@ -350,9 +351,9 @@ function Pantee() {
                       className={`w-5 h-5 mr-2 rounded-full ${
                         option.value === ""
                           ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "Good"
+                          : option.value === "#00c951"
                           ? "bg-green-500"
-                          : option.value === "Fair"
+                          : option.value === "#f0b100"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}

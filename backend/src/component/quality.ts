@@ -41,11 +41,11 @@ export async function evaluateStripQuality(s_id: string): Promise<void> {
 
   let color = "";
   if (allInRange) {
-    color = "#00FF00";
+    color = "#00c951";
   } else if (allOutOfRange) {
-    color = "#FF0000";
+    color = "#fb2c36";
   } else {
-    color = "#FFFF00";
+    color = "#f0b100";
   }
 
   await dbClient

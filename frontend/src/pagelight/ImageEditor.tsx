@@ -48,7 +48,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       // Initialize canvas size based on image
       if (canvasRef.current) {
         const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
+        // const ctx = canvas.getContext("2d");
 
         // Set initial corner points based on canvas size
         setCornerPoints([
@@ -114,7 +114,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       // Draw crop area
       ctx.beginPath();
       ctx.moveTo(cornerPoints[0].x, cornerPoints[0].y);
-      cornerPoints.forEach((point, i) => {
+      cornerPoints.forEach((_, i) => {
         const nextPoint = cornerPoints[(i + 1) % 4];
         ctx.lineTo(nextPoint.x, nextPoint.y);
       });
@@ -143,7 +143,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       ctx.restore();
 
       // Draw corner handles
-      cornerPoints.forEach((point, i) => {
+      cornerPoints.forEach((point, _) => {
         ctx.beginPath();
         ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI);
         ctx.fillStyle = "white";
@@ -156,7 +156,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
       // Draw lines connecting corners
       ctx.beginPath();
       ctx.moveTo(cornerPoints[0].x, cornerPoints[0].y);
-      cornerPoints.forEach((point, i) => {
+      cornerPoints.forEach((_, i) => {
         const nextPoint = cornerPoints[(i + 1) % 4];
         ctx.lineTo(nextPoint.x, nextPoint.y);
       });

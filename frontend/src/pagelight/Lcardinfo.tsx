@@ -63,7 +63,7 @@ const Lcardinfo: React.FC = () => {
       try {
         // PATCH เพื่ออัปเดตค่าคุณภาพก่อน
         const patchResponse = await fetch(
-          `http://localhost:3003/strips/quality/${stripId}`,
+          `/api/strips/quality/${stripId}`,
           {
             method: "PATCH",
           }
@@ -73,7 +73,7 @@ const Lcardinfo: React.FC = () => {
         console.log("PATCH Request Successful"); // Log here to see if PATCH was successful
 
         // จากนั้นค่อย GET ข้อมูลใหม่
-        const response = await fetch(`http://localhost:3003/strips/${stripId}`);
+        const response = await fetch(`/api/strips/${stripId}`);
         if (!response.ok) throw new Error("Failed to fetch data");
 
         const data = await response.json();
@@ -119,7 +119,7 @@ const Lcardinfo: React.FC = () => {
 
   //     try {
   //       const response = await fetch(
-  //         `http://localhost:3003/strips/predict/${stripId}`
+  //         `/api/strips/predict/${stripId}`
   //       );
   //       if (!response.ok) throw new Error("Failed to fetch prediction data");
   //       const data = await response.json();
@@ -128,7 +128,7 @@ const Lcardinfo: React.FC = () => {
 
   //       // Post the prediction data to the server
   //       const postResponse = await fetch(
-  //         `http://localhost:3003/strips_parameter`,
+  //         `/api/strips_parameter`,
   //         {
   //           method: "POST",
   //           headers: {
@@ -193,7 +193,7 @@ const Lcardinfo: React.FC = () => {
         try {
           // ลอง GET status ก่อน
           const getResponse = await fetch(
-            `http://localhost:3003/strip-status/${u_id}/${stripId}`
+            `/api/strip-status/${u_id}/${stripId}`
           );
           const getResult = await getResponse.json();
 
@@ -205,7 +205,7 @@ const Lcardinfo: React.FC = () => {
 
           // ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
           const postResponse = await fetch(
-            `http://localhost:3003/strip-status`,
+            `/api/strip-status`,
             {
               method: "POST",
               headers: {
@@ -243,7 +243,7 @@ const Lcardinfo: React.FC = () => {
     setIsPrivate(newStatus);
 
     try {
-      const response = await fetch(`http://localhost:3003/strip-status`, {
+      const response = await fetch(`/api/strip-status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3003', // หรือ 7003 ถ้าใช้ reverse proxy
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

@@ -41,7 +41,7 @@ const Ladd: React.FC = () => {
   useEffect(() => {
     // Fetch brands from API
     axios
-      .get<{ b_id: number; b_name: string }[]>("http://localhost:3003/brands")
+      .get<{ b_id: number; b_name: string }[]>("/api/brands")
       .then((response) => {
         setBrands(response.data);
       })
@@ -267,7 +267,7 @@ const Ladd: React.FC = () => {
 
       try {
         const response = await axios.post(
-          "http://localhost:3003/strips",
+          "/api/strips",
           data,
           {
             headers: {
@@ -285,7 +285,7 @@ const Ladd: React.FC = () => {
           const stripId = responseData.data.s_id;
 
           try {
-            await axios.get(`http://localhost:3003/strips/predict/${stripId}`);
+            await axios.get(`/api/strips/predict/${stripId}`);
           } catch (predictError) {
             console.error("Prediction failed:", predictError);
           }
