@@ -269,6 +269,7 @@ const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
 
 
   return (
+
     <div ref={pageRef} className="w-full h-screen flex flex-col" style={{ position: "fixed" }}>
       <Navbar
         user={user}

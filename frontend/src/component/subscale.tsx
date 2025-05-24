@@ -21,7 +21,7 @@ const Scale: React.FC<ScaleProps> = ({
   );
 
   return (
-    <div className="flex items-center space-x-4 mb-2.5">
+    <div className="flex items-center -space-x-8 mb-2.5">
       <div className="flex flex-col w-40"> {/* Fixed width to align text */}
         <div className="text-lg font-bold truncate">{name}</div>
         <div className="text-sm text-gray-600 truncate">{concentration}</div>
