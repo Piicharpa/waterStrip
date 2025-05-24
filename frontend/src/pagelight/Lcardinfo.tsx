@@ -113,47 +113,6 @@ const Lcardinfo: React.FC = () => {
     fetchData();
   }, [stripId]);
 
-  // useEffect(() => {
-  //   const fetchPhPrediction = async () => {
-  //     if (!stripId) return; // Check if stripId is available
-
-  //     try {
-  //       const response = await fetch(
-  //         `/api/strips/predict/${stripId}`
-  //       );
-  //       if (!response.ok) throw new Error("Failed to fetch prediction data");
-  //       const data = await response.json();
-  //       setPrediction(data.prediction);
-  //       console.log("Prediction Data:", data); // Log the prediction data
-
-  //       // Post the prediction data to the server
-  //       const postResponse = await fetch(
-  //         `/api/strips_parameter`,
-  //         {
-  //           method: "POST",
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //           body: JSON.stringify({
-  //             s_id: stripId,
-  //             p_id: 1, // pH p_id is 1
-  //             sp_value: data.prediction,
-  //           }),
-  //         }
-  //       );
-  //       if (!postResponse.ok) throw new Error("Failed to post prediction data");
-  //       const postResult = await postResponse.json();
-  //       console.log("Prediction data posted successfully:", postResult);
-  //     } catch (error) {
-  //       console.error("Error fetching prediction data:", error);
-  //     } finally {
-  //       setLoading(false); // Set loading to false after fetching
-  //     }
-  //   };
-
-  //   fetchPhPrediction();
-  // }, [stripId]);
-
   const handleDotClick = (index: number) => {
     setCurrentPage(index);
     if (scrollContainerRef.current) {

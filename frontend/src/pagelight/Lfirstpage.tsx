@@ -1,29 +1,16 @@
-import {
-  MapContainer,
-  TileLayer,
-  CircleMarker,
-  
-} from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState, useRef, useEffect, FC } from "react";
 import { useNavigate } from "react-router-dom";
 // import { logout, auth } from "../firebase";
-import {
-  onAuthStateChanged,
-
-} from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 // FirstPage.tsx
-import {
-  loginWithGoogle,
-  signupWithGoogle,
-  logout,
-} from "../oauth/auth";
+import { loginWithGoogle, signupWithGoogle, logout } from "../oauth/auth";
 import { auth } from "../firebase";
 import Navbar from "../component/navbar_fp";
-
 
 //logo
 const DefaultIcon = L.icon({
@@ -71,7 +58,7 @@ declare global {
 }
 
 //move from dot to dot ไม่ได้ใช้แต่ต้องมี
-const ChangeView: FC<{ center: Location }> = ({ }) => {
+const ChangeView: FC<{ center: Location }> = ({}) => {
   return null;
 };
 
@@ -97,7 +84,9 @@ const FirstPage = () => {
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
+  const [userType, setUserType] = useState<"researcher" | "regular" | null>(
+    null
+  );
   const pageRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const loginPopupRef = useRef<HTMLDivElement>(null);
@@ -108,7 +97,7 @@ const FirstPage = () => {
   // const [currentLocation, setCurrentLocation] = useState<Location>(INITIAL_CENTER);
   const [viewLocation] = useState<Location>(INITIAL_CENTER);
   const [places, setPlaces] = useState<Place[]>([]);
- 
+
   const dmsToDecimal = (dms: string): number => {
     const regex = /(\d+)[°](\d+)'(\d+\.\d+)"([NSEW])/;
     const match = dms.match(regex);
@@ -141,7 +130,7 @@ const FirstPage = () => {
               lat,
               lng,
             },
-            color: strip.s_qualitycolor
+            color: strip.s_qualitycolor,
           };
         });
 
@@ -188,20 +177,37 @@ const FirstPage = () => {
       const targetClassName = (e.target as Element).className || "";
       const isLeafletControl =
         typeof targetClassName === "string" &&
-        (targetClassName.includes("leaflet-control") || targetClassName.includes("leaflet-zoom"));
+        (targetClassName.includes("leaflet-control") ||
+          targetClassName.includes("leaflet-zoom"));
       const isLoginPopup = loginPopupRef.current?.contains(e.target) ?? false;
       const isSignupPopup = signupPopupRef.current?.contains(e.target) ?? false;
-      const isLoginButton = e.target.closest("button")?.textContent?.includes("Login") ?? false;
-      const isSignupButton = e.target.closest("button")?.textContent?.includes("Sign up") ?? false;
+      const isLoginButton =
+        e.target.closest("button")?.textContent?.includes("Login") ?? false;
+      const isSignupButton =
+        e.target.closest("button")?.textContent?.includes("Sign up") ?? false;
 
-      if (showLoginPopup && !isLoginPopup && !isLoginButton) setShowLoginPopup(false);
-      if (showSignupPopup && !isSignupPopup && !isSignupButton) setShowSignupPopup(false);
+      if (showLoginPopup && !isLoginPopup && !isLoginButton)
+        setShowLoginPopup(false);
+      if (showSignupPopup && !isSignupPopup && !isSignupButton)
+        setShowSignupPopup(false);
 
-      if (!isMapClick && !isLeafletControl && !isLoginPopup && !isSignupPopup && !isLoginButton && !isSignupButton) {
+      if (
+        !isMapClick &&
+        !isLeafletControl &&
+        !isLoginPopup &&
+        !isSignupPopup &&
+        !isLoginButton &&
+        !isSignupButton
+      ) {
         window.resetMap?.();
       }
 
-      if (!isLoginButton && !isSignupButton && !isLoginPopup && !isSignupPopup) {
+      if (
+        !isLoginButton &&
+        !isSignupButton &&
+        !isLoginPopup &&
+        !isSignupPopup
+      ) {
         setActiveButton(null);
       }
     };
@@ -222,40 +228,39 @@ const FirstPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-  try {
-    const userData = await loginWithGoogle() as AppUser;
-    if (userData && userData.u_id && userData.u_email) {
+    try {
+      const userData = (await loginWithGoogle()) as AppUser;
+      if (userData && userData.u_id && userData.u_email) {
+        setUser(userData);
+        navigate("/home");
+      } else {
+        alert("please Sign Up");
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
+  const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
+    setUserType(type);
+
+    try {
+      const userData = await signupWithGoogle(type);
       setUser(userData);
-      navigate("/home");
-    } else {
-      alert("please Sign Up");
-      navigate("/");
+      navigate("/permission");
+    } catch (error: any) {
+      if (error.message === "already_registered") {
+        alert("This email is already registered. Please log in.");
+        await logout();
+        setUser(null);
+        navigate("/");
+      } else {
+        console.error("Signup error:", error);
+        alert("Signup failed. Please try again.");
+      }
     }
-  } catch (error) {
-    console.error("Login error:", error);
-  }
-};
-
-const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
-  setUserType(type);
-
-  try {
-    const userData = await signupWithGoogle(type);
-    setUser(userData);
-    navigate("/permission");
-  } catch (error: any) {
-    if (error.message === "already_registered") {
-      alert("This email is already registered. Please log in.");
-      await logout();
-      setUser(null);
-      navigate("/");
-    } else {
-      console.error("Signup error:", error);
-      alert("Signup failed. Please try again.");
-    }
-  }
-};
-
+  };
 
   const handleLogout = async () => {
     try {
@@ -267,10 +272,12 @@ const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
     }
   };
 
-
   return (
-
-    <div ref={pageRef} className="w-full h-screen flex flex-col" style={{ position: "fixed" }}>
+    <div
+      ref={pageRef}
+      className="w-full h-screen flex flex-col"
+      style={{ position: "fixed" }}
+    >
       <Navbar
         user={user}
         activeButton={activeButton}
@@ -317,43 +324,42 @@ const handleGoogleSignupWithType = async (type: "researcher" | "regular") => {
             />
           ))}
           <ChangeView center={viewLocation} />
-         
         </MapContainer>
       </div>
       {showText && (
-            <div className="absolute bottom-10 left-10 z-[1000]">
-              <p className="text-base font-medium">
-                Check and read the values of substances in water
-              </p>
-              <p className="text-base font-medium">from strip photography</p>
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="text-3xl font-bold">AQUA,</p>
-                  <p className="text-3xl font-bold">Quality</p>
-                </div>
-                {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
-                <button
-                  className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
-                  onClick={() => navigate("/panteefirstpage")}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
+        <div className="absolute bottom-10 left-10 z-[1000]">
+          <p className="text-base font-medium">
+            Check and read the values of substances in water
+          </p>
+          <p className="text-base font-medium">from strip photography</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-3xl font-bold">AQUA,</p>
+              <p className="text-3xl font-bold">Quality</p>
             </div>
-          )}
+            {/* ปุ่มวงกลมสีน้ำเงินที่มีลูกศร > */}
+            <button
+              className="w-10 h-10 bg-black hover:bg-white rounded-full flex items-center justify-center text-white hover:text-black ml-3"
+              onClick={() => navigate("/panteefirstpage")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

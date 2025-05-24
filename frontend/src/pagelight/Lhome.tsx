@@ -2,16 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Card from "../component/card";
 import { BiArrowToLeft } from "react-icons/bi";
-import { RxCross2 } from "react-icons/rx";
-import {
-  MdKeyboardArrowLeft,
-  MdOutlineChevronRight,
-  MdClose,
-  MdUndo,
-} from "react-icons/md";
+import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios";
-import { logout } from "../oauth/auth"; // Adjust the import path as necessary
-
+import { RxCross2 } from "react-icons/rx";
 
 type User = {
   u_email: string;
@@ -35,7 +28,6 @@ const Lhome: React.FC = () => {
   const [cardToDelete, setCardToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
 
-
   // User profile popup states
   const [showUserPopup, setShowUserPopup] = useState(false);
   const userPopupRef = useRef<HTMLDivElement>(null);
@@ -47,20 +39,12 @@ const Lhome: React.FC = () => {
   const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
   const brandDropdownRef = useRef<HTMLDivElement>(null);
 
-  // For handling deleted cards and toast notification
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
-  const [deletedCardInfo, setDeletedCardInfo] =
-    useState<DeletedCardInfo | null>(null);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   // Water quality options
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-
-    { value: "#00FF00", label: "Good", color: "green" },
-    { value: "#FFFF00", label: "Fair", color: "yellow" },
-    { value: "#FF0000", label: "Bad", color: "red" },
-
+    { value: "Good", label: "Good", color: "green" },
+    { value: "Fair", label: "Fair", color: "yellow" },
+    { value: "Bad", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
@@ -94,6 +78,55 @@ const Lhome: React.FC = () => {
     };
   }, []);
 
+  // Fetch data from API
+  useEffect(() => {
+    // ดึงข้อมูล userId จาก sessionStorage ก่อน
+    const storedUserId = sessionStorage.getItem("userId");
+    // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
+    if (!storedUserId) {
+      console.error("User ID not found in sessionStorage");
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const userId = encodeURIComponent(storedUserId || "");
+        const [stripsRes, bandsRes] = await Promise.all([
+          axios.get<any[]>(`/api/strips/card/${userId}`),
+          axios.get<any[]>("/api/brands"),
+        ]);
+
+        const bandsMap = new Map(
+          bandsRes.data.map((band) => [band.b_id, band.b_name])
+        );
+
+        // กรอง strips ตาม u_id
+        const filteredStrips = stripsRes.data.filter(
+          (strip) => strip.u_id === storedUserId
+        );
+        const updatedCards = filteredStrips.map((strip) => ({
+          ...strip,
+          b_name: bandsMap.get(strip.b_id) || "Unknown",
+        }));
+
+        // Set all cards and original array for filtering
+        setCards(updatedCards);
+        setAllCards(updatedCards);
+
+        // Extract unique brand names for dropdown
+        const uniqueBrands = Array.from(
+          new Set(updatedCards.map((card) => card.b_name))
+        ).sort();
+
+        setBrands(uniqueBrands);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   // Fetch username and email
   useEffect(() => {
     const storedUserId = sessionStorage.getItem("userId");
@@ -105,7 +138,9 @@ const Lhome: React.FC = () => {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get<User>(`/api/users/${storedUserId}`);
+        const response = await axios.get<User>(
+          `/api/users/${storedUserId}`
+        );
         const userData = response.data;
         if (userData?.u_name) {
           setUsername(userData.u_name);
@@ -127,52 +162,6 @@ const Lhome: React.FC = () => {
     fetchUserData();
   }, [navigate]);
 
-  const fetchData = async () => {
-    const storedUserId = sessionStorage.getItem("userId");
-    if (!storedUserId) {
-      console.error("User ID not found in sessionStorage");
-      return;
-    }
-
-    try {
-      const queryParams = new URLSearchParams();
-      if (selectedBrand) queryParams.append("brand", selectedBrand);
-      if (selectedQuality) queryParams.append("quality", selectedQuality);
-
-      console.log("Query params:", queryParams.toString());
-
-      const stripsUrl = `/api/strips/card/${storedUserId}?${queryParams.toString()}`;
-      const [stripsRes, brandsRes] = await Promise.all([
-        axios.get<any[]>(stripsUrl),
-        axios.get<any[]>("/api/brands"),
-      ]);
-
-      const bandsMap = new Map(
-        brandsRes.data.map((band) => [band.b_id, band.b_name])
-      );
-
-      const updatedCards = stripsRes.data.map((strip) => ({
-        ...strip,
-        b_name: strip.brandName || bandsMap.get(strip.b_id) || "Unknown",
-      }));
-
-      setCards(updatedCards);
-      setAllCards(updatedCards);
-
-      const uniqueBrands = Array.from(
-        new Set(updatedCards.map((card) => card.b_name))
-      ).sort();
-
-      setBrands(uniqueBrands);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [selectedBrand, selectedQuality]);
-
   // Filter cards when brand or quality selection changes
   useEffect(() => {
     let filtered = allCards;
@@ -182,8 +171,7 @@ const Lhome: React.FC = () => {
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter((card) => card.s_qualitycolor === selectedQuality);
-
+      filtered = filtered.filter((card) => card.s_quality === selectedQuality);
     }
 
     setCards(filtered);
@@ -207,7 +195,7 @@ const Lhome: React.FC = () => {
 
     try {
       // Call your API to delete the card
-      await axios.delete(`http://localhost:3003/strips/${cardToDelete}`);
+      await axios.delete(`/api/strips/${cardToDelete}`);
 
       // Update the state by removing the deleted card
       const updatedCards = allCards.filter(
@@ -267,76 +255,6 @@ const Lhome: React.FC = () => {
       second: "numeric",
       hour12: true,
     }).format(new Date(isoString));
-  };
-
-
-  // Handle card deletion
-  const handleDeleteCard = (index: number) => {
-    // Store the deleted card info for potential undo
-    const deletedCard = cards[index];
-    setDeletedCardInfo({ card: deletedCard, index });
-
-    // Remove the card from the UI
-    const newCards = [...cards];
-    newCards.splice(index, 1);
-    setCards(newCards);
-    setAllCards(allCards.filter((card) => card.s_id !== deletedCard.s_id));
-
-    // Show toast notification
-    setShowDeleteToast(true);
-
-    // Auto-hide toast after 3 seconds
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-
-    toastTimerRef.current = setTimeout(() => {
-      setShowDeleteToast(false);
-      // Permanently delete the card from backend after toast disappears
-      if (deletedCard && deletedCard.s_id) {
-        deleteCardFromBackend(deletedCard.s_id);
-      }
-    }, 3000);
-  };
-
-  // Function to delete card from backend
-  const deleteCardFromBackend = async (cardId: string) => {
-    try {
-      // Here you would normally call your API to delete the card
-      await axios.delete(`/api/strips/${cardId}`);
-      console.log(`Card ${cardId} permanently deleted`);
-    } catch (error) {
-      console.error("Error deleting card:", error);
-    }
-  };
-
-  // Handle undo delete
-  const handleUndoDelete = () => {
-    if (deletedCardInfo) {
-      const { card, index } = deletedCardInfo;
-      const newCards = [...cards];
-      newCards.splice(index, 0, card);
-      setCards(newCards);
-      setAllCards([...allCards, card]);
-      setShowDeleteToast(false);
-
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-    }
-  };
-
-  // Handle close toast
-  const handleCloseToast = () => {
-    setShowDeleteToast(false);
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-
-    // Permanently delete the card from backend when toast is closed
-    if (deletedCardInfo && deletedCardInfo.card && deletedCardInfo.card.s_id) {
-      deleteCardFromBackend(deletedCardInfo.card.s_id);
-    }
   };
 
   // Handle scroll event
@@ -409,14 +327,6 @@ const Lhome: React.FC = () => {
     setIsBrandDropdownOpen(false);
   };
 
-
-   const [showLogout, setShowLogout] = useState(false);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/"); // or redirect to login if needed
-  };
-
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
       <div className="flex items-center justify-between">
@@ -424,7 +334,7 @@ const Lhome: React.FC = () => {
           <nav className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                 <img src="/image/logo2.png" alt="Logo" className="h-10" />
                 <span className="text-xl font-bold text-gray-800">
                   AQUAlity
@@ -450,28 +360,9 @@ const Lhome: React.FC = () => {
           </nav>
         </div>
 
-        {/* User Greeting */}
-
-        <div className="relative">
-          {showLogout && (
-            <button
-              onClick={handleLogout}
-              className="absolute top-14 right-0 bg-white border border-gray-300 px-4 py-2 rounded shadow text-sm"
-            >
-              Logout
-            </button>
-          )}
-         </div>
-
-
         <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
           {/* Water Quality Dropdown */}
-
-          //<div
-            //ref={waterQualityDropdownRef}
-            //className="relative w-14 z-[10000]"
-          //>
-
+          <div ref={waterQualityDropdownRef} className="relative w-14 z-[10]">
             {/* Dropdown Trigger */}
             <div
               onClick={() => {
@@ -490,10 +381,9 @@ const Lhome: React.FC = () => {
                   <>
                     <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-
-                        selectedQuality === "#00FF00"
+                        selectedQuality === "Good"
                           ? "bg-green-500"
-                          : selectedQuality === "#FFFF00"
+                          : selectedQuality === "Fair"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
@@ -523,11 +413,9 @@ const Lhome: React.FC = () => {
                       className={`w-5 h-5 mr-2 rounded-full ${
                         option.value === ""
                           ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-
-                          : option.value === "#00FF00"
+                          : option.value === "Good"
                           ? "bg-green-500"
-                          : option.value === "#FFFF00"
-
+                          : option.value === "Fair"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
@@ -540,10 +428,7 @@ const Lhome: React.FC = () => {
           </div>
 
           {/* Brand Dropdown */}
-
           <div ref={brandDropdownRef} className="relative w-64 z-[10]">
-          //<div ref={brandDropdownRef} className="relative w-64 z-[10000]">
-
             {/* Dropdown Trigger */}
             <div
               onClick={() => {
@@ -588,7 +473,7 @@ const Lhome: React.FC = () => {
         </div>
 
         {/* User Profile Circle with Popup */}
-       {/* <div className="relative" ref={userPopupRef}>
+        <div className="relative" ref={userPopupRef}>
           <div
             className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6 cursor-pointer "
             onClick={() => setShowUserPopup(!showUserPopup)}
@@ -637,28 +522,7 @@ const Lhome: React.FC = () => {
               </div>
             </div>
           )}
-        </div> */}
-
-        {/* <div className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6">
-          {username.charAt(0)}
-        </div> */}
-        <div className="relative">
-      <div
-        className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6 cursor-pointer"
-        onClick={() => setShowLogout(!showLogout)}
-      >
-        {username.charAt(0)}
-      </div>
-
-      {showLogout && (
-        <button
-          onClick={handleLogout}
-          className="absolute top-14 right-0 bg-white border border-gray-300 px-4 py-2 rounded shadow text-sm"
-        >
-          Logout
-        </button>
-      )}
-    </div>
+        </div>
       </div>
 
       <div className="flex flex-col items-center flex-grow">
@@ -788,25 +652,6 @@ const Lhome: React.FC = () => {
               </button>
             </div>
           </div>
-
-      {/* Delete Toast Notification */}
-      {/*{showDeleteToast && (
-        <div className="fixed bottom-20 left-8 bg-white border border-black text-black px-4 py-3 rounded-lg shadow-lg flex items-center gap-6 z-50">
-          <span>deleted</span>
-          <button
-            onClick={handleUndoDelete}
-            className="flex items-center bg-black border text-white border-black rounded-md px-2 py-1 text-sm "
-          >
-            <MdUndo className="mr-1 text-white" />
-            undo
-          </button>
-          <button
-            onClick={handleCloseToast}
-            className="-ml-2 text-gray-300 hover:text-black"
-          >
-            <MdClose size={20} />
-          </button> */}
-
         </div>
       )}
     </div>

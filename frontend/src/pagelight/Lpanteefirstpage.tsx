@@ -68,8 +68,7 @@ function Panteefirstpage() {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
-    useState(false);
+  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState("");
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
@@ -79,32 +78,32 @@ function Panteefirstpage() {
   // Water quality options matching the image
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "#00FF00", label: "Good", color: "green" },
-    { value: "#FFFF00", label: "Fair", color: "yellow" },
-    { value: "#FF0000", label: "Bad", color: "red" },
+    { value: "Good", label: "Good", color: "green" },
+    { value: "Fair", label: "Fair", color: "yellow" },
+    { value: "Bad", label: "Bad", color: "red" }
   ];
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        waterQualityDropdownRef.current &&
+        waterQualityDropdownRef.current && 
         !waterQualityDropdownRef.current.contains(event.target as Node)
       ) {
         setIsWaterQualityDropdownOpen(false);
       }
 
       if (
-        brandDropdownRef.current &&
+        brandDropdownRef.current && 
         !brandDropdownRef.current.contains(event.target as Node)
       ) {
         setIsBrandDropdownOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -142,13 +141,8 @@ function Panteefirstpage() {
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
-        const params = new URLSearchParams();
-        if (selectedBrand) params.append("brand", selectedBrand);
-        if (selectedQuality) params.append("quality", selectedQuality);
-
-        const response = await fetch(
-          `/api/strip-status/public?${params.toString()}`
-        );
+        // Fetch API with correct type annotation
+        const response = await fetch("/api/strip-status/public");
         const data: StripStatusResponse[] = await response.json();
 
         // Map data with explicit type conversion
@@ -171,12 +165,12 @@ function Panteefirstpage() {
 
         setPlaces(mappedPlaces);
         setFilteredPlaces(mappedPlaces);
-
+        
         // Extract unique brand names for dropdown
         const uniqueBrands = Array.from(
           new Set(mappedPlaces.map((place) => place.title))
         ).sort();
-
+        
         setBrands(uniqueBrands);
       } catch (error) {
         console.error("Error fetching public strip data:", error);
@@ -184,22 +178,22 @@ function Panteefirstpage() {
     };
 
     fetchPlacesData();
-  }, [selectedBrand, selectedQuality]);
+  }, []);
 
   // Filter places when brand or quality selection changes
   useEffect(() => {
     let filtered = places;
 
     if (selectedBrand !== "") {
-      filtered = filtered.filter((place) => place.title === selectedBrand);
+      filtered = filtered.filter(place => place.title === selectedBrand);
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter((place) => place.color === selectedQuality);
+      filtered = filtered.filter(place => place.quality === selectedQuality);
     }
 
     setFilteredPlaces(filtered);
-
+    
     // If there are filtered results, center the map on the first one
     if (filtered.length > 0) {
       setViewLocation(filtered[0].location);
@@ -260,12 +254,7 @@ function Panteefirstpage() {
       <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
         {/* Logo Section */}
         <div className="flex items-center gap-6">
-
-          {/*  <Link
-            to="/"
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          > s */}
-
+          <Link to="/" className="flex items-center gap-3">
             <img src="/image/logo2.png" alt="Logo" className="h-10" />
             <span className="text-xl font-bold text-gray-800">AQUAlity</span>
           </Link>
@@ -278,16 +267,16 @@ function Panteefirstpage() {
             Home
           </Link> */}
         </div>
-
+        
         {/* Navigation and controls wrapper */}
         <div className="flex items-center gap-4">
           {/* Water Quality Dropdown */}
-          <div
+          <div 
             ref={waterQualityDropdownRef}
             className="relative w-14 z-[10000]"
           >
             {/* Dropdown Trigger */}
-            <div
+            <div 
               onClick={() => {
                 setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
                 // Close brand dropdown if open
@@ -299,24 +288,24 @@ function Panteefirstpage() {
                 {selectedQuality === "" ? (
                   <>
                     <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
+                
                   </>
                 ) : (
                   <>
-                    <div
+                    <div 
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "#00FF00"
-                          ? "bg-green-500"
-                          : selectedQuality === "#FFFF00"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                        selectedQuality === "Good" ? "bg-green-500" :
+                        selectedQuality === "Fair" ? "bg-yellow-500" :
+                        "bg-red-500"
                       }`}
                     ></div>
+                   
                   </>
                 )}
               </div>
-              <svg
-                className="w-4 h-4"
-                xmlns="http://www.w3.org/2000/svg"
+              <svg 
+                className="w-4 h-4" 
+                xmlns="http://www.w3.org/2000/svg" 
                 viewBox="0 0 20 20"
               >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -325,22 +314,21 @@ function Panteefirstpage() {
 
             {/* Dropdown Menu */}
             {isWaterQualityDropdownOpen && (
-              <div className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]">
+              <div 
+                className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]"
+              >
                 {waterQualityOptions.map((option) => (
                   <div
                     key={option.value}
                     onClick={() => handleQualitySelect(option.value)}
                     className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
                   >
-                    <div
+                    <div 
                       className={`w-5 h-5 mr-2  rounded-full ${
-                        option.value === ""
-                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "#00FF00"
-                          ? "bg-green-500"
-                          : option.value === "#FFFF00"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                        option.value === "" ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500" :
+                        option.value === "Good" ? "bg-green-500" :
+                        option.value === "Fair" ? "bg-yellow-500" :
+                        "bg-red-500"
                       }`}
                     ></div>
                     <span>{option.label}</span>
@@ -351,9 +339,12 @@ function Panteefirstpage() {
           </div>
 
           {/* Brand Dropdown */}
-          <div ref={brandDropdownRef} className="relative w-64 z-[10000]">
+          <div 
+            ref={brandDropdownRef}
+            className="relative w-64 z-[10000]"
+          >
             {/* Dropdown Trigger */}
-            <div
+            <div 
               onClick={() => {
                 setIsBrandDropdownOpen(!isBrandDropdownOpen);
                 // Close water quality dropdown if open
@@ -362,9 +353,9 @@ function Panteefirstpage() {
               className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black  cursor-pointer"
             >
               <span>{selectedBrand || "Select Brand"}</span>
-              <svg
-                className="w-4 h-4 ml-2"
-                xmlns="http://www.w3.org/2000/svg"
+              <svg 
+                className="w-4 h-4 ml-2" 
+                xmlns="http://www.w3.org/2000/svg" 
                 viewBox="0 0 20 20"
               >
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -373,7 +364,9 @@ function Panteefirstpage() {
 
             {/* Dropdown Menu */}
             {isBrandDropdownOpen && (
-              <div className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white  rounded-lg  z-[10001] max-h-60 overflow-y-auto">
+              <div 
+                className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white  rounded-lg  z-[10001] max-h-60 overflow-y-auto"
+              >
                 <div
                   key="all-brands"
                   onClick={() => handleBrandSelect("")}
@@ -393,7 +386,7 @@ function Panteefirstpage() {
               </div>
             )}
           </div>
-
+          
           {/* Location button */}
           <button
             onClick={handleLocate}
@@ -404,7 +397,7 @@ function Panteefirstpage() {
           </button>
         </div>
       </nav>
-
+      
       {/* Map Section */}
       <div
         style={{
@@ -459,7 +452,7 @@ function Panteefirstpage() {
           <ChangeView center={viewLocation} />
         </MapContainer>
       </div>
-
+      
       {/* Sidebar with filtered places */}
       <div
         style={{
@@ -471,7 +464,7 @@ function Panteefirstpage() {
           overflowY: "auto",
           backgroundColor: "transparent",
           zIndex: 1000,
-          maxHeight: "calc(100vh - 100px)",
+          maxHeight: "calc(100vh - 100px)"
         }}
       >
         {filteredPlaces.map((place) => (
