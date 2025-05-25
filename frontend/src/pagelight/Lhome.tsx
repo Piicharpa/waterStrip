@@ -43,9 +43,9 @@ const Lhome: React.FC = () => {
   // Water quality options
   const waterQualityOptions = [
     { value: "", label: "All", color: "" },
-    { value: "Good", label: "Good", color: "green" },
-    { value: "Fair", label: "Fair", color: "yellow" },
-    { value: "Bad", label: "Bad", color: "red" },
+    { value: "#00c951", label: "Good", color: "green" },
+    { value: "#f0b100", label: "Fair", color: "yellow" },
+    { value: "#fb2c36", label: "Bad", color: "red" },
   ];
 
   // Close dropdowns when clicking outside
@@ -77,55 +77,6 @@ const Lhome: React.FC = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
-
-  // Fetch data from API
-  useEffect(() => {
-    // ดึงข้อมูล userId จาก sessionStorage ก่อน
-    const storedUserId = sessionStorage.getItem("userId");
-    // ตรวจสอบว่า storedUserId มีค่าแล้วหรือยัง
-    if (!storedUserId) {
-      console.error("User ID not found in sessionStorage");
-      return;
-    }
-
-    const fetchData = async () => {
-      try {
-        const userId = encodeURIComponent(storedUserId || "");
-        const [stripsRes, bandsRes] = await Promise.all([
-          axios.get<any[]>(`/api/strips/card/${userId}`),
-          axios.get<any[]>("/api/brands"),
-        ]);
-
-        const bandsMap = new Map(
-          bandsRes.data.map((band) => [band.b_id, band.b_name])
-        );
-
-        // กรอง strips ตาม u_id
-        const filteredStrips = stripsRes.data.filter(
-          (strip) => strip.u_id === storedUserId
-        );
-        const updatedCards = filteredStrips.map((strip) => ({
-          ...strip,
-          b_name: bandsMap.get(strip.b_id) || "Unknown",
-        }));
-
-        // Set all cards and original array for filtering
-        setCards(updatedCards);
-        setAllCards(updatedCards);
-
-        // Extract unique brand names for dropdown
-        const uniqueBrands = Array.from(
-          new Set(updatedCards.map((card) => card.b_name))
-        ).sort();
-
-        setBrands(uniqueBrands);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
   }, []);
 
   // Fetch username and email
@@ -161,6 +112,52 @@ const Lhome: React.FC = () => {
     fetchUserData();
   }, [navigate]);
 
+  const fetchData = async () => {
+    const storedUserId = sessionStorage.getItem("userId");
+    if (!storedUserId) {
+      console.error("User ID not found in sessionStorage");
+      return;
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (selectedBrand) queryParams.append("brand", selectedBrand);
+      if (selectedQuality) queryParams.append("quality", selectedQuality);
+
+      console.log("Query params:", queryParams.toString());
+
+      const stripsUrl = `/api/strips/card/${storedUserId}?${queryParams.toString()}`;
+      const [stripsRes, brandsRes] = await Promise.all([
+        axios.get<any[]>(stripsUrl),
+        axios.get<any[]>("/api/brands"),
+      ]);
+
+      const bandsMap = new Map(
+        brandsRes.data.map((band) => [band.b_id, band.b_name])
+      );
+
+      const updatedCards = stripsRes.data.map((strip) => ({
+        ...strip,
+        b_name: strip.brandName || bandsMap.get(strip.b_id) || "Unknown",
+      }));
+
+      setCards(updatedCards);
+      setAllCards(updatedCards);
+
+      const uniqueBrands = Array.from(
+        new Set(updatedCards.map((card) => card.b_name))
+      ).sort();
+
+      setBrands(uniqueBrands);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedBrand, selectedQuality]);
+
   // Filter cards when brand or quality selection changes
   useEffect(() => {
     let filtered = allCards;
@@ -170,7 +167,9 @@ const Lhome: React.FC = () => {
     }
 
     if (selectedQuality !== "") {
-      filtered = filtered.filter((card) => card.s_quality === selectedQuality);
+      filtered = filtered.filter(
+        (card) => card.s_qualitycolor === selectedQuality
+      );
     }
 
     setCards(filtered);
@@ -384,9 +383,9 @@ const Lhome: React.FC = () => {
                   <>
                     <div
                       className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "Good"
+                        selectedQuality === "#00c951"
                           ? "bg-green-500"
-                          : selectedQuality === "Fair"
+                          : selectedQuality === "#f0b100"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
@@ -416,9 +415,9 @@ const Lhome: React.FC = () => {
                       className={`w-5 h-5 mr-2 rounded-full ${
                         option.value === ""
                           ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "Good"
+                          : option.value === "#00c951"
                           ? "bg-green-500"
-                          : option.value === "Fair"
+                          : option.value === "#f0b100"
                           ? "bg-yellow-500"
                           : "bg-red-500"
                       }`}
