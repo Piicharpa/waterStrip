@@ -327,9 +327,9 @@ const Lcardinfo: React.FC = () => {
                 }`}
               >
                 {isPrivate ? (
-                  <FaLock className="text-black text-sm" />
+                  <FaLock className="text-gray-400 text-sm" />
                 ) : (
-                  <FaLockOpen className="text-gray-400 text-sm" />
+                  <FaLockOpen className="text-black text-sm" />
                 )}
               </span>
             </button>
