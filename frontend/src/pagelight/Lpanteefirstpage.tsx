@@ -187,24 +187,28 @@ function Panteefirstpage() {
   }, [selectedBrand, selectedQuality]);
 
   // Filter places when brand or quality selection changes
-  useEffect(() => {
-    let filtered = places;
+ useEffect(() => {
+  let filtered = places;
 
-    if (selectedBrand !== "") {
-      filtered = filtered.filter((place) => place.title === selectedBrand);
-    }
+  if (selectedBrand !== "") {
+    filtered = filtered.filter((place) => place.title === selectedBrand);
+  }
 
-    if (selectedQuality !== "") {
-      filtered = filtered.filter((place) => place.color === selectedQuality);
-    }
+  if (selectedQuality !== "") {
+    filtered = filtered.filter((place) => place.color === selectedQuality);
+  }
 
-    setFilteredPlaces(filtered);
+  // Keep only the 10 most recent cards (from the end of the array)
+  const recentFiltered = filtered.slice(-10).reverse(); // Reverse if you want newest first
 
-    // If there are filtered results, center the map on the first one
-    if (filtered.length > 0) {
-      setViewLocation(filtered[0].location);
-    }
-  }, [selectedBrand, selectedQuality, places]);
+  setFilteredPlaces(recentFiltered);
+
+  // If there are filtered results, center the map on the first one
+  if (recentFiltered.length > 0) {
+    setViewLocation(recentFiltered[0].location);
+  }
+}, [selectedBrand, selectedQuality, places]);
+
 
   const handleLocate = () => {
     if (navigator.geolocation) {
@@ -238,6 +242,9 @@ function Panteefirstpage() {
     setSelectedBrand(brand);
     setIsBrandDropdownOpen(false);
   };
+
+
+
 
   // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
