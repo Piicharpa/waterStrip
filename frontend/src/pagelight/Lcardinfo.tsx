@@ -18,6 +18,7 @@ interface Measurement {
   name: string;
   unit: string;
   value: number;
+  normalRange?: [number, number];
 }
 
 const ITEMS_PER_PAGE = 8;
@@ -25,7 +26,7 @@ const ITEMS_PER_PAGE = 8;
 const Lcardinfo: React.FC = () => {
   const { stripId } = useParams<{ stripId: string }>();
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [qualityMessage, setQualityMessage] = useState<string>("");
+  // const [qualityMessage, setQualityMessage] = useState<string>("");
   const [qualityColor, setQualityColor] = useState<string>("#000000");
   const [stripBrand, setStripBrand] = useState<string>("");
   const [analyzeDate, setAnalyzeDate] = useState<string>("");
@@ -62,12 +63,9 @@ const Lcardinfo: React.FC = () => {
     const fetchData = async () => {
       try {
         // PATCH เพื่ออัปเดตค่าคุณภาพก่อน
-        const patchResponse = await fetch(
-          `/api/strips/quality/${stripId}`,
-          {
-            method: "PATCH",
-          }
-        );
+        const patchResponse = await fetch(`/api/strips/quality/${stripId}`, {
+          method: "PATCH",
+        });
         if (!patchResponse.ok) throw new Error("Failed to PATCH data");
 
         console.log("PATCH Request Successful"); // Log here to see if PATCH was successful
@@ -85,7 +83,7 @@ const Lcardinfo: React.FC = () => {
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
         setQualityColor(data.s_qualitycolor);
-        setQualityMessage(data.s_quality);
+        // setQualityMessage(data.s_quality);
 
         const colorScales = data.parameters
           .filter((param: any) => param.colors && param.values)
@@ -103,6 +101,7 @@ const Lcardinfo: React.FC = () => {
             name: param.p_name,
             unit: param.p_unit,
             value: param.sp_value,
+            normalRange: [param.p_min, param.p_max], // ใช้ค่าที่มาจาก backend หรือ default
           }));
         setMeasurements(measurements);
       } catch (error) {
@@ -163,20 +162,17 @@ const Lcardinfo: React.FC = () => {
           }
 
           // ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
-          const postResponse = await fetch(
-            `/api/strip-status`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                u_id,
-                s_id: stripId,
-                status: "private",
-              }),
-            }
-          );
+          const postResponse = await fetch(`/api/strip-status`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              u_id,
+              s_id: stripId,
+              status: "private",
+            }),
+          });
 
           const postResult = await postResponse.json();
 
@@ -232,10 +228,7 @@ const Lcardinfo: React.FC = () => {
         <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
           {/* Logo Section */}
           <div className="flex items-center gap-6">
-            <Link
-              to="/"
-              className="flex items-center gap-3 "
-            >
+            <Link to="/" className="flex items-center gap-3 ">
               <img src="/image/logo2.png" alt="Logo" className="h-10" />
               <span className="text-xl font-bold text-gray-800">AQUAlity</span>
             </Link>
@@ -276,14 +269,20 @@ const Lcardinfo: React.FC = () => {
               </div>
             </div>
 
-            {/* Quality Message - ถัดลงมา */}
-            <div className="bg-transparent mt-2 rounded-lg max-h-64 overflow-y-auto">
-              <div className="text-base text-black whitespace-pre-wrap break-words">
-                {qualityMessage}
-              </div>
+            {/* Image - ย้ายมาอยู่ฝั่งซ้าย หลัง Water Quality */}
+            <div className="relative h-15 w-full bg-transparent overflow-hidden flex items-center justify-center mt-4">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="Uploaded water test strip"
+                  className="absolute h-65 w-auto transform rotate-90 object-contain"
+                />
+              ) : (
+                <p className="text-gray-500">กำลังโหลดรูปภาพ..</p>
+              )}
             </div>
 
-            <div className="border-t w-110">
+            <div className="w-60">
               <h1 className="text-sm text-gray-400 mt-6">Location</h1>
               <p className="text-black text-base">
                 <span
@@ -337,27 +336,8 @@ const Lcardinfo: React.FC = () => {
           </div>
 
           <div className="mr-41 bg-transparent w-2xl items-start">
-            {/* Image - บนสุด ชิดขอบบน */}
-            <div className="flex justify-center">
-              <div className="h-62 w-auto">
-                {" "}
-                {/* กำหนดความสูง h-15, ความกว้างปรับตามอัตราส่วน */}
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt="Uploaded water test strip"
-                    className="h-full w-auto object-contain transform rotate-90" // ใช้ h-full w-auto เพื่อให้รูปปรับตามความสูงที่กำหนด
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500">กำลังโหลดรูปภาพ..</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Horizontal Scrollable Frame - ห่างจากรูป mt-4 */}
-            <div className="-mt-18">
+            {/* Horizontal Scrollable Frame - ย้ายขึ้นมาด้านบน */}
+            <div className="mt-14">
               {/* Scrollable Container */}
               <div
                 ref={scrollContainerRef}
@@ -390,6 +370,7 @@ const Lcardinfo: React.FC = () => {
                           )}
                           scaleColors={scaleSet.colors}
                           scaleValues={scaleSet.values}
+                          normalRange={measurement.normalRange} // <- เพิ่มตรงนี้!
                         />
                       );
                     })}
@@ -410,6 +391,13 @@ const Lcardinfo: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* Quality Message - ย้ายมาอยู่ฝั่งขวาล่าง หลัง Horizontal Scrollable Frame */}
+            {/* <div className="bg-transparent mt-8 rounded-lg max-h-64 overflow-y-auto">
+              <div className="text-base text-black whitespace-pre-wrap break-words">
+                {qualityMessage}
+              </div>
+            </div> */}
           </div>
         </div>
       </div>
