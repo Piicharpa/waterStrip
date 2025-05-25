@@ -48,6 +48,49 @@ const Lhome: React.FC = () => {
     { value: "#fb2c36", label: "Bad", color: "red" },
   ];
 
+  // Calculate number of dots (max 4)
+  const getDotsCount = () => {
+    if (cards.length <= 4) return cards.length;
+    return 4;
+  };
+
+  // Calculate current dot index based on scroll position
+  const getCurrentDotIndex = (scrollLeft: number, maxScrollLeft: number) => {
+    if (cards.length <= 4) {
+      return Math.round((scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0));
+    }
+    
+    // For more than 4 cards, divide scroll into 4 sections
+    const sectionSize = maxScrollLeft / 3; // 4 sections = 3 dividers
+    let dotIndex = Math.floor(scrollLeft / sectionSize);
+    
+    // Ensure we don't exceed 3 (for 4 dots: 0, 1, 2, 3)
+    dotIndex = Math.min(dotIndex, 3);
+    
+    return dotIndex;
+  };
+
+  // Handle dot click for navigation
+  const handleDotClick = (dotIndex: number) => {
+    if (!scrollRef.current) return;
+    
+    const maxScrollLeft = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+    let scrollTo: number;
+    
+    if (cards.length <= 4) {
+      // Direct mapping for 4 or fewer cards
+      scrollTo = (maxScrollLeft / Math.max(cards.length - 1, 1)) * dotIndex;
+    } else {
+      // For more than 4 cards, divide scroll area into 4 sections
+      scrollTo = (maxScrollLeft / 3) * dotIndex;
+    }
+    
+    scrollRef.current.scrollTo({
+      left: scrollTo,
+      behavior: "smooth",
+    });
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -256,16 +299,15 @@ const Lhome: React.FC = () => {
     }).format(new Date(isoString));
   };
 
-  // Handle scroll event
+  // Handle scroll event - Updated to use new dot calculation
   useEffect(() => {
     const handleScroll = () => {
       if (scrollRef.current) {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        const index = Math.round(
-          (scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0)
-        );
+        
+        const index = getCurrentDotIndex(scrollLeft, maxScrollLeft);
         setScrollIndex(isNaN(index) ? 0 : index);
       }
     };
@@ -278,32 +320,24 @@ const Lhome: React.FC = () => {
     };
   }, [cards.length]);
 
-  const handleDotClick = (dotIndex: number) => {
-    if (scrollRef.current) {
-      const scrollWidth = scrollRef.current.scrollWidth;
-      const scrollTo = (scrollWidth / (cards.length - 1)) * dotIndex; // Scroll to specific dot
-      scrollRef.current.scrollTo({
-        left: scrollTo,
-        behavior: "smooth",
-      });
-    }
-  };
-
   const handleScroll = (direction: "left" | "right" | "front") => {
     if (scrollRef.current) {
       const scrollWidth = scrollRef.current.scrollWidth;
       const containerWidth = scrollRef.current.clientWidth;
       const currentScroll = scrollRef.current.scrollLeft;
+      const maxScrollLeft = scrollWidth - containerWidth;
       let newScroll;
 
       if (direction === "left") {
-        newScroll = Math.max(currentScroll - containerWidth, 0);
+        // เลื่อนไปทีละการ์ด (ประมาณ 270px = card width + gap)
+        const cardScrollDistance = 270;
+        newScroll = Math.max(currentScroll - cardScrollDistance, 0);
       } else if (direction === "right") {
-        newScroll = Math.min(
-          currentScroll + containerWidth,
-          scrollWidth - containerWidth
-        );
+        // เลื่อนไปทีละการ์ด (ประมาณ 270px = card width + gap)
+        const cardScrollDistance = 270;
+        newScroll = Math.min(currentScroll + cardScrollDistance, maxScrollLeft);
       } else if (direction === "front") {
+        // เลื่อนกลับไปที่หน้าสุด
         newScroll = 0;
       }
 
@@ -572,9 +606,10 @@ const Lhome: React.FC = () => {
             </div>
           </div>
 
+          {/* Updated dots section - Show maximum 4 dots */}
           {cards.length > 0 && (
             <div className="flex justify-center mt-10 space-x-2">
-              {[...Array(cards.length)].map((_, dotIndex) => (
+              {[...Array(getDotsCount())].map((_, dotIndex) => (
                 <button
                   key={dotIndex}
                   onClick={() => handleDotClick(dotIndex)}
