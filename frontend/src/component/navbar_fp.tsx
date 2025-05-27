@@ -34,7 +34,7 @@ const UserNav = ({
   user: AppUser;
   handleLogout: () => Promise<void>;
 }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex items-center gap-4">
     <span className="text-sm">{user.u_name}</span>
     <button
       onClick={handleLogout}
