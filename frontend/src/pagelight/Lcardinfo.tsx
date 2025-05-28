@@ -37,6 +37,7 @@ const Lcardinfo: React.FC = () => {
   const [u_id, setUid] = useState("");
   const [scaleColorSets, setScaleColorSets] = useState<ColorScaleSet[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [isPrivate, setIsPrivate] = useState(true);
   // const [prediction, setPrediction] = useState<string>("");
   // const [loading, setLoading] = useState<boolean>(false);
   // const [error, setError] = useState<string>("");
@@ -191,8 +192,6 @@ const Lcardinfo: React.FC = () => {
     }
   }, [u_id, stripId]);
 
-  const [isPrivate, setIsPrivate] = useState(true);
-
   const handleToggle = async () => {
     const newStatus = !isPrivate;
     setIsPrivate(newStatus);
@@ -335,9 +334,9 @@ const Lcardinfo: React.FC = () => {
             </button>
           </div>
 
-          <div className="mr-41 bg-transparent w-2xl items-start">
+          <div className="mr-41 bg-r w-2xl items-start">
             {/* Horizontal Scrollable Frame - ย้ายขึ้นมาด้านบน */}
-            <div className="mt-14">
+            <div className="mt-10">
               {/* Scrollable Container */}
               <div
                 ref={scrollContainerRef}
@@ -351,39 +350,43 @@ const Lcardinfo: React.FC = () => {
                 {paginatedMeasurements.map((page, pageIndex) => (
                   <div
                     key={pageIndex}
-                    className="bg-transparent p-3 flex-shrink-0 snap-center"
+                    className="bg-transparent p-3 flex-shrink-0 snap-center min-w-full"
+                    style={{ width: '480px' }}
                   >
-                    {page.map((measurement, index) => {
-                      const scaleSetIndex = index % scaleColorSets.length;
-                      const scaleSet = scaleColorSets[scaleSetIndex] ?? {
-                        colors: [],
-                        values: [],
-                      };
+                    {/* แสดง Scale แบบแนวตั้ง (8 items per page) */}
+                    <div className="flex flex-col space-y-3 w-full">
+                      {page.map((measurement, index) => {
+                        const scaleSetIndex = index % scaleColorSets.length;
+                        const scaleSet = scaleColorSets[scaleSetIndex] ?? {
+                          colors: [],
+                          values: [],
+                        };
 
-                      return (
-                        <Scale
-                          key={index}
-                          name={measurement.name}
-                          concentration={measurement.unit}
-                          value={parseFloat(
-                            Number(measurement.value).toFixed(2)
-                          )}
-                          scaleColors={scaleSet.colors}
-                          scaleValues={scaleSet.values}
-                          normalRange={measurement.normalRange} // <- เพิ่มตรงนี้!
-                        />
-                      );
-                    })}
+                        return (
+                          <Scale
+                            key={index}
+                            name={measurement.name}
+                            concentration={measurement.unit}
+                            value={parseFloat(
+                              Number(measurement.value).toFixed(2)
+                            )}
+                            scaleColors={scaleSet.colors}
+                            scaleValues={scaleSet.values}
+                            normalRange={measurement.normalRange}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Pagination Dots */}
-              <div className="flex flex-col items-center space-x-2 mt-4">
+              <div className="flex flex-row items-center justify-center space-x-2 mt-4">
                 {paginatedMeasurements.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-2 h-2 rounded-full cursor-pointer ${
+                    className={`w-2 h-2 rounded-full cursor-pointer transition-colors duration-200 ${
                       index === currentPage ? "bg-black" : "bg-gray-300"
                     }`}
                     onClick={() => handleDotClick(index)}
