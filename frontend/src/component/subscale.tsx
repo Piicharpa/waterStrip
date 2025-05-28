@@ -118,7 +118,7 @@ const Scale: React.FC<ScaleProps> = ({
                   (lastNormalBox - firstNormalBox) * 8 +
                   8
                 }px`,
-                top: "calc(50% + 20.5px)", // ด้านล่างกรอบเขียว
+                top: "calc(50% + 20.5px)",
                 textAlign: "center",
               }}
             >

@@ -162,7 +162,6 @@ const Lcardinfo: React.FC = () => {
             return; // ไม่ต้อง post ซ้ำ
           }
 
-          // ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
           const postResponse = await fetch(`/api/strip-status`, {
             method: "POST",
             headers: {
@@ -351,7 +350,7 @@ const Lcardinfo: React.FC = () => {
                   <div
                     key={pageIndex}
                     className="bg-transparent p-3 flex-shrink-0 snap-center min-w-full"
-                    style={{ width: '480px' }}
+                    style={{ width: "480px" }}
                   >
                     {/* แสดง Scale แบบแนวตั้ง (8 items per page) */}
                     <div className="flex flex-col space-y-3 w-full">
