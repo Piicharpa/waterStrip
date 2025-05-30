@@ -26,7 +26,7 @@ const ITEMS_PER_PAGE = 8;
 const Lcardinfo: React.FC = () => {
   const { stripId } = useParams<{ stripId: string }>();
   const [imageUrl, setImageUrl] = useState<string>("");
-  // const [qualityMessage, setQualityMessage] = useState<string>("");
+  const [qualityMessage, setQualityMessage] = useState<string>("");
   const [qualityColor, setQualityColor] = useState<string>("#000000");
   const [stripBrand, setStripBrand] = useState<string>("");
   const [analyzeDate, setAnalyzeDate] = useState<string>("");
@@ -83,7 +83,7 @@ const Lcardinfo: React.FC = () => {
         setImageUrl(data.s_url);
         setLocation(data.s_latitude + "," + data.s_longitude);
         setQualityColor(data.s_qualitycolor);
-        // setQualityMessage(data.s_quality);
+        setQualityMessage(data.s_quality);
 
         const colorScales = data.parameters
           .filter((param: any) => param.colors && param.values)
@@ -265,7 +265,7 @@ const Lcardinfo: React.FC = () => {
                 <h1 className="text-black text-3xl font-semibold -mt-2">
                   Water Quality
                 </h1>
-                <h6 className="text-black">Bad</h6>
+                <h6 className="text-black">{qualityMessage}</h6>
               </div>
             </div>
 
