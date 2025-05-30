@@ -30,7 +30,8 @@ interface Location {
 interface Place {
   id: number;
   title: string;
-  date: string;
+  rawDate: string; // 🆕 เก็บค่าเดิมจาก DB
+  formattedDate: string; // 🆕 แปลงไว้ใช้แสดงผล
   location: Location;
   color: string;
   quality: string;
@@ -152,22 +153,25 @@ function Panteefirstpage() {
         const data: StripStatusResponse[] = await response.json();
 
         // Map data with explicit type conversion
-        const mappedPlaces = data.map((strip): Place => {
-          const lat = dmsToDecimal(strip.s_latitude);
-          const lng = dmsToDecimal(strip.s_longitude);
+        const mappedPlaces = data
+          .map((strip): Place => {
+            const lat = dmsToDecimal(strip.s_latitude);
+            const lng = dmsToDecimal(strip.s_longitude);
 
-          return {
-            id: strip.s_id,
-            title: strip.brand_name || "Unknown Brand",
-            date: getFormattedDate(strip.s_date),
-            location: {
-              lat,
-              lng,
-            },
-            color: strip.s_qualitycolor,
-            quality: strip.s_quality,
-          };
-        });
+            return {
+              id: strip.s_id,
+              title: strip.brand_name || "Unknown Brand",
+              rawDate: strip.s_date,
+              formattedDate: getFormattedDate(strip.s_date),
+              location: { lat, lng },
+              color: strip.s_qualitycolor,
+              quality: strip.s_quality,
+            };
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime()
+          );
 
         setPlaces(mappedPlaces);
         setFilteredPlaces(mappedPlaces);
@@ -187,28 +191,30 @@ function Panteefirstpage() {
   }, [selectedBrand, selectedQuality]);
 
   // Filter places when brand or quality selection changes
- useEffect(() => {
-  let filtered = places;
+  useEffect(() => {
+    let filtered = places;
 
-  if (selectedBrand !== "") {
-    filtered = filtered.filter((place) => place.title === selectedBrand);
-  }
+    if (selectedBrand !== "") {
+      filtered = filtered.filter((place) => place.title === selectedBrand);
+    }
 
-  if (selectedQuality !== "") {
-    filtered = filtered.filter((place) => place.color === selectedQuality);
-  }
+    if (selectedQuality !== "") {
+      filtered = filtered.filter((place) => place.color === selectedQuality);
+    }
 
-  // Keep only the 10 most recent cards (from the end of the array)
-  const recentFiltered = filtered.slice(-10).reverse(); // Reverse if you want newest first
+    // 10 อันล่าสุด
+    const sortedFiltered = [...filtered].sort(
+      (a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime()
+    );
 
-  setFilteredPlaces(recentFiltered);
+    const recentFiltered = sortedFiltered.slice(0, 10);
 
-  // If there are filtered results, center the map on the first one
-  if (recentFiltered.length > 0) {
-    setViewLocation(recentFiltered[0].location);
-  }
-}, [selectedBrand, selectedQuality, places]);
+    setFilteredPlaces(recentFiltered);
 
+    if (recentFiltered.length > 0) {
+      setViewLocation(recentFiltered[0].location);
+    }
+  }, [selectedBrand, selectedQuality, places]);
 
   const handleLocate = () => {
     if (navigator.geolocation) {
@@ -242,9 +248,6 @@ function Panteefirstpage() {
     setSelectedBrand(brand);
     setIsBrandDropdownOpen(false);
   };
-
-
-
 
   // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
@@ -456,7 +459,7 @@ function Panteefirstpage() {
                   <h3 style={{ fontWeight: "bold", margin: "0 0 5px 0" }}>
                     {place.title}
                   </h3>
-                  <p style={{ margin: "0 0 5px 0" }}>{place.date}</p>
+                  <p style={{ margin: "0 0 5px 0" }}>{place.formattedDate}</p>
                 </div>
               </Popup>
             </CircleMarker>
@@ -528,7 +531,7 @@ function Panteefirstpage() {
                 {place.title}
               </h3>
               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
-                {place.date}
+                {place.formattedDate}
               </p>
             </div>
           </div>
