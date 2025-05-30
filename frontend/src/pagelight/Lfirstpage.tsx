@@ -18,7 +18,9 @@ const FirstPage = () => {
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
+  const [userType, setUserType] = useState<"researcher" | "regular" | null>(
+    null
+  );
 
   const loginPopupRef = useRef<HTMLDivElement>(null);
   const signupPopupRef = useRef<HTMLDivElement>(null);
@@ -50,29 +52,53 @@ const FirstPage = () => {
 
   // Handle login/signup popup
   useEffect(() => {
+    // Global click handler to close popups and reset map/view states
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const isLogin = loginPopupRef.current?.contains(target);
-      const isSignup = signupPopupRef.current?.contains(target);
+      if (!(e.target instanceof Element)) return;
 
-      if (showLoginPopup && !isLogin) setShowLoginPopup(false);
-      if (showSignupPopup && !isSignup) setShowSignupPopup(false);
-      if (!isLogin && !isSignup) setActiveButton(null);
+      const isLoginPopup = loginPopupRef.current?.contains(e.target) ?? false;
+      const isSignupPopup = signupPopupRef.current?.contains(e.target) ?? false;
+      const isLoginButton =
+        e.target.closest("button")?.textContent?.includes("Login") ?? false;
+      const isSignupButton =
+        e.target.closest("button")?.textContent?.includes("Sign up") ?? false;
+
+      if (showLoginPopup && !isLoginPopup && !isLoginButton)
+        setShowLoginPopup(false);
+      if (showSignupPopup && !isSignupPopup && !isSignupButton)
+        setShowSignupPopup(false);
+
+      if (
+        !isLoginPopup &&
+        !isSignupPopup &&
+        !isLoginButton &&
+        !isSignupButton
+      ) {
+        window.resetMap?.();
+      }
+
+      if (
+        !isLoginButton &&
+        !isSignupButton &&
+        !isLoginPopup &&
+        !isSignupPopup
+      ) {
+        setActiveButton(null);
+      }
     };
-
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, [showLoginPopup, showSignupPopup]);
 
   const handleLoginClick = () => {
     setActiveButton("login");
-    setShowLoginPopup(!showLoginPopup);
+    setShowLoginPopup((prev) => !prev);
     setShowSignupPopup(false);
   };
 
   const handleSignupClick = () => {
     setActiveButton("signup");
-    setShowSignupPopup(!showSignupPopup);
+    setShowSignupPopup((prev) => !prev);
     setShowLoginPopup(false);
   };
 
@@ -109,6 +135,12 @@ const FirstPage = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (user === null) {
+      navigate("/");
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -157,7 +189,12 @@ const FirstPage = () => {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
