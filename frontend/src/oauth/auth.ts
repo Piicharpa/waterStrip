@@ -63,4 +63,6 @@ export const signupWithGoogle = async (type: "researcher" | "regular") => {
 
 export const logout = async () => {
   await auth.signOut();
+  localStorage.removeItem("user");
+  sessionStorage.clear();
 };
