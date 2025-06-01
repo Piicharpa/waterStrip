@@ -6,24 +6,12 @@ import "leaflet/dist/leaflet.css";
 import rawGeoJson from "./thailand-provinces.json";
 import * as turf from "@turf/turf";
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
-
+import { dmsToDecimal } from "../../utils/dmsToDecimal.ts"; // Assuming you have a utility function for DMS conversion
+import { DateAnalyzer } from "../Convertor/DateAnalyzer"; 
 
 const thailandProvincesGeoJSON = rawGeoJson as FeatureCollection;
 const DEFAULT_POSITION: [number, number] = [18.796143, 98.979263]; // Chiang Mai
 
-/**
- * Converts a DMS (Degrees, Minutes, Seconds) string to decimal degrees.
- * Example input: "18°47'46.1\"N" or "98°59'13.3\"E"
- */
-function dmsToDecimal(dms: string): number {
-  const regex = /(\d+)[°:](\d+)[\'′:](\d+(?:\.\d+)?)[\"\″]?([NSEW])/i;
-  const match = dms.match(regex);
-  if (!match) return NaN;
-  const [, deg, min, sec, dir] = match;
-  let dec = Number(deg) + Number(min) / 60 + Number(sec) / 3600;
-  if (dir === "S" || dir === "W") dec *= -1;
-  return dec;
-}
 
 const MapView = () => {
   const [center, setCenter] = useState<[number, number]>(DEFAULT_POSITION);
@@ -44,7 +32,6 @@ const MapView = () => {
         feature.geometry.type === "MultiPolygon"
       ) {
         if (turf.booleanPointInPolygon(point, feature as Feature<Polygon | MultiPolygon>)) {
-
           return (feature.properties as any).NAME_1;
         }
       }
@@ -54,47 +41,44 @@ const MapView = () => {
 
   // Fetch places and strips data
   useEffect(() => {
-      const fetchPlacesData = async () => {
-        try {
-          // Fetch strip data
-          const stripsResponse = await fetch('/api/strips');
-          const stripsData = await stripsResponse.json();
-          setStrips(stripsData);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      };
-  
-      fetchPlacesData();
-    }, []);
+    const fetchPlacesData = async () => {
+      try {
+        const stripsResponse = await fetch("/api/strips");
+        const stripsData = await stripsResponse.json();
+        const ThisMontStrip = DateAnalyzer(stripsData);
+        setStrips(ThisMontStrip);
+        console.log("Fetched strips data:", ThisMontStrip);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchPlacesData();
+  }, []);
 
   // Analyze strip data to assign colors to provinces
   useEffect(() => {
     if (!strips.length) return;
 
+    const stripsThisMonth = strips;
+
+    console.log("Strips from current month:", stripsThisMonth);
+
     const colorCountMap: Record<string, Record<string, number>> = {};
 
-    for (const strip of strips) {
+    for (const strip of stripsThisMonth) {
       const lat = dmsToDecimal(strip.s_latitude);
       const lng = dmsToDecimal(strip.s_longitude);
-      console.log(`Processing strip at lat: ${lat}, lng: ${lng}`);
-      console.log("ตัวอย่าง properties:", thailandProvincesGeoJSON.features[0].properties);
-
-      
-
       const color = strip.s_qualitycolor;
-      console.log(` Color: ${color}`);
 
       const province = getProvinceFromLatLng(lat, lng, thailandProvincesGeoJSON);
-      console.log(` Province: ${province}`);
+
       if (!province) continue;
 
       if (!colorCountMap[province]) {
         colorCountMap[province] = {};
       }
       colorCountMap[province][color] = (colorCountMap[province][color] || 0) + 1;
-
-      console.log(` Province: ${province}, Color: ${color}`);
     }
 
     const mostCommonColorByProvince: Record<string, string> = {};
@@ -103,15 +87,14 @@ const MapView = () => {
       const mostCommonColor = Object.entries(colors).sort((a, b) => b[1] - a[1])[0][0];
       mostCommonColorByProvince[province] = mostCommonColor;
     }
-      console.log("Province colors:", mostCommonColorByProvince);
+
     setProvinceColors(mostCommonColorByProvince);
   }, [strips]);
 
-
   // Popup on each province
   const onEachProvince = (province: GeoJSON.Feature, layer: L.Layer) => {
-    if (province.properties && (province.properties as any).name) {
-      layer.bindPopup((province.properties as any).name);
+    if (province.properties && (province.properties as any).NAME_1) {
+      layer.bindPopup((province.properties as any).NAME_1);
     }
   };
 
@@ -134,6 +117,8 @@ const MapView = () => {
       setCenter(DEFAULT_POSITION);
     }
   }, []);
+
+  // Fetch additional place info (if needed)
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchPlaces();
@@ -141,35 +126,36 @@ const MapView = () => {
     };
     fetchData();
   }, []);
-  return (
-    <MapContainer
-      center={center}
-      zoom={9}
-      scrollWheelZoom={true}
-      style={{ height: "100vh", width: "100%" }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <ChangeView center={center} />
 
-      {/* Province polygons with dynamic fillColor */}
-      <GeoJSON
-        data={thailandProvincesGeoJSON}
-        style={(feature) => {
-          const name = feature?.properties ? (feature.properties as any).NAME_1 : undefined;
-          const color = name ? provinceColors[name]?? "#eee"  : "#ccc";
-          return {
-            color: "#666",
-            weight: 1,
-            fillColor: color,
-            fillOpacity: 0.5,
-          };
-        }}
-        onEachFeature={onEachProvince}
-      />
-    </MapContainer>
+  return (
+    <div className="relative" style={{ height: "100vh", width: "100%" }}>
+      <MapContainer
+        center={center}
+        zoom={9}
+        scrollWheelZoom={true}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <ChangeView center={center} />
+        <GeoJSON
+          data={thailandProvincesGeoJSON}
+          style={(feature) => {
+            const name = feature?.properties ? (feature.properties as any).NAME_1 : undefined;
+            const color = name ? provinceColors[name] ?? "#eee" : "#ccc";
+            return {
+              color: "#666",
+              weight: 1,
+              fillColor: color,
+              fillOpacity: 0.5,
+            };
+          }}
+          onEachFeature={onEachProvince}
+        />
+      </MapContainer>
+    </div>
   );
 };
 
