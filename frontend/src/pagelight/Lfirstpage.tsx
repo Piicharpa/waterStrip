@@ -171,7 +171,7 @@ const FirstPage = () => {
         {/* Overlay card */}
       <div
       className="absolute"
-      style={{ maxWidth: 400, zIndex: 9999 }}
+      style={{ maxWidth: 400, zIndex: 1000 }}
     >
       <StripDataProvider>
       <ProvinceStatus />
