@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import Card from "../component/card";
+import { useNavigate } from "react-router-dom";
+import Card from "../component/Card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 import axios from "axios";
-import { RxCross2 } from "react-icons/rx";
 import { logout } from "../oauth/auth";
+import Navbar from "../component/Navbar/Navbar";
+import HomeNavControls from "../component/Navbar/RightNav/HomeNavControls";
+import AppUser from "../component/Types/AppUser";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 type User = {
   u_email: string;
@@ -34,19 +38,10 @@ const Lhome: React.FC = () => {
   const userPopupRef = useRef<HTMLDivElement>(null);
 
   // Dropdown state
-  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
-    useState(false);
-  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const [, setIsWaterQualityDropdownOpen] = useState(false);
+  const [, setIsBrandDropdownOpen] = useState(false);
   const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
   const brandDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Water quality options
-  const waterQualityOptions = [
-    { value: "", label: "All", color: "" },
-    { value: "#00c951", label: "Good", color: "green" },
-    { value: "#f0b100", label: "Fair", color: "yellow" },
-    { value: "#fb2c36", label: "Bad", color: "red" },
-  ];
 
   // Calculate number of dots (max 4)
   const getDotsCount = () => {
@@ -57,26 +52,29 @@ const Lhome: React.FC = () => {
   // Calculate current dot index based on scroll position
   const getCurrentDotIndex = (scrollLeft: number, maxScrollLeft: number) => {
     if (cards.length <= 4) {
-      return Math.round((scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0));
+      return Math.round(
+        (scrollLeft / maxScrollLeft) * Math.max(cards.length - 1, 0)
+      );
     }
-    
+
     // For more than 4 cards, divide scroll into 4 sections
     const sectionSize = maxScrollLeft / 3; // 4 sections = 3 dividers
     let dotIndex = Math.floor(scrollLeft / sectionSize);
-    
+
     // Ensure we don't exceed 3 (for 4 dots: 0, 1, 2, 3)
     dotIndex = Math.min(dotIndex, 3);
-    
+
     return dotIndex;
   };
 
   // Handle dot click for navigation
   const handleDotClick = (dotIndex: number) => {
     if (!scrollRef.current) return;
-    
-    const maxScrollLeft = scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
+
+    const maxScrollLeft =
+      scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
     let scrollTo: number;
-    
+
     if (cards.length <= 4) {
       // Direct mapping for 4 or fewer cards
       scrollTo = (maxScrollLeft / Math.max(cards.length - 1, 1)) * dotIndex;
@@ -84,7 +82,7 @@ const Lhome: React.FC = () => {
       // For more than 4 cards, divide scroll area into 4 sections
       scrollTo = (maxScrollLeft / 3) * dotIndex;
     }
-    
+
     scrollRef.current.scrollTo({
       left: scrollTo,
       behavior: "smooth",
@@ -188,7 +186,7 @@ const Lhome: React.FC = () => {
       setAllCards(updatedCards);
 
       const uniqueBrands = Array.from(
-        new Set(updatedCards.map((card) => card.b_name))
+        new Set(brandsRes.data.map((brand) => brand.b_name))
       ).sort();
 
       setBrands(uniqueBrands);
@@ -306,7 +304,7 @@ const Lhome: React.FC = () => {
         const scrollLeft = scrollRef.current.scrollLeft;
         const maxScrollLeft =
           scrollRef.current.scrollWidth - scrollRef.current.clientWidth;
-        
+
         const index = getCurrentDotIndex(scrollLeft, maxScrollLeft);
         setScrollIndex(isNaN(index) ? 0 : index);
       }
@@ -348,216 +346,50 @@ const Lhome: React.FC = () => {
     }
   };
 
-  // Handle water quality selection
-  const handleQualitySelect = (quality: string) => {
-    setSelectedQuality(quality);
-    setIsWaterQualityDropdownOpen(false);
-  };
-
-  // Handle brand selection
-  const handleBrandSelect = (brand: string) => {
-    setSelectedBrand(brand);
-    setIsBrandDropdownOpen(false);
-  };
+  const [user, setUser] = useState<AppUser | null>(null);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const res = await fetch(`/api/users/${currentUser.uid}`);
+          if (res.ok) {
+            const userData = await res.json();
+            sessionStorage.setItem("userId", userData.u_id);
+            setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div className="fixed top-0 bg-white border-gray-200 px-6 py-3 gap-8 z-50">
-          <nav className="flex items-center justify-between">
-            {/* Logo Section */}
-            <div className="flex items-center gap-6">
-              <Link
-                to="/"
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-              >
-                <img src="/image/logo2.png" alt="Logo" className="h-10" />
-                <span className="text-xl font-bold text-gray-800">
-                  AQUAlity
-                </span>
-              </Link>
-
-              {/* Menu Links */}
-              <Link
-                to="/home"
-                className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
-              >
-                Home
-              </Link>
-
-              {/*Map Link */}
-              <Link
-                to="/pantee"
-                className="text-gray-800 text-base hover:underline px-2 py-2 rounded-lg transition-colors"
-              >
-                Map
-              </Link>
-            </div>
-          </nav>
-        </div>
-
-        <div className="flex-grow flex justify-end mr-3 mt-3 gap-4">
-          {/* Water Quality Dropdown */}
-          <div ref={waterQualityDropdownRef} className="relative w-14 z-[10]">
-            {/* Dropdown Trigger */}
-            <div
-              onClick={() => {
-                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
-                // Close brand dropdown if open
-                setIsBrandDropdownOpen(false);
-              }}
-              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
-            >
-              <div className="flex items-center">
-                {selectedQuality === "" ? (
-                  <>
-                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
-                  </>
-                ) : (
-                  <>
-                    <div
-                      className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "#00c951"
-                          ? "bg-green-500"
-                          : selectedQuality === "#f0b100"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    ></div>
-                  </>
-                )}
-              </div>
-              <svg
-                className="w-4 h-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-
-            {/* Dropdown Menu */}
-            {isWaterQualityDropdownOpen && (
-              <div className="absolute top-full left-0 w-25 mt-2 border border-gray-200 bg-white rounded-lg  z-[10001]">
-                {waterQualityOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    onClick={() => handleQualitySelect(option.value)}
-                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
-                  >
-                    <div
-                      className={`w-5 h-5 mr-2 rounded-full ${
-                        option.value === ""
-                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "#00c951"
-                          ? "bg-green-500"
-                          : option.value === "#f0b100"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    ></div>
-                    <span>{option.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Brand Dropdown */}
-          <div ref={brandDropdownRef} className="relative w-64 z-[10]">
-            {/* Dropdown Trigger */}
-            <div
-              onClick={() => {
-                setIsBrandDropdownOpen(!isBrandDropdownOpen);
-                // Close water quality dropdown if open
-                setIsWaterQualityDropdownOpen(false);
-              }}
-              className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black cursor-pointer"
-            >
-              <span>{selectedBrand || "Select Brand"}</span>
-              <svg
-                className="w-4 h-4 ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-
-            {/* Dropdown Menu */}
-            {isBrandDropdownOpen && (
-              <div className="absolute top-full left-0 w-full mt-2 border border-gray-200 bg-white rounded-lg  z-[10001] max-h-60 overflow-y-auto">
-                <div
-                  key="all-brands"
-                  onClick={() => handleBrandSelect("")}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  All Brands
-                </div>
-                {brands.map((brand) => (
-                  <div
-                    key={brand}
-                    onClick={() => handleBrandSelect(brand)}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {brand}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* User Profile Circle with Popup */}
-        <div className="relative" ref={userPopupRef}>
-          <div
-            className="w-10 h-10 mt-3 bg-black text-white flex items-center justify-center rounded-full font-bold mr-6 cursor-pointer "
-            onClick={() => setShowUserPopup(!showUserPopup)}
-          >
-            {username.charAt(0)}
-          </div>
-
-          {/* User Profile Popup */}
-          {showUserPopup && (
-            <div className="absolute top-full right-0 mt-2 w-70 bg-white border border-gray-200 rounded-lg shadow-lg z-[10001] mr-6">
-              {/* Header with email and close button */}
-              <div className="flex items-center justify-between p-3 border-gray-200">
-                <div></div> {/* spacer ด้านซ้าย */}
-                <div className="text-sm text-black truncate">{userEmail}</div>
-                <button
-                  onClick={() => setShowUserPopup(false)}
-                  className="text-gray-400 hover:text-gray-600 text-lg font-bold"
-                >
-                  <RxCross2 />
-                </button>
-              </div>
-              {/* User Info Section */}
-              <div className="flex flex-col items-center -mt-2 p-4">
-                {/* User Avatar */}
-                <div className="w-15 h-15 bg-black text-white flex items-center justify-center rounded-full font-bold text-2xl mb-3">
-                  {username.charAt(0)}
-                </div>
-
-                {/* Greeting */}
-                <div className="text-center text-gray-800 mb-4">
-                  <span className="text-base">Hi, </span>
-                  <span className="text-base">{username}</span>
-                </div>
-              </div>
-
-              {/* Logout Button */}
-              <div className="p-3 -mt-6 border-gray-200">
-                <button
-                  onClick={handleLogout}
-                  className="w-full bg-black text-white py-2 px-4 rounded-lg text-base cursor-pointer hover:bg-gray-800 transition"
-                >
-                  log out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <Navbar
+        user={user}
+        RightComponent={
+          <HomeNavControls
+            selectedBrand={selectedBrand}
+            setSelectedBrand={setSelectedBrand}
+            selectedQuality={selectedQuality}
+            setSelectedQuality={setSelectedQuality}
+            brands={brands}
+            username={username}
+            userEmail={userEmail}
+            showUserPopup={showUserPopup}
+            setShowUserPopup={setShowUserPopup}
+            handleLogout={handleLogout}
+            userPopupRef={userPopupRef}
+          />
+        }
+      />
 
       <div className="flex flex-col items-center flex-grow">
         <div className="relative w-full flex-grow flex mt-10 flex-col justify-center">

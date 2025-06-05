@@ -1,28 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import Navbar from "../component/navbar_fp";
 import MapView from "../component/map/MapView";
 import { auth } from "../firebase";
 import { loginWithGoogle, signupWithGoogle, logout } from "../oauth/auth";
 import ProvinceStatus from "../component/map/ProvinceStatus";
 import { StripDataProvider } from "../contexts/StripDataContext";
-
-
-interface AppUser {
-  u_id: string;
-  u_email: string | null;
-  u_name?: string;
-  u_role?: "researcher" | "regular";
-}
+import Navbar from "../component/Navbar/Navbar";
+import { UserNav, AuthButtons } from "../component/Navbar/RightNav/UserNavAuth";
+import AppUser from "../component/Types/AppUser";
 
 const FirstPage = () => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"researcher" | "regular" | null>(null);
-  const [stripData, setStripData] = useState<any[]>([]);
+  const [userType, setUserType] = useState<"researcher" | "regular" | null>(
+    null
+  );
+  // const [stripData, setStripData] = useState<any[]>([]);
 
   const loginPopupRef = useRef<HTMLDivElement>(null);
   const signupPopupRef = useRef<HTMLDivElement>(null);
@@ -154,29 +150,34 @@ const FirstPage = () => {
     <div className="w-full h-screen flex flex-col fixed">
       <Navbar
         user={user}
-        activeButton={activeButton}
-        onLoginClick={handleLoginClick}
-        onSignupClick={handleSignupClick}
-        showLoginPopup={showLoginPopup}
-        showSignupPopup={showSignupPopup}
-        loginPopupRef={loginPopupRef}
-        signupPopupRef={signupPopupRef}
-        userType={userType}
-        setUserType={setUserType}
-        handleGoogleSignIn={handleGoogleSignIn}
-        handleGoogleSignupWithType={handleGoogleSignupWithType}
-        handleLogout={handleLogout}
+        RightComponent={
+          user ? (
+            <UserNav user={user} handleLogout={handleLogout} />
+          ) : (
+            <AuthButtons
+              onLoginClick={handleLoginClick}
+              onSignupClick={handleSignupClick}
+              showLoginPopup={showLoginPopup}
+              showSignupPopup={showSignupPopup}
+              loginPopupRef={loginPopupRef}
+              signupPopupRef={signupPopupRef}
+              activeButton={activeButton}
+              userType={userType}
+              setUserType={setUserType}
+              handleGoogleSignIn={handleGoogleSignIn}
+              handleGoogleSignupWithType={handleGoogleSignupWithType}
+            />
+          )
+        }
       />
+
       <div className="absolute top-[60px] left-[15px] right-[15px] bottom-[20px]">
         {/* Overlay card */}
-      <div
-      className="absolute"
-      style={{ maxWidth: 400, zIndex: 1000 }}
-    >
-      <StripDataProvider>
-      <ProvinceStatus />
-    </StripDataProvider>
-    </div>
+        <div className="absolute" style={{ maxWidth: 400, zIndex: 1000 }}>
+          <StripDataProvider>
+            <ProvinceStatus />
+          </StripDataProvider>
+        </div>
 
         {/* Map view behind */}
         <MapView />
