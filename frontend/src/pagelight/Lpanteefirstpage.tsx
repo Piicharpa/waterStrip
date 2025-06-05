@@ -8,11 +8,14 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaLocationCrosshairs } from "react-icons/fa6";
-import { Link } from "react-router-dom";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import Navbar from "../component/Navbar/Navbar";
+import MapNavControls from "../component/Navbar/RightNav/MapNavControls";
+import AppUser from "../component/Types/AppUser";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -69,21 +72,12 @@ function Panteefirstpage() {
   const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [isWaterQualityDropdownOpen, setIsWaterQualityDropdownOpen] =
-    useState(false);
+  const [, setIsWaterQualityDropdownOpen] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState("");
-  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const [, setIsBrandDropdownOpen] = useState(false);
   const waterQualityDropdownRef = useRef<HTMLDivElement>(null);
   const brandDropdownRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<{ [key: number]: L.CircleMarker }>({});
-
-  // Water quality options matching the image
-  const waterQualityOptions = [
-    { value: "", label: "All", color: "" },
-    { value: "#00c951", label: "Good", color: "green" },
-    { value: "#f0b100", label: "Fair", color: "yellow" },
-    { value: "#fb2c36", label: "Bad", color: "red" },
-  ];
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -237,18 +231,6 @@ function Panteefirstpage() {
     }
   };
 
-  // Handle quality selection
-  const handleQualitySelect = (quality: string) => {
-    setSelectedQuality(quality);
-    setIsWaterQualityDropdownOpen(false);
-  };
-
-  // Handle brand selection
-  const handleBrandSelect = (brand: string) => {
-    setSelectedBrand(brand);
-    setIsBrandDropdownOpen(false);
-  };
-
   // ฟังก์ชันเมื่อคลิกที่การ์ด
   const handleCardClick = (placeId: number) => {
     const marker = markersRef.current[placeId];
@@ -263,155 +245,46 @@ function Panteefirstpage() {
       }
     }
   };
+  const [user, setUser] = useState<AppUser | null>(null);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const res = await fetch(`/api/users/${currentUser.uid}`);
+          if (res.ok) {
+            const userData = await res.json();
+            sessionStorage.setItem("userId", userData.u_id);
+            setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div style={{ position: "fixed", width: "100vw", height: "100vh" }}>
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-3 gap-8 z-50">
-        {/* Logo Section */}
-        <div className="flex items-center gap-6">
-          <Link
-            to="/"
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          >
-            <img src="/image/logo2.png" alt="Logo" className="h-10" />
-            <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-          </Link>
-
-          {/* Menu Links */}
-          <Link
-            to="/"
-            className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
-          >
-            Home
-          </Link>
-        </div>
-
-        {/* Navigation and controls wrapper */}
-        <div className="flex items-center gap-4">
-          {/* Water Quality Dropdown */}
-          <div
-            ref={waterQualityDropdownRef}
-            className="relative w-14 z-[10000]"
-          >
-            {/* Dropdown Trigger */}
-            <div
-              onClick={() => {
-                setIsWaterQualityDropdownOpen(!isWaterQualityDropdownOpen);
-                // Close brand dropdown if open
-                setIsBrandDropdownOpen(false);
-              }}
-              className="flex items-center justify-between w-15 h-10 p-2 bg-white border border-black rounded-l-full cursor-pointer"
-            >
-              <div className="flex items-center">
-                {selectedQuality === "" ? (
-                  <>
-                    <div className="w-5 h-5 mr-2 rounded-full bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"></div>
-                  </>
-                ) : (
-                  <>
-                    <div
-                      className={`w-5 h-5 mr-2 rounded-full ${
-                        selectedQuality === "#00c951"
-                          ? "bg-green-500"
-                          : selectedQuality === "#f0b100"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    ></div>
-                  </>
-                )}
-              </div>
-              <svg
-                className="w-4 h-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-
-            {/* Dropdown Menu */}
-            {isWaterQualityDropdownOpen && (
-              <div className="absolute top-full left-0 w-25 mt-4 border border-gray-200 bg-white rounded-lg  z-[10001]">
-                {waterQualityOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    onClick={() => handleQualitySelect(option.value)}
-                    className="flex items-center p-2 hover:bg-gray-100 hover:rounded-lg cursor-pointer"
-                  >
-                    <div
-                      className={`w-5 h-5 mr-2  rounded-full ${
-                        option.value === ""
-                          ? "bg-gradient-to-tr from-green-500 via-yellow-500 to-red-500"
-                          : option.value === "#00c951"
-                          ? "bg-green-500"
-                          : option.value === "#f0b100"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                    ></div>
-                    <span>{option.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Brand Dropdown */}
-          <div ref={brandDropdownRef} className="relative w-64 z-[10000]">
-            {/* Dropdown Trigger */}
-            <div
-              onClick={() => {
-                setIsBrandDropdownOpen(!isBrandDropdownOpen);
-                // Close water quality dropdown if open
-                setIsWaterQualityDropdownOpen(false);
-              }}
-              className="flex items-center justify-between w-full h-10 p-2 bg-white border rounded-r-full border-black  cursor-pointer"
-            >
-              <span>{selectedBrand || "Select Brand"}</span>
-              <svg
-                className="w-4 h-4 ml-2"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-
-            {/* Dropdown Menu */}
-            {isBrandDropdownOpen && (
-              <div className="absolute top-full left-0 w-full mt-4 border border-gray-200 bg-white  rounded-lg  z-[10001] max-h-60 overflow-y-auto">
-                <div
-                  key="all-brands"
-                  onClick={() => handleBrandSelect("")}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  All Brands
-                </div>
-                {brands.map((brand) => (
-                  <div
-                    key={brand}
-                    onClick={() => handleBrandSelect(brand)}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {brand}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Location button */}
-          <button
-            onClick={handleLocate}
-            className="bg-white hover:bg-black text-black hover:text-white p-2 rounded-full  outline-none focus:ring-0 transition-colors"
-            title="Find my location"
-          >
-            <FaLocationCrosshairs size={20} />
-          </button>
-        </div>
-      </nav>
+      <Navbar
+        user={user}
+        RightComponent={
+          <MapNavControls
+            selectedBrand={selectedBrand}
+            setSelectedBrand={setSelectedBrand}
+            selectedQuality={selectedQuality}
+            setSelectedQuality={setSelectedQuality}
+            brands={brands}
+            handleLocate={handleLocate}
+          />
+        }
+      />
 
       {/* Map Section */}
       <div

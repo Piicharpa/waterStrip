@@ -128,7 +128,7 @@ const MapView = () => {
   }, []);
 
   return (
-    // <div className="relative" style={{ height: "100vh", width: "100%" }}>
+
       <MapContainer
         center={center}
         zoom={13}
@@ -155,7 +155,7 @@ const MapView = () => {
           onEachFeature={onEachProvince}
         />
       </MapContainer>
-    // </div>
+
   );
 };
 

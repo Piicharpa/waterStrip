@@ -1,13 +1,23 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
+import AppUser from "../../Types/AppUser";
 
-interface AppUser {
-  u_id: string;
-  u_email: string | null;
-  u_name?: string;
-  u_role?: "researcher" | "regular";
-}
+export const UserNav = ({
+  user,
+  handleLogout,
+}: {
+  user: AppUser;
+  handleLogout: () => Promise<void>;
+}) => (
+  <div className="flex items-center gap-4">
+    <span className="text-sm">{user.u_name}</span>
+    <button
+      onClick={handleLogout}
+      className="bg-black text-white px-4 py-1 rounded-lg hover:opacity-80"
+    >
+      Logout
+    </button>
+  </div>
+);
 
 interface NavbarProps {
   user: AppUser | null;
@@ -27,25 +37,7 @@ interface NavbarProps {
   handleLogout: () => Promise<void>;
 }
 
-const UserNav = ({
-  user,
-  handleLogout,
-}: {
-  user: AppUser;
-  handleLogout: () => Promise<void>;
-}) => (
-  <div className="flex items-center gap-4">
-    <span className="text-sm">{user.u_name}</span>
-    <button
-      onClick={handleLogout}
-      className="bg-black text-white px-4 py-1 rounded-lg hover:opacity-80"
-    >
-      Logout
-    </button>
-  </div>
-);
-
-const AuthButtons = ({
+export const AuthButtons = ({
   onLoginClick,
   onSignupClick,
   showLoginPopup,
@@ -166,74 +158,3 @@ const AuthButtons = ({
     </div>
   </>
 );
-
-const Navbar: React.FC<NavbarProps> = (props) => {
-  const {
-    user,
-    activeButton,
-    onLoginClick,
-    onSignupClick,
-    showLoginPopup,
-    showSignupPopup,
-    loginPopupRef,
-    signupPopupRef,
-    userType,
-    setUserType,
-    handleGoogleSignIn,
-    handleGoogleSignupWithType,
-    handleLogout,
-  } = props;
-
-  return (
-    <nav className="flex flex-col md:flex-row md:items-center justify-between px-6 py-3 gap-9">
-      <Link
-        to="/"
-        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-      >
-        <img src="/image/logo2.png" alt="Logo" className="h-10" />
-        <span className="text-xl font-bold text-gray-800">AQUAlity</span>
-      </Link>
-
-      <div className="flex flex-col md:flex-row items-center gap-6 w-full">
-        {user && (
-          <div className="ml-0.5">
-            <Link
-              to="/home"
-              className="text-black text-base hover:underline px-4 py-2 rounded-lg transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              to="/pantee"
-              className="text-black text-base hover:underline px-8 py-2 rounded-lg transition-colors"
-            >
-              Map
-            </Link>
-          </div>
-        )}
-
-        <div className="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
-          {user ? (
-            <UserNav user={user} handleLogout={handleLogout} />
-          ) : (
-            <AuthButtons
-              onLoginClick={onLoginClick}
-              onSignupClick={onSignupClick}
-              showLoginPopup={showLoginPopup}
-              showSignupPopup={showSignupPopup}
-              loginPopupRef={loginPopupRef}
-              signupPopupRef={signupPopupRef}
-              activeButton={activeButton}
-              userType={userType}
-              setUserType={setUserType}
-              handleGoogleSignIn={handleGoogleSignIn}
-              handleGoogleSignupWithType={handleGoogleSignupWithType}
-            />
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-export default Navbar;
