@@ -17,7 +17,7 @@ const MapView = () => {
   const [center, setCenter] = useState<[number, number]>(DEFAULT_POSITION);
   const [strips, setStrips] = useState<any[]>([]);
   const [provinceColors, setProvinceColors] = useState<Record<string, string>>({});
-  const [places, setPlaces] = useState<any[]>([]);
+  const [_, setPlaces] = useState<any[]>([]);
 
   // Utility to get province name from coordinates
   const getProvinceFromLatLng = (
@@ -128,7 +128,7 @@ const MapView = () => {
   }, []);
 
   return (
-    <div className="relative" style={{ height: "100vh", width: "100%" }}>
+
       <MapContainer
         center={center}
         zoom={9}
@@ -155,7 +155,7 @@ const MapView = () => {
           onEachFeature={onEachProvince}
         />
       </MapContainer>
-    </div>
+
   );
 };
 
