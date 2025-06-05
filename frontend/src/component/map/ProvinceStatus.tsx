@@ -77,7 +77,7 @@ const ProvinceStatus = () => {
   const statusColors = {
     Good: "text-green-600",
     Bad: "text-red-600",
-    Unknown: "text-gray-400",
+    // Unknown: "text-gray-400",
   };
 
   return (
