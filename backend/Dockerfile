@@ -4,6 +4,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY . .
 RUN npm ci
+RUN npm install -g drizzle-kit
 RUN npm run build
 ENV NODE_ENV production
 ENV PORT 3001

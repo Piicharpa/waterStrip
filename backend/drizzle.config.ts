@@ -1,8 +1,8 @@
-import "dotenv/config";
-import { defineConfig } from "drizzle-kit";
-import { connectionString } from "./db/utils";
+require("dotenv/config");
+const { defineConfig } = require("drizzle-kit");
+const { connectionString } = require("./db/utils");
 
-export default defineConfig({
+module.exports = defineConfig({
   dialect: "postgresql",
   schema: "./db/schema.ts",
   out: "db/migration",

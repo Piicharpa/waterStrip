@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "../loadEnv"; 
 
 const dbUser = process.env.POSTGRES_APP_USER;
 const dbPassword = process.env.POSTGRES_APP_PASSWORD;

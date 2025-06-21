@@ -27,11 +27,17 @@ services:
       - waterStrip-net
     env_file:
       - ./.env
-    # command: >
-    #   sh -c "
-    #   npm run db:push &&
-    #   npm run start
-    #   "
+    command: >
+      sh -c "
+      until nc -z postgres 5432; do
+        echo 'Waiting for Postgres...';
+        sleep 1;
+      done;
+      echo 'Postgres is up!';
+      npx tsx db/migrate.ts &&
+      npm run start
+      "
+
   frontend:
     container_name: waterStrip-frontend
     build: ./frontend
@@ -50,7 +56,6 @@ services:
       - "5000:5000"
     networks:
       - waterStrip-net
-
 
 volumes:
   waterStrip-data:
