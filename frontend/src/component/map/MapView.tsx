@@ -131,7 +131,7 @@ const MapView = () => {
 
       <MapContainer
         center={center}
-        zoom={9}
+        zoom={13}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
       >
