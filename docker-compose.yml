@@ -47,7 +47,7 @@ services:
     build: ./ml-service
     container_name: waterStrip-ml
     ports:
-      - "5000:5000"
+      - "5001:5001"
     networks:
       - waterStrip-net
 
