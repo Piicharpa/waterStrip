@@ -1,4 +1,4 @@
-import "../loadEnv";
+import 'dotenv/config'; 
 import express, { ErrorRequestHandler } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
