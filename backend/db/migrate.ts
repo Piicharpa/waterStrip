@@ -1,16 +1,18 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+// backend/db/migrate.ts
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
 import { connectionString } from "./utils";
 
-const dbConn = postgres(connectionString, { max: 1 });
+const pool = new Pool({ connectionString });
 
 async function main() {
-  await migrate(drizzle(dbConn), {
+  const db = drizzle(pool);
+  await migrate(db, {
     migrationsFolder: "./db/migration",
-    migrationsSchema: "drizzle", // Default schema
+    migrationsSchema: "drizzle",
   });
-  await dbConn.end();
+  await pool.end();
 }
 
 main();

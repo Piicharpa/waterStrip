@@ -1,3 +1,4 @@
+// backend/drizzle.config.ts
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 import { connectionString } from "./db/utils";
