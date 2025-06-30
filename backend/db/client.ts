@@ -4,7 +4,12 @@ import * as schema from "./schema";
 import { Pool } from "pg";
 import { connectionString } from "./utils";
 
-const pool = new Pool({ connectionString });
+const pool = new Pool({
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
 export const dbClient = drizzle(pool, {
   schema,
