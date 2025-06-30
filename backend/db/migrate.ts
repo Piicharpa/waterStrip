@@ -2,14 +2,10 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
-import { connectionString } from "./utils";
+// import { connectionString } from "./utils";
 
-const pool = new Pool({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+import { pgConfig } from "./utils";
+const pool = new Pool(pgConfig);
 
 async function main() {
   const db = drizzle(pool);
