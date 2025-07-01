@@ -30,4 +30,5 @@ export const pgConfig = {
   ssl: {
     rejectUnauthorized: false,
   },
+  family: 4,
 };
