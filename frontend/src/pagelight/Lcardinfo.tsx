@@ -61,12 +61,9 @@ const Lcardinfo: React.FC = () => {
     const fetchData = async () => {
       try {
         // PATCH เพื่ออัปเดตค่าคุณภาพก่อน
-        const patchResponse = await fetch(
-          `/api/strips/quality/${stripId}`,
-          {
-            method: "PATCH",
-          }
-        );
+        const patchResponse = await fetch(`/api/strips/quality/${stripId}`, {
+          method: "PATCH",
+        });
         if (!patchResponse.ok) throw new Error("Failed to PATCH data");
 
         console.log("PATCH Request Successful"); // Log here to see if PATCH was successful
@@ -117,37 +114,33 @@ const Lcardinfo: React.FC = () => {
   //     if (!stripId) return; // Check if stripId is available
 
   //     try {
-  //       const response = await fetch(
-  //         `/api/strips/predict/${stripId}`
-  //       );
+  //       const response = await fetch(`/api/strips/predict/${stripId}`);
   //       if (!response.ok) throw new Error("Failed to fetch prediction data");
   //       const data = await response.json();
   //       setPrediction(data.prediction);
   //       console.log("Prediction Data:", data); // Log the prediction data
 
   //       // Post the prediction data to the server
-  //       const postResponse = await fetch(
-  //         `/api/strips_parameter`,
-  //         {
-  //           method: "POST",
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //           },
-  //           body: JSON.stringify({
-  //             s_id: stripId,
-  //             p_id: 1, // pH p_id is 1
-  //             sp_value: data.prediction,
-  //           }),
-  //         }
-  //       );
+  //       const postResponse = await fetch(`/api/strips_parameter`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           s_id: stripId,
+  //           p_id: 1, // pH p_id is 1
+  //           sp_value: data.prediction,
+  //         }),
+  //       });
   //       if (!postResponse.ok) throw new Error("Failed to post prediction data");
   //       const postResult = await postResponse.json();
   //       console.log("Prediction data posted successfully:", postResult);
   //     } catch (error) {
   //       console.error("Error fetching prediction data:", error);
-  //     } finally {
-  //       setLoading(false); // Set loading to false after fetching
   //     }
+  //     // finally {
+  //     //   // setLoading(false); // Set loading to false after fetching
+  //     // }
   //   };
 
   //   fetchPhPrediction();
@@ -203,20 +196,17 @@ const Lcardinfo: React.FC = () => {
           }
 
           // ถ้ายังไม่มี status นี้ → POST เพื่อสร้างใหม่
-          const postResponse = await fetch(
-            `/api/strip-status`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                u_id,
-                s_id: stripId,
-                status: "private",
-              }),
-            }
-          );
+          const postResponse = await fetch(`/api/strip-status`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              u_id,
+              s_id: stripId,
+              status: "private",
+            }),
+          });
 
           const postResult = await postResponse.json();
 
@@ -281,20 +271,20 @@ const Lcardinfo: React.FC = () => {
             </Link>
 
             {/* Menu Links */}
-                          <Link
-                            to="/home"
-                            className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
-                          >
-                            Home
-                          </Link>
-            
-                          {/*Map Link */}
-                          <Link
-                            to="/pantee"
-                            className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
-                          >
-                            Map
-                          </Link>
+            <Link
+              to="/home"
+              className="text-gray-800 text-base hover:underline px-4 py-2 rounded-lg transition-colors"
+            >
+              Home
+            </Link>
+
+            {/*Map Link */}
+            <Link
+              to="/pantee"
+              className="text-gray-800 text-base  hover:underline px-2 py-2 rounded-lg transition-colors"
+            >
+              Map
+            </Link>
           </div>
         </nav>
 
