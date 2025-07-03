@@ -45,7 +45,7 @@ const Card: React.FC<CardProps> = ({
       {/* ปุ่มถังขยะที่มุมบนขวา */}
       {onDelete && (
         <div 
-          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black bg-opacity-30 hover:bg-opacity-50 transition"
+          className="absolute top-2 right-2 z-10 p-2 rounded-full bg-transparent bg-opacity-30 hover:bg-opacity-50 transition"
           onClick={handleDeleteClick}
         >
           <FaTrash size={16} className="text-white" />

@@ -1,8 +1,13 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+// backend/db/client.ts
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
-import postgres from "postgres";
-import { connectionString } from "./utils";
+import { Pool } from "pg";
+// import { connectionString } from "./utils";
+import { pgConfig } from "./utils";
 
-export const dbConn = postgres(connectionString);
+const pool = new Pool(pgConfig);
 
-export const dbClient = drizzle(dbConn, { schema: schema, logger: true });
+export const dbClient = drizzle(pool, {
+  schema,
+  logger: true,
+});

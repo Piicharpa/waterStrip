@@ -17,41 +17,34 @@ export async function evaluateStripQuality(s_id: string): Promise<void> {
 
   let allInRange = true;
   let allOutOfRange = true;
-  let qualityMessages: string[] = [];
 
   for (const param of stripParams) {
-    const { p_name, sp_value, p_min, p_max } = param;
+    const { sp_value, p_min, p_max } = param;
 
-    let message = "";
-    let inRange = false;
+    const inRange = sp_value >= p_min && sp_value <= p_max;
 
-    if (sp_value < p_min) {
-      message = `พารามิเตอร์ "${p_name}" ต่ำกว่าช่วงที่กำหนด`;
-    } else if (sp_value > p_max) {
-      message = `พารามิเตอร์ "${p_name}" สูงกว่าช่วงที่กำหนด`;
-    } else {
-      message = `พารามิเตอร์ "${p_name}" อยู่ในช่วงที่กำหนด`;
-      inRange = true;
-    }
-
-    qualityMessages.push(message);
     allInRange = allInRange && inRange;
     allOutOfRange = allOutOfRange && !inRange;
   }
 
   let color = "";
+  let summaryMessage = "";
+
   if (allInRange) {
     color = "#00c951";
+    summaryMessage = "Good";
   } else if (allOutOfRange) {
     color = "#fb2c36";
+    summaryMessage = "Bad";
   } else {
     color = "#f0b100";
+    summaryMessage = "Fair";
   }
 
   await dbClient
     .update(Strip)
     .set({
-      s_quality: qualityMessages.join(" , "),
+      s_quality: summaryMessage,
       s_qualitycolor: color,
     })
     .where(eq(Strip.s_id, s_id));

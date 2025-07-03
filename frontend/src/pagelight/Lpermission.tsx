@@ -16,30 +16,32 @@ export default function PermissionPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userId = user.uid;
-        setUid(userId);
+      if (!user) {
+        navigate("/"); // ยังไม่ได้ login จริง ๆ
+        return;
+      }
 
-        try {
-          const response = await fetch(
-            `api/users/${userId}`,
-            { method: "GET" }
-          );
-          if (!response.ok) throw new Error("Failed to fetch user");
+      const userId = user.uid;
+      setUid(userId);
 
-          const userData = await response.json();
-          console.log(userData);
-          if (userData.u_name) {
-            setName(userData.u_name);
-            setSubmitted(true);
-            sessionStorage.setItem("username", userData.u_name);
-            sessionStorage.setItem("userId", userId);
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+      try {
+        const response = await fetch(`/api/users/${userId}`, { method: "GET" });
+        if (!response.ok) throw new Error("Failed to fetch user");
+
+        const userData = await response.json();
+        console.log(userData);
+
+        if (userData.u_name) {
+          setName(userData.u_name);
+          setSubmitted(true);
+          sessionStorage.setItem("username", userData.u_name);
+          sessionStorage.setItem("userId", userId);
+          navigate("/home"); // ✅ Redirect ไป home ทันทีถ้ามีชื่อแล้ว
+        } else {
+          // ไม่มีชื่อ ก็ให้รอให้ผู้ใช้กรอกชื่อ → ไม่ redirect
         }
-      } else {
-        navigate("/");
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     });
 
@@ -63,7 +65,6 @@ export default function PermissionPage() {
       if (!response.ok) throw new Error("Failed to update name");
 
       setSubmitted(true);
-
       sessionStorage.setItem("username", name);
     } catch (error) {
       console.error("Error updating name:", error);
@@ -71,6 +72,13 @@ export default function PermissionPage() {
   };
 
   const handleContinue = () => {
+    if (!checked) return;
+
+    // ✅ เซ็ตซ้ำให้แน่ใจว่า `userId` อยู่ใน sessionStorage ก่อนเปลี่ยนหน้า
+    sessionStorage.setItem("username", name);
+    sessionStorage.setItem("userId", uid);
+
+    console.log("✅ Navigating to /home");
     navigate("/home");
   };
 
@@ -151,7 +159,7 @@ export default function PermissionPage() {
                 ? "bg-black text-white cursor-pointer"
                 : "bg-[#f1f1f1] text-gray-400 cursor-not-allowed"
             }`}
-            onClick={() => checked && handleContinue()}
+            onClick={handleContinue}
             disabled={!checked}
           >
             Accept & Continue

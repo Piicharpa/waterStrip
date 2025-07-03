@@ -1,3 +1,4 @@
+import 'dotenv/config'; 
 import express, { ErrorRequestHandler } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -85,7 +86,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 // =================== Server ===================
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.BackendPORT_IN;
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });

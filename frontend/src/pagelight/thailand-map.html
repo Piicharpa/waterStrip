@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Thailand Provinces Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([13.736717, 100.523186], 6); // Centered on Thailand
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Load GeoJSON data
+    fetch('https://raw.githubusercontent.com/cvibhagool/thailand-map/master/thailand-provinces.geojson')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(geojsonData => {
+        // Add GeoJSON layer to the map
+        L.geoJSON(geojsonData, {
+          style: {
+            color: '#3388ff',
+            weight: 1,
+            fillOpacity: 0.1
+          },
+          onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.name) {
+              layer.bindPopup(feature.properties.name);
+            }
+          }
+        }).addTo(map);
+      })
+      .catch(error => {
+        console.error('Error loading the GeoJSON data:', error);
+      });
+  </script>
+</body>
+</html>

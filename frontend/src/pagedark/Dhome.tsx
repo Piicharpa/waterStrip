@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Card from "../component/card";
+import Card from "../component/Card";
 import { BiArrowToLeft } from "react-icons/bi";
 import { MdKeyboardArrowLeft, MdOutlineChevronRight } from "react-icons/md";
 

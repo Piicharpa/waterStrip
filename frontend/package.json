@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.15",
+    "@turf/turf": "^7.2.0",
     "axios": "^1.8.4",
     "browser-image-compression": "^2.0.2",
     "date-fns": "^4.1.0",
