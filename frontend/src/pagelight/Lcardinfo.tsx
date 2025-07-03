@@ -112,6 +112,7 @@ const Lcardinfo: React.FC = () => {
     fetchData();
   }, [stripId]);
 
+
   const handleDotClick = (index: number) => {
     setCurrentPage(index);
     if (scrollContainerRef.current) {
