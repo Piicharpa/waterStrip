@@ -86,7 +86,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 // =================== Server ===================
-const PORT = process.env.BackendPORT_IN;
+const PORT = process.env.BackendPORT || 3001;
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });

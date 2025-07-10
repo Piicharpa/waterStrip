@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3003', // หรือ 7003 ถ้าใช้ reverse proxy
+        target: 'http://localhost:3001', // หรือ 7003 ถ้าใช้ reverse proxy
         changeOrigin: true,
         secure: false,
       },
