@@ -6,7 +6,7 @@ export default defineConfig({
   schema: "./db/schema.ts",
   out: "./db/migration",
   dbCredentials: {
-    url: process.env.DATABASE_URL!, // ✅ ใช้ direct URL (db.bddrbv...)
+    url: process.env.DATABASE_URL!, 
   },
   strict: true,
   verbose: true,
