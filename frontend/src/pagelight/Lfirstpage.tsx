@@ -1,4 +1,17 @@
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
+import MapView from "../component/map/MapView";
+import { auth } from "../firebase";
+import { loginWithGoogle, signupWithGoogle, logout } from "../oauth/auth";
+import ProvinceStatus from "../component/map/ProvinceStatus";
+import { StripDataProvider } from "../contexts/StripDataContext";
+import Navbar from "../component/Navbar/Navbar";
+import { UserNav, AuthButtons } from "../component/Navbar/RightNav/UserNavAuth";
+import AppUser from "../component/Types/AppUser";
 
+const FirstPage = () => {
+  const [user, setUser] = useState<AppUser | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [activeButton, setActiveButton] = useState<string | null>(null);
