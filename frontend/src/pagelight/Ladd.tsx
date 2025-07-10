@@ -187,15 +187,39 @@ const Ladd: React.FC = () => {
   }, [navigate]);
 
   // Handler for when editor saves the image
+  // const handleSaveEditedImage = async (editedImageDataUrl: string) => {
+  //   setImagePreview(editedImageDataUrl);
+  //   setShowImageEditor(false);
+
+  //   // Convert data URL to File object
+  //   const response = await fetch(editedImageDataUrl);
+  //   const blob = await response.blob();
+  //   const file = new File([blob], "edited-image.jpg", { type: "image/jpeg" });
+  //   setSelectedFile(file);
+  // };
   const handleSaveEditedImage = async (editedImageDataUrl: string) => {
     setImagePreview(editedImageDataUrl);
     setShowImageEditor(false);
 
-    // Convert data URL to File object
     const response = await fetch(editedImageDataUrl);
     const blob = await response.blob();
     const file = new File([blob], "edited-image.jpg", { type: "image/jpeg" });
     setSelectedFile(file);
+
+    // อัปโหลดไปยัง FastAPI
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const uploadResponse = await axios.post("/api/upload/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("Upload success:", uploadResponse.data);
+    } catch (err) {
+      console.error("Upload failed:", err);
+    }
   };
 
   // Handle cancel from editor
