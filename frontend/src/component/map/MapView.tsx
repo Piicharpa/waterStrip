@@ -1,25 +1,54 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import { fetchPlaces } from "../../utils/fetchPlaces";
-import ChangeView from "./ChangeView";
 import "leaflet/dist/leaflet.css";
 import rawGeoJson from "./thailand-provinces.json";
 import * as turf from "@turf/turf";
-import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
-import { dmsToDecimal } from "../../utils/dmsToDecimal.ts"; // Assuming you have a utility function for DMS conversion
-import { DateAnalyzer } from "../Convertor/DateAnalyzer"; 
+import type {
+  Feature,
+  FeatureCollection,
+  Polygon,
+  MultiPolygon,
+} from "geojson";
+import { dmsToDecimal } from "../../utils/dmsToDecimal.ts";
+import { DateAnalyzer } from "../Convertor/DateAnalyzer";
+import { LatLngBoundsExpression } from "leaflet";
 
 const thailandProvincesGeoJSON = rawGeoJson as FeatureCollection;
-const DEFAULT_POSITION: [number, number] = [18.796143, 98.979263]; // Chiang Mai
 
+// ขอบเขตประเทศไทย
+const THAILAND_BOUNDS: LatLngBoundsExpression = [
+  [5.610833, 97.344167], // SW
+  [20.463056, 105.637222], // NE
+];
+
+// ฟังก์ชันสำหรับซูมเข้าที่ผู้ใช้ (เมื่อได้ตำแหน่ง)
+const FlyToUserLocation = ({
+  position,
+}: {
+  position: [number, number] | null;
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) {
+      map.setView(position, 13, { animate: true }); // ✅ ซูมแบบ smooth กว่า
+    }
+  }, [position]);
+
+  return null;
+};
 
 const MapView = () => {
-  const [center, setCenter] = useState<[number, number]>(DEFAULT_POSITION);
+  const [userPosition, setUserPosition] = useState<[number, number] | null>(
+    null
+  );
   const [strips, setStrips] = useState<any[]>([]);
-  const [provinceColors, setProvinceColors] = useState<Record<string, string>>({});
+  const [provinceColors, setProvinceColors] = useState<Record<string, string>>(
+    {}
+  );
   const [_, setPlaces] = useState<any[]>([]);
 
-  // Utility to get province name from coordinates
   const getProvinceFromLatLng = (
     lat: number,
     lng: number,
@@ -31,7 +60,12 @@ const MapView = () => {
         feature.geometry.type === "Polygon" ||
         feature.geometry.type === "MultiPolygon"
       ) {
-        if (turf.booleanPointInPolygon(point, feature as Feature<Polygon | MultiPolygon>)) {
+        if (
+          turf.booleanPointInPolygon(
+            point,
+            feature as Feature<Polygon | MultiPolygon>
+          )
+        ) {
           return (feature.properties as any).NAME_1;
         }
       }
@@ -39,7 +73,6 @@ const MapView = () => {
     return null;
   };
 
-  // Fetch places and strips data
   useEffect(() => {
     const fetchPlacesData = async () => {
       try {
@@ -56,69 +89,60 @@ const MapView = () => {
     fetchPlacesData();
   }, []);
 
-  // Analyze strip data to assign colors to provinces
   useEffect(() => {
     if (!strips.length) return;
 
-    const stripsThisMonth = strips;
-
-    console.log("Strips from current month:", stripsThisMonth);
-
     const colorCountMap: Record<string, Record<string, number>> = {};
 
-    for (const strip of stripsThisMonth) {
+    for (const strip of strips) {
       const lat = dmsToDecimal(strip.s_latitude);
       const lng = dmsToDecimal(strip.s_longitude);
       const color = strip.s_qualitycolor;
-
-      const province = getProvinceFromLatLng(lat, lng, thailandProvincesGeoJSON);
-
+      const province = getProvinceFromLatLng(
+        lat,
+        lng,
+        thailandProvincesGeoJSON
+      );
       if (!province) continue;
 
-      if (!colorCountMap[province]) {
-        colorCountMap[province] = {};
-      }
-      colorCountMap[province][color] = (colorCountMap[province][color] || 0) + 1;
+      if (!colorCountMap[province]) colorCountMap[province] = {};
+      colorCountMap[province][color] =
+        (colorCountMap[province][color] || 0) + 1;
     }
 
     const mostCommonColorByProvince: Record<string, string> = {};
     for (const province in colorCountMap) {
       const colors = colorCountMap[province];
-      const mostCommonColor = Object.entries(colors).sort((a, b) => b[1] - a[1])[0][0];
+      const mostCommonColor = Object.entries(colors).sort(
+        (a, b) => b[1] - a[1]
+      )[0][0];
       mostCommonColorByProvince[province] = mostCommonColor;
     }
 
     setProvinceColors(mostCommonColorByProvince);
   }, [strips]);
 
-  // Popup on each province
   const onEachProvince = (province: GeoJSON.Feature, layer: L.Layer) => {
     if (province.properties && (province.properties as any).NAME_1) {
       layer.bindPopup((province.properties as any).NAME_1);
     }
   };
 
-  // Get user's geolocation
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setCenter([latitude, longitude]);
+          setUserPosition([latitude, longitude]);
         },
         (error) => {
           console.warn("ไม่สามารถเข้าถึงตำแหน่งได้:", error.message);
-          setCenter(DEFAULT_POSITION);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
-    } else {
-      console.warn("เบราว์เซอร์ไม่รองรับ geolocation");
-      setCenter(DEFAULT_POSITION);
     }
   }, []);
 
-  // Fetch additional place info (if needed)
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetchPlaces();
@@ -128,34 +152,33 @@ const MapView = () => {
   }, []);
 
   return (
-
-      <MapContainer
-        center={center}
-        zoom={13}
-        scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <ChangeView center={center} />
-        <GeoJSON
-          data={thailandProvincesGeoJSON}
-          style={(feature) => {
-            const name = feature?.properties ? (feature.properties as any).NAME_1 : undefined;
-            const color = name ? provinceColors[name] ?? "#eee" : "#ccc";
-            return {
-              color: "#666",
-              weight: 1,
-              fillColor: color,
-              fillOpacity: 0.5,
-            };
-          }}
-          onEachFeature={onEachProvince}
-        />
-      </MapContainer>
-
+    <MapContainer
+      bounds={THAILAND_BOUNDS}
+      scrollWheelZoom={true}
+      style={{ height: "100%", width: "100%" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {userPosition && <FlyToUserLocation position={userPosition} />}
+      <GeoJSON
+        data={thailandProvincesGeoJSON}
+        style={(feature) => {
+          const name = feature?.properties
+            ? (feature.properties as any).NAME_1
+            : undefined;
+          const color = name ? provinceColors[name] ?? "#eee" : "#ccc";
+          return {
+            color: "#666",
+            weight: 1,
+            fillColor: color,
+            fillOpacity: 0.5,
+          };
+        }}
+        onEachFeature={onEachProvince}
+      />
+    </MapContainer>
   );
 };
 
